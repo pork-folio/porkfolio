@@ -94,6 +94,55 @@ export const schema = z.object({
   balance: string;
 }>;
 
+type TokenInfo = {
+  symbol: string;
+  baseSymbol: string;
+  chainName: string;
+  balance: string;
+  decimals: number;
+  contract?: string;
+  zrc20?: string;
+};
+
+type AggregatedToken = {
+  baseSymbol: string;
+  totalBalance: string;
+  tokens: TokenInfo[];
+};
+
+function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
+  const tokenMap = new Map<string, AggregatedToken>();
+
+  data.forEach((token) => {
+    const baseSymbol = token.symbol.split(".")[0];
+
+    if (!tokenMap.has(baseSymbol)) {
+      tokenMap.set(baseSymbol, {
+        baseSymbol,
+        totalBalance: "0",
+        tokens: [],
+      });
+    }
+
+    const aggregated = tokenMap.get(baseSymbol)!;
+    aggregated.tokens.push({
+      symbol: token.symbol,
+      baseSymbol,
+      chainName: token.chain_name,
+      balance: token.balance,
+      decimals: token.decimals,
+      contract: token.contract,
+      zrc20: token.zrc20,
+    });
+
+    const currentTotal = parseFloat(aggregated.totalBalance);
+    const newBalance = parseFloat(token.balance);
+    aggregated.totalBalance = (currentTotal + newBalance).toString();
+  });
+
+  return Array.from(tokenMap.values());
+}
+
 const DragHandle = dynamic(
   () =>
     Promise.resolve(({ id }: { id: string }) => {
@@ -117,12 +166,7 @@ const DragHandle = dynamic(
   { ssr: false }
 );
 
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
-  {
-    id: "drag",
-    header: () => null,
-    cell: ({ row }) => <DragHandle id={row.original.id} />,
-  },
+const columns: ColumnDef<AggregatedToken>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -150,14 +194,15 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "symbol",
+    accessorKey: "baseSymbol",
     header: "Symbol",
     cell: ({ row }) => {
+      const token = row.original;
       return (
         <div className="flex flex-col">
-          <div className="font-medium">{row.original.symbol}</div>
+          <div className="font-medium">{token.baseSymbol}</div>
           <div className="text-sm text-muted-foreground">
-            {row.original.ticker}
+            {token.tokens.length} chains
           </div>
         </div>
       );
@@ -165,87 +210,40 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "chain_name",
-    header: "Chain",
+    accessorKey: "totalBalance",
+    header: () => <div className="w-full text-right">Total Balance</div>,
     cell: ({ row }) => (
-      <Badge variant="outline" className="text-muted-foreground px-1.5">
-        {row.original.chain_name}
-      </Badge>
+      <div className="text-right font-medium">{row.original.totalBalance}</div>
     ),
-  },
-  {
-    accessorKey: "coin_type",
-    header: "Type",
-    cell: ({ row }) => (
-      <Badge variant="outline" className="text-muted-foreground px-1.5">
-        {row.original.coin_type}
-      </Badge>
-    ),
-  },
-  {
-    accessorKey: "balance",
-    header: () => <div className="w-full text-right">Balance</div>,
-    cell: ({ row }) => (
-      <div className="text-right font-medium">{row.original.balance}</div>
-    ),
-  },
-  {
-    accessorKey: "decimals",
-    header: "Decimals",
-    cell: ({ row }) => (
-      <div className="text-right">{row.original.decimals}</div>
-    ),
-  },
-  {
-    accessorKey: "contract",
-    header: "Contract",
-    cell: ({ row }) =>
-      row.original.contract ? (
-        <div className="font-mono text-sm">
-          {row.original.contract.slice(0, 6)}...
-          {row.original.contract.slice(-4)}
-        </div>
-      ) : null,
-  },
-  {
-    accessorKey: "zrc20",
-    header: "ZRC20",
-    cell: ({ row }) =>
-      row.original.zrc20 ? (
-        <div className="font-mono text-sm">
-          {row.original.zrc20.slice(0, 6)}...{row.original.zrc20.slice(-4)}
-        </div>
-      ) : null,
   },
 ];
 
-interface DraggableRowProps {
-  row: Row<z.infer<typeof schema>>;
-}
-
-function DraggableRow({ row }: DraggableRowProps) {
-  const { isDragging, transform, transition } = useSortable({
-    id: row.original.id.toString(),
-  });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
+function TokenDetails({ token }: { token: AggregatedToken }) {
   return (
-    <TableRow
-      data-row-id={row.original.id.toString()}
-      style={style}
-      className="group"
-    >
-      {row.getVisibleCells().map((cell) => (
-        <TableCell key={cell.id}>
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </TableCell>
-      ))}
-    </TableRow>
+    <div className="space-y-2 p-4">
+      <div className="text-sm font-medium">Chain Details</div>
+      <div className="grid gap-2">
+        {token.tokens.map((t) => (
+          <div
+            key={`${t.symbol}-${t.chainName}`}
+            className="flex items-center justify-between rounded-md border p-2"
+          >
+            <div className="flex flex-col">
+              <div className="font-medium">{t.chainName}</div>
+              <div className="text-sm text-muted-foreground">{t.symbol}</div>
+            </div>
+            <div className="text-right">
+              <div className="font-medium">{t.balance}</div>
+              {t.contract && (
+                <div className="text-xs text-muted-foreground">
+                  {t.contract.slice(0, 6)}...{t.contract.slice(-4)}
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -261,10 +259,17 @@ export function DataTable({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [data, setData] = React.useState(initialData);
+  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(
+    new Set()
+  );
+
+  const aggregatedData = React.useMemo(
+    () => aggregateTokens(initialData),
+    [initialData]
+  );
 
   const table = useReactTable({
-    data,
+    data: aggregatedData,
     columns,
     state: {
       sorting,
@@ -285,161 +290,90 @@ export function DataTable({
     getFacetedUniqueValues: getFacetedUniqueValues(),
   });
 
-  const sensors = useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: {
-        distance: 10,
-      },
-    }),
-    useSensor(TouchSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  function handleDragEnd(event: DragEndEvent) {
-    const { active, over } = event;
-
-    if (active.id !== over?.id) {
-      setData((items) => {
-        const oldIndex = items.findIndex(
-          (item) => item.id.toString() === active.id
-        );
-        const newIndex = items.findIndex(
-          (item) => item.id.toString() === over?.id
-        );
-        return arrayMove(items, oldIndex, newIndex);
-      });
-    }
-  }
+  const toggleRow = (baseSymbol: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(baseSymbol)) {
+        next.delete(baseSymbol);
+      } else {
+        next.add(baseSymbol);
+      }
+      return next;
+    });
+  };
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex flex-1 items-center space-x-2">
           <Input
-            placeholder="Filter items..."
+            placeholder="Filter tokens..."
             value={
-              (table.getColumn("symbol")?.getFilterValue() as string) ?? ""
+              (table.getColumn("baseSymbol")?.getFilterValue() as string) ?? ""
             }
             onChange={(event) =>
-              table.getColumn("symbol")?.setFilterValue(event.target.value)
+              table.getColumn("baseSymbol")?.setFilterValue(event.target.value)
             }
             className="h-8 w-[150px] lg:w-[250px]"
           />
-          {table.getColumn("symbol") && (
-            <Select
-              value={
-                (table.getColumn("symbol")?.getFilterValue() as string) ?? "all"
-              }
-              onValueChange={(value) =>
-                table
-                  .getColumn("symbol")
-                  ?.setFilterValue(value === "all" ? "" : value)
-              }
-            >
-              <SelectTrigger className="h-8 w-[150px] lg:w-[200px]">
-                <SelectValue placeholder="Select symbol" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All symbols</SelectItem>
-                {Array.from(
-                  table.getColumn("symbol")?.getFacetedUniqueValues().keys() ??
-                    []
-                ).map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-        <div className="flex items-center space-x-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="ml-auto hidden h-8 lg:flex"
-              >
-                <IconLayoutColumns className="mr-2 h-4 w-4" />
-                View
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => {
-                  return (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      className="capitalize"
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) =>
-                        column.toggleVisibility(!!value)
-                      }
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  );
-                })}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
       <div className="rounded-md border">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-          modifiers={[restrictToVerticalAxis]}
-        >
-          <SortableContext
-            items={table
-              .getRowModel()
-              .rows.map((row) => row.original.id.toString())}
-            strategy={verticalListSortingStrategy}
-          >
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      return (
-                        <TableHead key={header.id}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </TableHead>
-                      );
-                    })}
-                  </TableRow>
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
                 ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table
-                    .getRowModel()
-                    .rows.map((row) => <DraggableRow key={row.id} row={row} />)
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      No results.
-                    </TableCell>
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <React.Fragment key={row.original.baseSymbol}>
+                  <TableRow
+                    className="cursor-pointer"
+                    onClick={() => toggleRow(row.original.baseSymbol)}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </SortableContext>
-        </DndContext>
+                  {expandedRows.has(row.original.baseSymbol) && (
+                    <TableRow>
+                      <TableCell colSpan={columns.length}>
+                        <TokenDetails token={row.original} />
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  No results.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
       <div className="flex items-center justify-end space-x-2">
         <div className="flex-1 text-sm text-muted-foreground">
