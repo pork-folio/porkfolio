@@ -1,11 +1,32 @@
+"use client";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import { DataTable } from "@/components/data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { ZetaChainClient } from "@zetachain/toolkit/client";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
+import { useEffect } from "react";
 
 import data from "./data.json";
 
 export default function Page() {
+  const { primaryWallet } = useDynamicContext();
+  const client = new ZetaChainClient({ network: "testnet" });
+
+  useEffect(() => {
+    const fetchBalances = async () => {
+      if (primaryWallet?.address) {
+        const balances = await client.getBalances({
+          evmAddress: primaryWallet.address,
+        });
+        console.log("Balances:", balances);
+      }
+    };
+
+    fetchBalances();
+  }, [primaryWallet?.address]);
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
