@@ -10,7 +10,6 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
-  type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
 import {
@@ -22,18 +21,10 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
-  IconChevronsLeft,
-  IconChevronsRight,
-  IconCircleCheckFilled,
-  IconDotsVertical,
   IconGripVertical,
   IconLayoutColumns,
-  IconLoader,
-  IconPlus,
-  IconTrendingUp,
 } from "@tabler/icons-react";
 import {
   ColumnDef,
@@ -50,42 +41,19 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { Area, AreaChart, CartesianGrid, XAxis } from "recharts";
-import { toast } from "sonner";
 import { z } from "zod";
 import dynamic from "next/dynamic";
-import { cn } from "@/lib/utils";
 
-import { useIsMobile } from "@/hooks/use-mobile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -93,7 +61,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -102,7 +69,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -115,9 +81,6 @@ export const schema = z.object({
   id: z.string(),
   ticker: z.string(),
   balance: z.string(),
-  isExpanded: z.boolean().optional(),
-  isAggregate: z.boolean().optional(),
-  children: z.array(z.lazy(() => schema)).optional(),
 }) as z.ZodType<{
   chain_id: string;
   coin_type: string;
@@ -129,9 +92,6 @@ export const schema = z.object({
   id: string;
   ticker: string;
   balance: string;
-  isExpanded?: boolean;
-  isAggregate?: boolean;
-  children?: Array<z.infer<typeof schema>>;
 }>;
 
 const DragHandle = dynamic(
@@ -261,12 +221,11 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
 
 interface DraggableRowProps {
   row: Row<z.infer<typeof schema>>;
-  onToggleExpansion: (id: string) => void;
 }
 
-function DraggableRow({ row, onToggleExpansion }: DraggableRowProps) {
+function DraggableRow({ row }: DraggableRowProps) {
   const { isDragging, transform, transition } = useSortable({
-    id: row.original.id,
+    id: row.original.id.toString(),
   });
 
   const style = {
@@ -275,83 +234,19 @@ function DraggableRow({ row, onToggleExpansion }: DraggableRowProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const hasChildren = row.original.children && row.original.children.length > 0;
-  const isExpanded = row.original.isExpanded;
-
   return (
     <TableRow
-      data-row-id={row.original.id}
+      data-row-id={row.original.id.toString()}
       style={style}
-      className={cn(
-        "group",
-        row.original.isAggregate && "bg-muted/50 font-medium",
-        row.original.isExpanded && "bg-muted"
-      )}
+      className="group"
     >
       {row.getVisibleCells().map((cell) => (
         <TableCell key={cell.id}>
-          {cell.column.id === "symbol" && hasChildren ? (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-6"
-                onClick={() => onToggleExpansion(row.original.id)}
-              >
-                <IconChevronRight
-                  className={cn(
-                    "size-4 transition-transform",
-                    isExpanded && "rotate-90"
-                  )}
-                />
-              </Button>
-              {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </div>
-          ) : (
-            flexRender(cell.column.columnDef.cell, cell.getContext())
-          )}
+          {flexRender(cell.column.columnDef.cell, cell.getContext())}
         </TableCell>
       ))}
     </TableRow>
   );
-}
-
-// Helper function to get base symbol (e.g., "USDC" from "USDC.ARB")
-function getBaseSymbol(symbol: string): string {
-  return symbol.split(".")[0];
-}
-
-// Function to aggregate tokens
-function aggregateTokens(
-  tokens: z.infer<typeof schema>[]
-): z.infer<typeof schema>[] {
-  const tokenMap = new Map<string, z.infer<typeof schema>>();
-
-  tokens.forEach((token) => {
-    const baseSymbol = getBaseSymbol(token.symbol);
-    const existingToken = tokenMap.get(baseSymbol);
-
-    if (existingToken) {
-      // Update existing aggregate token
-      existingToken.balance = (
-        parseFloat(existingToken.balance) + parseFloat(token.balance)
-      ).toString();
-      existingToken.children = existingToken.children || [];
-      existingToken.children.push(token);
-    } else {
-      // Create new aggregate token
-      const aggregateToken: z.infer<typeof schema> = {
-        ...token,
-        symbol: baseSymbol,
-        ticker: baseSymbol,
-        isAggregate: true,
-        children: [token],
-      };
-      tokenMap.set(baseSymbol, aggregateToken);
-    }
-  });
-
-  return Array.from(tokenMap.values());
 }
 
 export function DataTable({
@@ -366,22 +261,7 @@ export function DataTable({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [expandedRows, setExpandedRows] = React.useState<Set<string>>(
-    new Set()
-  );
-  const [data, setData] = React.useState(() => aggregateTokens(initialData));
-
-  const toggleRowExpansion = (id: string) => {
-    setExpandedRows((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
+  const [data, setData] = React.useState(initialData);
 
   const table = useReactTable({
     data,
@@ -422,8 +302,12 @@ export function DataTable({
 
     if (active.id !== over?.id) {
       setData((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over?.id);
+        const oldIndex = items.findIndex(
+          (item) => item.id.toString() === active.id
+        );
+        const newIndex = items.findIndex(
+          (item) => item.id.toString() === over?.id
+        );
         return arrayMove(items, oldIndex, newIndex);
       });
     }
@@ -434,7 +318,7 @@ export function DataTable({
       <div className="flex items-center justify-between">
         <div className="flex flex-1 items-center space-x-2">
           <Input
-            placeholder="Filter tokens..."
+            placeholder="Filter items..."
             value={
               (table.getColumn("symbol")?.getFilterValue() as string) ?? ""
             }
@@ -443,28 +327,25 @@ export function DataTable({
             }
             className="h-8 w-[150px] lg:w-[250px]"
           />
-          {table.getColumn("chain_name") && (
+          {table.getColumn("symbol") && (
             <Select
               value={
-                (table.getColumn("chain_name")?.getFilterValue() as string) ??
-                "all"
+                (table.getColumn("symbol")?.getFilterValue() as string) ?? "all"
               }
               onValueChange={(value) =>
                 table
-                  .getColumn("chain_name")
+                  .getColumn("symbol")
                   ?.setFilterValue(value === "all" ? "" : value)
               }
             >
               <SelectTrigger className="h-8 w-[150px] lg:w-[200px]">
-                <SelectValue placeholder="Select chain" />
+                <SelectValue placeholder="Select symbol" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All chains</SelectItem>
+                <SelectItem value="all">All symbols</SelectItem>
                 {Array.from(
-                  table
-                    .getColumn("chain_name")
-                    ?.getFacetedUniqueValues()
-                    .keys() ?? []
+                  table.getColumn("symbol")?.getFacetedUniqueValues().keys() ??
+                    []
                 ).map((value) => (
                   <SelectItem key={value} value={value}>
                     {value}
@@ -516,7 +397,9 @@ export function DataTable({
           modifiers={[restrictToVerticalAxis]}
         >
           <SortableContext
-            items={table.getRowModel().rows.map((row) => row.original.id)}
+            items={table
+              .getRowModel()
+              .rows.map((row) => row.original.id.toString())}
             strategy={verticalListSortingStrategy}
           >
             <Table>
@@ -540,37 +423,9 @@ export function DataTable({
               </TableHeader>
               <TableBody>
                 {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => {
-                    const isExpanded = expandedRows.has(row.original.id);
-                    const hasChildren =
-                      row.original.children && row.original.children.length > 0;
-
-                    return (
-                      <React.Fragment key={row.id}>
-                        <DraggableRow
-                          row={row}
-                          onToggleExpansion={toggleRowExpansion}
-                        />
-                        {isExpanded &&
-                          hasChildren &&
-                          row.original.children?.map(
-                            (child: z.infer<typeof schema>) => (
-                              <DraggableRow
-                                key={child.id}
-                                row={{
-                                  ...row,
-                                  original: {
-                                    ...child,
-                                    isExpanded: false,
-                                  },
-                                }}
-                                onToggleExpansion={toggleRowExpansion}
-                              />
-                            )
-                          )}
-                      </React.Fragment>
-                    );
-                  })
+                  table
+                    .getRowModel()
+                    .rows.map((row) => <DraggableRow key={row.id} row={row} />)
                 ) : (
                   <TableRow>
                     <TableCell
@@ -611,164 +466,5 @@ export function DataTable({
         </div>
       </div>
     </div>
-  );
-}
-
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
-
-const chartConfig = {
-  desktop: {
-    label: "Desktop",
-    color: "var(--primary)",
-  },
-  mobile: {
-    label: "Mobile",
-    color: "var(--primary)",
-  },
-} satisfies ChartConfig;
-
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
-  const isMobile = useIsMobile();
-
-  return (
-    <Drawer direction={isMobile ? "bottom" : "right"}>
-      <DrawerTrigger asChild>
-        <Button variant="link" className="text-foreground w-fit px-0 text-left">
-          {item.symbol}
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent>
-        <DrawerHeader className="gap-1">
-          <DrawerTitle>{item.symbol}</DrawerTitle>
-          <DrawerDescription>
-            Showing total visitors for the last 6 months
-          </DrawerDescription>
-        </DrawerHeader>
-        <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-          {!isMobile && (
-            <>
-              <ChartContainer config={chartConfig}>
-                <AreaChart
-                  accessibilityLayer
-                  data={chartData}
-                  margin={{
-                    left: 0,
-                    right: 10,
-                  }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
-                    hide
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="dot" />}
-                  />
-                  <Area
-                    dataKey="mobile"
-                    type="natural"
-                    fill="var(--color-mobile)"
-                    fillOpacity={0.6}
-                    stroke="var(--color-mobile)"
-                    stackId="a"
-                  />
-                  <Area
-                    dataKey="desktop"
-                    type="natural"
-                    fill="var(--color-desktop)"
-                    fillOpacity={0.4}
-                    stroke="var(--color-desktop)"
-                    stackId="a"
-                  />
-                </AreaChart>
-              </ChartContainer>
-              <Separator />
-              <div className="grid gap-2">
-                <div className="flex gap-2 leading-none font-medium">
-                  Trending up by 5.2% this month{" "}
-                  <IconTrendingUp className="size-4" />
-                </div>
-                <div className="text-muted-foreground">
-                  Showing total visitors for the last 6 months. This is just
-                  some random text to test the layout. It spans multiple lines
-                  and should wrap around.
-                </div>
-              </div>
-              <Separator />
-            </>
-          )}
-          <form className="flex flex-col gap-4">
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="chain_name">Chain</Label>
-              <Input id="chain_name" defaultValue={item.chain_name} />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="coin_type">Type</Label>
-                <Select defaultValue={item.coin_type}>
-                  <SelectTrigger id="coin_type" className="w-full">
-                    <SelectValue placeholder="Select a type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Table of Contents">
-                      Table of Contents
-                    </SelectItem>
-                    <SelectItem value="Executive Summary">
-                      Executive Summary
-                    </SelectItem>
-                    <SelectItem value="Technical Approach">
-                      Technical Approach
-                    </SelectItem>
-                    <SelectItem value="Design">Design</SelectItem>
-                    <SelectItem value="Capabilities">Capabilities</SelectItem>
-                    <SelectItem value="Focus Documents">
-                      Focus Documents
-                    </SelectItem>
-                    <SelectItem value="Narrative">Narrative</SelectItem>
-                    <SelectItem value="Cover Page">Cover Page</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="balance">Balance</Label>
-                <Input id="balance" defaultValue={item.balance} />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="decimals">Decimals</Label>
-                <Input id="decimals" defaultValue={item.decimals} />
-              </div>
-              <div className="flex flex-col gap-3">
-                <Label htmlFor="contract">Contract</Label>
-                <Input id="contract" defaultValue={item.contract} />
-              </div>
-            </div>
-            <div className="flex flex-col gap-3">
-              <Label htmlFor="zrc20">ZRC20</Label>
-              <Input id="zrc20" defaultValue={item.zrc20} />
-            </div>
-          </form>
-        </div>
-        <DrawerFooter>
-          <Button>Submit</Button>
-          <DrawerClose asChild>
-            <Button variant="outline">Done</Button>
-          </DrawerClose>
-        </DrawerFooter>
-      </DrawerContent>
-    </Drawer>
   );
 }
