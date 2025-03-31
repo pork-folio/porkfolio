@@ -9,23 +9,6 @@ import { mainnet } from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
 
-const zetaTestnet = {
-  blockExplorerUrls: ["https://explorer.testnet.zetachain.com/"],
-  chainId: 7001,
-  chainName: "ZetaChain Testnet",
-  iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
-  name: "ZetaChain",
-  nativeCurrency: {
-    decimals: 18,
-    name: "ZETA",
-    symbol: "ZETA",
-    iconUrl: "https://app.dynamic.xyz/assets/networks/eth.svg",
-  },
-  networkId: 7001,
-  rpcUrls: ["https://zetachain-athens.g.allthatnode.com/archive/evm"],
-  vanityName: "ZetaChain Testnet",
-};
-
 const zetaMainnet = {
   blockExplorerUrls: ["https://explorer.zetachain.com/"],
   chainId: 7000,
@@ -45,7 +28,6 @@ const zetaMainnet = {
 
 const config = createConfig({
   chains: [mainnet],
-  multiInjectedProviderDiscovery: false,
   transports: {
     [mainnet.id]: http(),
   },
