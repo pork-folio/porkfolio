@@ -1,35 +1,10 @@
 "use client";
 
 import * as React from "react";
-import {
-  DndContext,
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  closestCenter,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
-import {
-  SortableContext,
-  arrayMove,
-  useSortable,
-  verticalListSortingStrategy,
-  sortableKeyboardCoordinates,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import {
-  IconChevronLeft,
-  IconChevronRight,
-  IconGripVertical,
-  IconLayoutColumns,
-} from "@tabler/icons-react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
-  Row,
   SortingState,
   VisibilityState,
   flexRender,
@@ -42,25 +17,10 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { z } from "zod";
-import dynamic from "next/dynamic";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -142,29 +102,6 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
 
   return Array.from(tokenMap.values());
 }
-
-const DragHandle = dynamic(
-  () =>
-    Promise.resolve(({ id }: { id: string }) => {
-      const { attributes, listeners } = useSortable({
-        id,
-      });
-
-      return (
-        <Button
-          {...attributes}
-          {...listeners}
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground size-7 hover:bg-transparent"
-        >
-          <IconGripVertical className="text-muted-foreground size-3" />
-          <span className="sr-only">Drag to reorder</span>
-        </Button>
-      );
-    }),
-  { ssr: false }
-);
 
 const columns: ColumnDef<AggregatedToken>[] = [
   {
