@@ -114,6 +114,28 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
   return Array.from(tokenMap.values());
 }
 
+function PriceCell({ ticker }: { ticker: string }) {
+  const { prices } = usePriceStore();
+  const price = prices.find((p) => p.ticker === ticker)?.usdRate;
+  return (
+    <div className="text-right font-medium">
+      {price ? `$${price.toFixed(2)}` : "-"}
+    </div>
+  );
+}
+
+function ValueCell({ ticker, balance }: { ticker: string; balance: string }) {
+  const { prices } = usePriceStore();
+  const price = prices.find((p) => p.ticker === ticker)?.usdRate;
+  const balanceValue = parseFloat(balance);
+  const value = price ? price * balanceValue : null;
+  return (
+    <div className="text-right font-medium">
+      {value ? `$${value.toFixed(2)}` : "-"}
+    </div>
+  );
+}
+
 const columns: ColumnDef<AggregatedToken>[] = [
   {
     id: "select",
@@ -169,14 +191,19 @@ const columns: ColumnDef<AggregatedToken>[] = [
     header: () => <div className="w-full text-right">Price (USD)</div>,
     cell: ({ row }) => {
       const token = row.original;
-      const { prices } = usePriceStore();
-      const price = prices.find(
-        (p) => p.ticker === token.tokens[0]?.ticker
-      )?.usdRate;
+      return <PriceCell ticker={token.tokens[0]?.ticker} />;
+    },
+  },
+  {
+    id: "value",
+    header: () => <div className="w-full text-right">Value (USD)</div>,
+    cell: ({ row }) => {
+      const token = row.original;
       return (
-        <div className="text-right font-medium">
-          {price ? `$${price.toFixed(2)}` : "-"}
-        </div>
+        <ValueCell
+          ticker={token.tokens[0]?.ticker}
+          balance={token.totalBalance}
+        />
       );
     },
   },
