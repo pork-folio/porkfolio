@@ -9,7 +9,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "750000000000"
+        "liquidity_cap": "750000000000",
+        "pyth_price_id": "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
     },
     {
         "zrc20_contract_address": "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0",
@@ -21,7 +22,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000000000000000000"
+        "liquidity_cap": "1000000000000000000000000",
+        "pyth_price_id": "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
     },
     {
         "zrc20_contract_address": "0x0ca762FA958194795320635c11fF0C45C6412958",
@@ -33,7 +35,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "750000000000"
+        "liquidity_cap": "750000000000",
+        "pyth_price_id": "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"
     },
     {
         "zrc20_contract_address": "0x0cbe0dF132a6c6B4a2974Fa1b7Fb953CF0Cc798a",
@@ -45,7 +48,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "2500000000000"
+        "liquidity_cap": "2500000000000",
+        "pyth_price_id": "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
     },
     {
         "zrc20_contract_address": "0x13A0c5930C028511Dc02665E7285134B6d11A5f4",
@@ -57,7 +61,8 @@
         "coin_type": "Gas",
         "gas_limit": "254",
         "paused": false,
-        "liquidity_cap": "10000000000"
+        "liquidity_cap": "10000000000",
+        "pyth_price_id": "0xe62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43"
     },
     {
         "zrc20_contract_address": "0x1de70f3e971B62A0707dA18100392af14f7fB677",
@@ -69,7 +74,8 @@
         "coin_type": "Gas",
         "gas_limit": "21000",
         "paused": false,
-        "liquidity_cap": "500000000000000000000"
+        "liquidity_cap": "500000000000000000000",
+        "pyth_price_id": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
     },
     {
         "zrc20_contract_address": "0x236b0DE675cC8F46AE186897fCCeFe3370C9eDeD",
@@ -81,7 +87,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "50000000000000000000000000000"
+        "liquidity_cap": "50000000000000000000000000000",
+        "pyth_price_id": "0xd69731a2e74ac1ce884fc3890f7ee324b6deb66147055249568869ed700882e4"
     },
     {
         "zrc20_contract_address": "0x2Db395976CDb9eeFCc8920F4F2f0736f1D575794",
@@ -93,7 +100,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "750000000000"
+        "liquidity_cap": "750000000000",
+        "pyth_price_id": "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"
     },
     {
         "zrc20_contract_address": "0x3e128c169564DD527C8e9bd85124BF6A890E5a5f",
@@ -105,7 +113,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000"
+        "liquidity_cap": "1000000000",
+        "pyth_price_id": "0x2817d7bfe5c64b8ea956e9a26f573ef64e72e4d7891f2d6af9bcc93f7aff9a97"
     },
     {
         "zrc20_contract_address": "0x48f80608B672DC30DC7e3dbBd0343c5F02C738Eb",
@@ -117,7 +126,8 @@
         "coin_type": "Gas",
         "gas_limit": "21000",
         "paused": false,
-        "liquidity_cap": "2000000000000000000000"
+        "liquidity_cap": "2000000000000000000000",
+        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe"
     },
     {
         "zrc20_contract_address": "0x4bC32034caCcc9B7e02536945eDbC286bACbA073",
@@ -129,7 +139,8 @@
         "coin_type": "Gas",
         "gas_limit": "5000",
         "paused": false,
-        "liquidity_cap": "3000000000000"
+        "liquidity_cap": "3000000000000",
+        "pyth_price_id": "0xef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d"
     },
     {
         "zrc20_contract_address": "0x54Bf2B1E91FCb56853097BD2545750d218E245e1",
@@ -141,7 +152,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000"
+        "liquidity_cap": "1000000000",
+        "pyth_price_id": "0x2817d7bfe5c64b8ea956e9a26f573ef64e72e4d7891f2d6af9bcc93f7aff9a97"
     },
     {
         "zrc20_contract_address": "0x777915D031d1e8144c90D025C594b3b8Bf07a08d",
@@ -153,7 +165,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "50000000000000000000000000000"
+        "liquidity_cap": "50000000000000000000000000000",
+        "pyth_price_id": "0xf0d57deca57b3da2fe63a493f4c25925fdfd8edf834b20f93e1f84dbd1504d4a"
     },
     {
         "zrc20_contract_address": "0x7c8dDa80bbBE1254a7aACf3219EBe1481c6E01d7",
@@ -165,7 +178,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "2500000000000"
+        "liquidity_cap": "2500000000000",
+        "pyth_price_id": "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"
     },
     {
         "zrc20_contract_address": "0x8344d6f84d26f998fa070BbEA6D2E15E359e2641",
@@ -177,7 +191,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000000"
+        "liquidity_cap": "1000000000000",
+        "pyth_price_id": "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
     },
     {
         "zrc20_contract_address": "0x91d4F0D54090Df2D81e834c3c8CE71C6c865e79F",
@@ -189,7 +204,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000000000000000000"
+        "liquidity_cap": "1000000000000000000000000",
+        "pyth_price_id": "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"
     },
     {
         "zrc20_contract_address": "0x96152E6180E085FA57c7708e18AF8F05e37B479D",
@@ -201,7 +217,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000000"
+        "liquidity_cap": "1000000000000",
+        "pyth_price_id": "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
     },
     {
         "zrc20_contract_address": "0xA614Aebf7924A3Eb4D066aDCA5595E4980407f1d",
@@ -213,7 +230,8 @@
         "coin_type": "Gas",
         "gas_limit": "21000",
         "paused": false,
-        "liquidity_cap": "250000000000000000000"
+        "liquidity_cap": "250000000000000000000",
+        "pyth_price_id": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
     },
     {
         "zrc20_contract_address": "0xADF73ebA3Ebaa7254E859549A44c74eF7cff7501",
@@ -225,19 +243,8 @@
         "coin_type": "Gas",
         "gas_limit": "21000",
         "paused": false,
-        "liquidity_cap": "1000000000000000000000000"
-    },
-    {
-        "zrc20_contract_address": "0xD10932EB3616a937bd4a2652c87E9FeBbAce53e5",
-        "asset": "0x0E7779e698052f8fe56C415C3818FCf89de9aC6D",
-        "foreign_chain_id": "56",
-        "decimals": 18,
-        "name": "ZetaChain ZRC20 ULTI on BNB Chain",
-        "symbol": "ULTI.BSC",
-        "coin_type": "ERC20",
-        "gas_limit": "100000",
-        "paused": false,
-        "liquidity_cap": "100000000000000000000000000"
+        "liquidity_cap": "1000000000000000000000000",
+        "pyth_price_id": "0xffd11c5a1cfd42f80afb2df4d9f264c15f956d68153335374ec10722edd70472"
     },
     {
         "zrc20_contract_address": "0xE80e3e8Ac1C19c744d4c2147172489BEAF23E3C5",
@@ -249,7 +256,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000"
+        "liquidity_cap": "1000000000",
+        "pyth_price_id": "0x2817d7bfe5c64b8ea956e9a26f573ef64e72e4d7891f2d6af9bcc93f7aff9a97"
     },
     {
         "zrc20_contract_address": "0xE8d7796535F1cd63F0fe8D631E68eACe6839869B",
@@ -261,7 +269,8 @@
         "coin_type": "Gas",
         "gas_limit": "21000",
         "paused": false,
-        "liquidity_cap": "20000000000000000000000"
+        "liquidity_cap": "20000000000000000000000",
+        "pyth_price_id": "0x93da3352f9f1d105fdfe4971cfa80e9dd777bfc5d0f683ebb6e1294b92137bb7"
     },
     {
         "zrc20_contract_address": "0xEe9CC614D03e7Dbe994b514079f4914a605B4719",
@@ -273,7 +282,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000000"
+        "liquidity_cap": "1000000000000",
+        "pyth_price_id": "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"
     },
     {
         "zrc20_contract_address": "0xa52Ad01A1d62b408fFe06C2467439251da61E4a9",
@@ -285,7 +295,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "750000000000"
+        "liquidity_cap": "750000000000",
+        "pyth_price_id": "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"
     },
     {
         "zrc20_contract_address": "0xcC683A782f4B30c138787CB5576a86AF66fdc31d",
@@ -297,7 +308,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "500000000000000000000000"
+        "liquidity_cap": "500000000000000000000000",
+        "pyth_price_id": "0xb0948a5e5313200c632b51bb5ca32f6de0d36e9950a942d19751e833f70dabfd"
     },
     {
         "zrc20_contract_address": "0xd0eFed75622e7AA4555EE44F296dA3744E3ceE19",
@@ -309,7 +321,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000"
+        "liquidity_cap": "1000000000",
+        "pyth_price_id": "0xc9d8b075a5c69303365ae23633d4e085199bf5c520a3b90fed1322a0342ffc33"
     },
     {
         "zrc20_contract_address": "0xd97B1de3619ed2c6BEb3860147E30cA8A7dC9891",
@@ -321,7 +334,8 @@
         "coin_type": "Gas",
         "gas_limit": "21000",
         "paused": false,
-        "liquidity_cap": "1000000000000000000000"
+        "liquidity_cap": "1000000000000000000000",
+        "pyth_price_id": "0xff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace"
     },
     {
         "zrc20_contract_address": "0xdbfF6471a79E5374d771922F2194eccc42210B9F",
@@ -333,31 +347,8 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000000"
-    },
-    {
-        "zrc20_contract_address": "0xe1A4f44b12eb72DC6da556Be9Ed1185141d7C23c",
-        "asset": "0x8eD97a637A790Be1feff5e888d43629dc05408F6",
-        "foreign_chain_id": "1",
-        "decimals": 18,
-        "name": "ZetaChain ZRC20 NPC on Ethereum Mainnet",
-        "symbol": "NPC.ETH",
-        "coin_type": "ERC20",
-        "gas_limit": "100000",
-        "paused": false,
-        "liquidity_cap": "20000000000000000000000000"
-    },
-    {
-        "zrc20_contract_address": "0xe573a6e11f8506620F123DBF930222163D46BCB6",
-        "asset": "0x0E7779e698052f8fe56C415C3818FCf89de9aC6D",
-        "foreign_chain_id": "1",
-        "decimals": 18,
-        "name": "ZetaChain ZRC20 ULTI on Ethereum",
-        "symbol": "ULTI.ETH",
-        "coin_type": "ERC20",
-        "gas_limit": "100000",
-        "paused": false,
-        "liquidity_cap": "100000000000000000000000000"
+        "liquidity_cap": "1000000000000",
+        "pyth_price_id": "0x2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b"
     },
     {
         "zrc20_contract_address": "0xfC9201f4116aE6b054722E10b98D904829b469c3",
@@ -369,6 +360,7 @@
         "coin_type": "ERC20",
         "gas_limit": "100000",
         "paused": false,
-        "liquidity_cap": "1000000000000"
+        "liquidity_cap": "1000000000000",
+        "pyth_price_id": "0xeaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a"
     }
 ]

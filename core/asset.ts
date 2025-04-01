@@ -1,4 +1,4 @@
-import assetsData from './data/foreignAssets.json';
+import assetsData from './data/assets.json';
 
 type Asset = {
     zrc20: string;
@@ -8,6 +8,7 @@ type Asset = {
     name: string;
     symbol: string;
     coinType: string;
+    pythPriceId: string;
 }
 
 const zetaCoin: Asset = {
@@ -18,10 +19,13 @@ const zetaCoin: Asset = {
     name: "ZetaChain ZETA",
     symbol: "ZETA",
     coinType: "Gas",
+    pythPriceId: "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
 }
 
 export function supportedAssets(): Asset[] {
     // zetacored query fungible list-foreign-coins --output json | jq '.foreignCoins' | pbcopy
+    // pyth price id can be found here: https://www.pyth.network/developers/price-feed-ids
+    // Note: it doesn't include [ULTI, NPC] as they have no Pyth oracle
     let assets = assetsData.map(parseAsset);
 
     assets.push(zetaCoin)
@@ -38,5 +42,6 @@ function parseAsset(item: any): Asset {
         name: item.name,
         symbol: item.symbol,
         coinType: item.coin_type,
+        pythPriceId: item.pyth_price_id,
     }
 }
