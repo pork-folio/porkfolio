@@ -3,6 +3,8 @@ import { ZetaChainClient } from "@zetachain/toolkit/client";
 import { getSigner } from "@dynamic-labs/ethers-v6";
 import { getAddress } from "@zetachain/protocol-contracts";
 import { useTransactionStore } from "@/store/transactions";
+import { useBalanceStore } from "@/store/balances";
+import { fetchBalances } from "./balances";
 
 type TokenInfo = {
   symbol: string;
@@ -116,6 +118,12 @@ export async function handleDeposit(
     console.log("Deposit transaction:", tx);
     await tx.wait();
     console.log("Deposit successful!");
+
+    // Refresh balances after successful deposit
+    if (primaryWallet.address) {
+      const balancesData = await fetchBalances(primaryWallet.address);
+      useBalanceStore.getState().setBalances(balancesData);
+    }
   } catch (error) {
     console.error("Deposit failed:", error);
   } finally {

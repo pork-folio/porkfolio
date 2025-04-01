@@ -4,6 +4,8 @@ import { getSigner } from "@dynamic-labs/ethers-v6";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import { useTransactionStore } from "@/store/transactions";
 import { getAddress } from "@zetachain/protocol-contracts";
+import { useBalanceStore } from "@/store/balances";
+import { fetchBalances } from "./balances";
 
 type TokenInfo = {
   symbol: string;
@@ -130,6 +132,12 @@ export async function handleWithdraw(
     console.log("Withdrawal transaction:", tx);
     await tx.wait();
     console.log("Withdrawal successful!");
+
+    // Refresh balances after successful withdrawal
+    if (primaryWallet.address) {
+      const balancesData = await fetchBalances(primaryWallet.address);
+      useBalanceStore.getState().setBalances(balancesData);
+    }
   } catch (error) {
     console.error("Withdrawal failed:", error);
   } finally {
