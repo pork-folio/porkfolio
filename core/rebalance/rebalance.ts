@@ -8,6 +8,7 @@ import {
     calculateUsdAllocation,
     buildDesiredAllocations
 } from "@/core/rebalance/input";
+import { determineRebalanceActions } from "@/core/rebalance/engine";
 
 export interface Allocation {
     type: "percentage" | "usd_value"
@@ -76,15 +77,11 @@ export function rebalance(input: RebalanceInput): RebalanceOutput {
         logs.push(`Desired allocation #${idx + 1}: ${tokenValue} ${tokenSymbol} ($${usdValue})`);
     });
 
-    // 5. Now we have everything to calculate actions
-    // todo
+    // 5. Now we have everything to calculate the actions
+    let out = determineRebalanceActions(inputItems, desiredAllocations);
 
-    return {
-        valid: true,
-        uuid: crypto.randomUUID(),
-        createdAt: new Date(),
-        actions: [],
-        logs: logs
-    }
+    out.logs = [...logs, ...out.logs];
+
+    return out;
 }
 
