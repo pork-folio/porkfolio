@@ -182,6 +182,9 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
       // Determine which network to use
       const network = tokenInfo.chainId === "7000" ? "mainnet" : "testnet";
 
+      // Switch to ZetaChain network
+      await primaryWallet.switchNetwork(parseInt(tokenInfo.chainId));
+
       // Initialize ZetaChain client with the signer
       const client = new ZetaChainClient({
         network,
@@ -270,6 +273,12 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
         tokenInfo.chainName.toLowerCase().replace(" ", "_") as any
       );
 
+      if (!gatewayAddress) {
+        throw new Error(
+          `Gateway address not found for chain ${tokenInfo.chainName}`
+        );
+      }
+
       // Create revert options
       const revertOptions = {
         revertAddress: ethers.ZeroAddress,
@@ -287,10 +296,42 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
       // Calculate deposit amount
       let depositAmount = tokenInfo.balance;
       if (tokenInfo.coin_type === "Gas") {
-        // For gas tokens, leave 10% for gas fees
-        const totalAmount = parseFloat(tokenInfo.balance);
-        const depositAmountFloat = totalAmount * 0.9;
-        depositAmount = depositAmountFloat.toString();
+        // For gas tokens, estimate gas and reserve only what's needed
+        const totalAmount = ethers.parseUnits(
+          tokenInfo.balance,
+          tokenInfo.decimals
+        );
+
+        // Create gateway contract instance
+        const gatewayContract = new ethers.Contract(
+          gatewayAddress,
+          GatewayABI as any,
+          signer
+        );
+
+        // Estimate gas for the deposit transaction
+        const gasEstimate = await gatewayContract.deposit.estimateGas(
+          primaryWallet.address,
+          ethers.parseUnits(tokenInfo.balance, tokenInfo.decimals),
+          ethers.ZeroAddress,
+          ethers.ZeroAddress,
+          "0x",
+          { value: ethers.parseUnits(tokenInfo.balance, tokenInfo.decimals) }
+        );
+
+        // Add 20% buffer to gas estimate
+        const gasBuffer = (gasEstimate * BigInt(120)) / BigInt(100);
+        const gasCost =
+          gasBuffer *
+          ((await signer.provider?.getFeeData()) || { gasPrice: BigInt(0) })
+            .gasPrice!;
+
+        // Reserve gas cost and convert back to token units
+        const reservedAmount = gasCost;
+        const availableAmount = totalAmount - reservedAmount;
+
+        // Convert back to string with proper decimals
+        depositAmount = ethers.formatUnits(availableAmount, tokenInfo.decimals);
       }
 
       // Execute deposit
