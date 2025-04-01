@@ -21,6 +21,9 @@ import {
 import { z } from "zod";
 import { ZetaChainClient } from "@zetachain/toolkit/client";
 import { getSigner } from "@dynamic-labs/ethers-v6";
+import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
+import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
+import { getAddress } from "@zetachain/protocol-contracts";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -67,6 +70,7 @@ type TokenInfo = {
   contract?: string;
   zrc20?: string;
   chainId: string;
+  coin_type: string;
 };
 
 type AggregatedToken = {
@@ -99,6 +103,7 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
       contract: token.contract,
       zrc20: token.zrc20,
       chainId: token.chain_id,
+      coin_type: token.coin_type,
     });
 
     const currentTotal = parseFloat(aggregated.totalBalance);
@@ -240,6 +245,69 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
     }
   };
 
+  const handleDeposit = async (tokenInfo: TokenInfo) => {
+    try {
+      if (!primaryWallet) {
+        alert("Please connect your wallet first");
+        return;
+      }
+
+      // Get the signer from Dynamic
+      const signer = await getSigner(primaryWallet);
+
+      // Initialize ZetaChain client with the signer
+      const client = new ZetaChainClient({
+        network: "testnet",
+        signer,
+      });
+
+      // Get the gateway address for the source chain
+      const gatewayAddress = getAddress(
+        "gateway",
+        tokenInfo.chainName.toLowerCase().replace(" ", "_") as any
+      );
+
+      // Create revert options
+      const revertOptions = {
+        revertAddress: ethers.ZeroAddress,
+        callOnRevert: false,
+        onRevertGasLimit: 0,
+        revertMessage: "",
+      };
+
+      // Create transaction options
+      const txOptions = {
+        gasLimit: undefined,
+        gasPrice: undefined,
+      };
+
+      // Calculate deposit amount
+      let depositAmount = tokenInfo.balance;
+      if (tokenInfo.coin_type === "Gas") {
+        // For gas tokens, leave 10% for gas fees
+        const totalAmount = parseFloat(tokenInfo.balance);
+        const depositAmountFloat = totalAmount * 0.9;
+        depositAmount = depositAmountFloat.toString();
+      }
+
+      // Execute deposit
+      const tx = await client.evmDeposit({
+        amount: depositAmount,
+        ...(tokenInfo.coin_type !== "Gas" && { erc20: tokenInfo.contract }), // Only include erc20 for non-gas tokens
+        gatewayEvm: gatewayAddress,
+        receiver: primaryWallet.address,
+        revertOptions,
+        txOptions,
+      });
+
+      console.log("Deposit transaction:", tx);
+      await tx.wait();
+      console.log("Deposit successful!");
+    } catch (error) {
+      console.error("Deposit failed:", error);
+    }
+  };
+
   return (
     <div className="space-y-2 p-4">
       <div className="text-sm font-medium">Chain Details</div>
@@ -274,7 +342,7 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
                   variant="outline"
                   size="sm"
                   className="mt-2"
-                  onClick={() => console.log("Deposit token:", t)}
+                  onClick={() => handleDeposit(t)}
                 >
                   Deposit
                 </Button>
