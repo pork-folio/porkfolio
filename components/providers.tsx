@@ -11,9 +11,17 @@ import {
   bscTestnet,
   avalancheFuji,
   zetachainAthensTestnet,
+  base,
+  arbitrum,
+  bsc,
+  avalanche,
+  sepolia,
+  mainnet,
+  polygon,
 } from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
+import { createContext, useContext, useState } from "react";
 
 const zetaTestnet = {
   blockExplorerUrls: ["https://athens.explorer.zetachain.com/"],
@@ -32,13 +40,45 @@ const zetaTestnet = {
   vanityName: "ZetaChain Testnet",
 };
 
-const config = createConfig({
+const amoyTestnet = {
+  id: 80001,
+  name: "Amoy Testnet",
+  network: "amoy",
+  nativeCurrency: {
+    decimals: 18,
+    name: "MATIC",
+    symbol: "MATIC",
+  },
+  rpcUrls: {
+    default: { http: ["https://rpc-amoy.polygon.technology"] },
+  },
+  blockExplorers: {
+    default: { name: "PolygonScan", url: "https://amoy.polygonscan.com" },
+  },
+  testnet: true,
+};
+
+const mainnetConfig = createConfig({
+  chains: [base, arbitrum, bsc, avalanche, mainnet, polygon],
+  transports: {
+    [base.id]: http(),
+    [arbitrum.id]: http(),
+    [bsc.id]: http(),
+    [avalanche.id]: http(),
+    [mainnet.id]: http(),
+    [polygon.id]: http(),
+  },
+});
+
+const testnetConfig = createConfig({
   chains: [
     baseSepolia,
     arbitrumSepolia,
     bscTestnet,
     avalancheFuji,
     zetachainAthensTestnet,
+    sepolia,
+    amoyTestnet,
   ],
   transports: {
     [baseSepolia.id]: http(),
@@ -46,27 +86,77 @@ const config = createConfig({
     [bscTestnet.id]: http(),
     [avalancheFuji.id]: http(),
     [zetachainAthensTestnet.id]: http(),
+    [sepolia.id]: http(),
+    [amoyTestnet.id]: http(),
   },
 });
 
 const queryClient = new QueryClient();
 
+const NetworkContext = createContext<{
+  isTestnet: boolean;
+  toggleNetwork: () => void;
+}>({
+  isTestnet: true,
+  toggleNetwork: () => {},
+});
+
+export const useNetwork = () => useContext(NetworkContext);
+
 export function Providers({ children }: { children: React.ReactNode }) {
+  const [isTestnet, setIsTestnet] = useState(true);
+  const config = isTestnet ? testnetConfig : mainnetConfig;
+
+  const toggleNetwork = () => {
+    setIsTestnet(!isTestnet);
+  };
+
+  const dynamicSettings = {
+    environmentId: "eaec6949-d524-40e7-81d2-80113243499a",
+    walletConnectors: [EthereumWalletConnectors],
+    overrides: {
+      evmNetworks: (networks: any[]) => {
+        const filteredNetworks = networks.filter((network) => {
+          const chainId = network.chainId;
+          if (isTestnet) {
+            return [
+              baseSepolia.id,
+              arbitrumSepolia.id,
+              bscTestnet.id,
+              avalancheFuji.id,
+              zetachainAthensTestnet.id,
+              sepolia.id,
+              amoyTestnet.id,
+            ].includes(chainId);
+          } else {
+            return [
+              base.id,
+              arbitrum.id,
+              bsc.id,
+              avalanche.id,
+              mainnet.id,
+              polygon.id,
+            ].includes(chainId);
+          }
+        });
+
+        if (isTestnet) {
+          return mergeNetworks([zetaTestnet], filteredNetworks);
+        }
+        return filteredNetworks;
+      },
+    },
+  };
+
   return (
-    <DynamicContextProvider
-      settings={{
-        environmentId: "eaec6949-d524-40e7-81d2-80113243499a",
-        walletConnectors: [EthereumWalletConnectors],
-        overrides: {
-          evmNetworks: (networks) => mergeNetworks([zetaTestnet], networks),
-        },
-      }}
-    >
-      <WagmiProvider config={config}>
-        <QueryClientProvider client={queryClient}>
-          <DynamicWagmiConnector>{children}</DynamicWagmiConnector>
-        </QueryClientProvider>
-      </WagmiProvider>
-    </DynamicContextProvider>
+    <NetworkContext.Provider value={{ isTestnet, toggleNetwork }}>
+      <DynamicContextProvider settings={dynamicSettings}>
+        <WagmiProvider config={config}>
+          <QueryClientProvider client={queryClient}>
+            <DynamicWagmiConnector>{children}</DynamicWagmiConnector>
+          </QueryClientProvider>
+        </WagmiProvider>
+      </DynamicContextProvider>
+    </NetworkContext.Provider>
   );
 }
