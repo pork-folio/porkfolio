@@ -4,7 +4,7 @@ import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import { DynamicWagmiConnector } from "@dynamic-labs/wagmi-connector";
 import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { http } from "viem";
+import { http, Chain } from "viem";
 import {
   baseSepolia,
   arbitrumSepolia,
@@ -14,28 +14,6 @@ import {
 } from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
-
-const zetaTestnetChain: Chain = {
-  id: 7001,
-  name: "ZetaChain Testnet",
-  nativeCurrency: {
-    decimals: 18,
-    name: "ZETA",
-    symbol: "ZETA",
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://zetachain-athens.g.allthatnode.com/archive/evm"],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "ZetaChain Testnet Explorer",
-      url: "https://athens.explorer.zetachain.com/",
-    },
-  },
-  testnet: true,
-};
 
 const zetaTestnet = {
   blockExplorerUrls: ["https://athens.explorer.zetachain.com/"],
