@@ -1,0 +1,28 @@
+{
+    "name": "Layer 1 Maxi",
+    "description": "A portfolio focused on most popular chains",
+    "sort_index": 0,
+    "tags": [
+        "popular",
+        "conservative"
+    ],
+    "env": [
+        "testnet",
+        "mainnet"
+    ],
+    "type": "percentage_strategy",
+    "percentage_strategy": [
+        {
+            "percentage": 5000,
+            "asset": "BTC.BTC"
+        },
+        {
+            "percentage": 3000,
+            "asset": "ETH.ETH"
+        },
+        {
+            "percentage": 2000,
+            "asset": "SOL.SOL"
+        }
+    ]
+}
