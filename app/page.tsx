@@ -2,10 +2,14 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { DataTable } from "@/components/data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { supportedAssets } from "@/core/asset";
 
 import data from "./data.json";
 
 export default function Page() {
+  // TMP logs
+  console.log("Supported assets", supportedAssets());
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
