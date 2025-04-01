@@ -1,0 +1,29 @@
+{
+    "name": "Low Risk",
+    "description": "Stable coin with minor BTC percentage",
+    "sort_index": 1,
+    "tags": [
+        "stable",
+        "conservative",
+        "low-risk"
+    ],
+    "env": [
+        "testnet",
+        "mainnet"
+    ],
+    "type": "percentage_strategy",
+    "percentage_strategy": [
+        {
+            "percentage": 5000,
+            "asset": "USDC.ETH"
+        },
+        {
+            "percentage": 4000,
+            "asset": "USDT.ETH"
+        },
+        {
+            "percentage": 1000,
+            "asset": "BTC.BTC"
+        }
+    ]
+}

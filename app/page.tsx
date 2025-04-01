@@ -15,6 +15,9 @@ export default async function Page() {
   const prices = await core.queryAssetPrices(assets);
   console.log("Prices", prices);
 
+  const strategies = core.getStrategies(testnet);
+  console.log("Strategies", strategies);
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
