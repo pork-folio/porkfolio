@@ -168,9 +168,16 @@ const columns: ColumnDef<AggregatedToken>[] = [
 
 function TokenDetails({ token }: { token: AggregatedToken }) {
   const { primaryWallet } = useDynamicContext();
+  const [loadingStates, setLoadingStates] = React.useState<
+    Record<string, boolean>
+  >({});
 
   const handleWithdraw = async (tokenInfo: TokenInfo) => {
     try {
+      setLoadingStates((prev) => ({
+        ...prev,
+        [`${tokenInfo.symbol}-${tokenInfo.chainName}`]: true,
+      }));
       if (!primaryWallet) {
         alert("Please connect your wallet first");
         return;
@@ -245,11 +252,20 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
       console.log("Withdrawal successful!");
     } catch (error) {
       console.error("Withdrawal failed:", error);
+    } finally {
+      setLoadingStates((prev) => ({
+        ...prev,
+        [`${tokenInfo.symbol}-${tokenInfo.chainName}`]: false,
+      }));
     }
   };
 
   const handleDeposit = async (tokenInfo: TokenInfo) => {
     try {
+      setLoadingStates((prev) => ({
+        ...prev,
+        [`${tokenInfo.symbol}-${tokenInfo.chainName}`]: true,
+      }));
       if (!primaryWallet) {
         alert("Please connect your wallet first");
         return;
@@ -349,6 +365,11 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
       console.log("Deposit successful!");
     } catch (error) {
       console.error("Deposit failed:", error);
+    } finally {
+      setLoadingStates((prev) => ({
+        ...prev,
+        [`${tokenInfo.symbol}-${tokenInfo.chainName}`]: false,
+      }));
     }
   };
 
@@ -378,8 +399,16 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
                   size="sm"
                   className="mt-2"
                   onClick={() => handleWithdraw(t)}
+                  disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
                 >
-                  Withdraw
+                  {loadingStates[`${t.symbol}-${t.chainName}`] ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      Withdrawing...
+                    </div>
+                  ) : (
+                    "Withdraw"
+                  )}
                 </Button>
               ) : (
                 <Button
@@ -387,8 +416,16 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
                   size="sm"
                   className="mt-2"
                   onClick={() => handleDeposit(t)}
+                  disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
                 >
-                  Deposit
+                  {loadingStates[`${t.symbol}-${t.chainName}`] ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                      Depositing...
+                    </div>
+                  ) : (
+                    "Deposit"
+                  )}
                 </Button>
               )}
             </div>
