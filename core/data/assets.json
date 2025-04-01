@@ -127,7 +127,7 @@
         "gas_limit": "21000",
         "paused": false,
         "liquidity_cap": "2000000000000000000000",
-        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe"
+        "pyth_price_id": "0x2f95862b045670cd22bee3114c39763a4a08beeb663b145d283c31d7d1101c4f"
     },
     {
         "zrc20_contract_address": "0x4bC32034caCcc9B7e02536945eDbC286bACbA073",

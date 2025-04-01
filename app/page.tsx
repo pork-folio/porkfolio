@@ -7,14 +7,13 @@ import * as core from "@/core";
 import data from "./data.json";
 
 export default async function Page() {
-  // showcase that it works
-  const assets = core.supportedAssets();
+  const testnet = true;
 
-  console.log("Supported assets", assets);
+  const assets = core.supportedAssets(testnet);
+  console.log(`Supported assets (testnet=${testnet})`, assets);
 
   const prices = await core.queryAssetPrices(assets);
-
-  console.log("Pyth Prices", prices);
+  console.log("Prices", prices);
 
   return (
     <SidebarProvider>
