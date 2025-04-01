@@ -161,12 +161,6 @@ const columns: ColumnDef<AggregatedToken>[] = [
   },
 ];
 
-const ZETACHAIN_GATEWAY = "0x6c533f7fe93fae114d0954697069df33c9b74fd7";
-
-const gatewayABI = [
-  "function withdraw(bytes memory receiver, uint256 amount, address zrc20, tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit) calldata revertOptions) external",
-];
-
 function TokenDetails({ token }: { token: AggregatedToken }) {
   const { primaryWallet } = useDynamicContext();
 

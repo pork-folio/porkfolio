@@ -5,7 +5,7 @@ import { DynamicWagmiConnector } from "@dynamic-labs/wagmi-connector";
 import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
-import { mainnet, Chain } from "viem/chains";
+import { Chain } from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
 
@@ -29,23 +29,6 @@ const zetaTestnetChain: Chain = {
     },
   },
   testnet: true,
-};
-
-const zetaMainnet = {
-  blockExplorerUrls: ["https://explorer.zetachain.com/"],
-  chainId: 7000,
-  chainName: "ZetaChain Mainnet",
-  iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
-  name: "ZetaChain",
-  nativeCurrency: {
-    decimals: 18,
-    name: "ZETA",
-    symbol: "ZETA",
-    iconUrl: "https://app.dynamic.xyz/assets/networks/eth.svg",
-  },
-  networkId: 7000,
-  rpcUrls: ["https://zetachain-mainnet.g.allthatnode.com/archive/evm"],
-  vanityName: "ZetaChain Mainnet",
 };
 
 const zetaTestnet = {
