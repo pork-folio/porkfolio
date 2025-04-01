@@ -4,10 +4,10 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { DataTable } from "@/components/data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { ZetaChainClient } from "@zetachain/toolkit/client";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BalanceData, fetchBalances } from "@/lib/handlers/balances";
 
 const roundToSignificantDigits = (
   value: number,
@@ -35,52 +35,25 @@ const roundNumber = (value: number): string => {
   });
 };
 
-interface BalanceData {
-  chain_id: string;
-  coin_type: string;
-  contract: string;
-  decimals: number;
-  symbol: string;
-  zrc20?: string;
-  chain_name: string;
-  id: string;
-  ticker: string;
-  balance: string;
-}
-
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
-  const client = new ZetaChainClient({ network: "testnet" });
   const [balances, setBalances] = useState<BalanceData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchBalances = async () => {
+    const loadBalances = async () => {
       if (primaryWallet?.address) {
         setIsLoading(true);
         try {
-          const balancesData = await client.getBalances({
-            evmAddress: primaryWallet.address,
-          });
-
-          // Transform the balances data to match the expected format
-          const transformedBalances = balancesData.map((balance) => ({
-            ...balance,
-            chain_id: String(balance.chain_id || ""),
-            contract: balance.contract || "",
-            chain_name: balance.chain_name || "",
-            ticker: balance.ticker || balance.symbol,
-            balance: roundNumber(parseFloat(balance.balance)),
-          }));
-
-          setBalances(transformedBalances);
+          const balancesData = await fetchBalances(primaryWallet.address);
+          setBalances(balancesData);
         } finally {
           setIsLoading(false);
         }
       }
     };
 
-    fetchBalances();
+    loadBalances();
   }, [primaryWallet?.address]);
 
   return (
