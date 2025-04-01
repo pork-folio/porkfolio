@@ -1,34 +1,6 @@
 import { BalanceData } from "@/lib/handlers/balances";
-import { Price } from "./price";
-import { Asset } from "./asset";
-import { Distribution, Strategy } from "./strategy";
+import { Allocation, Asset, Distribution, Price } from "@/core";
 
-export interface Allocation {
-    type: "percentage" | "usd_value"
-    percentage?: number
-    usdValue?: number
-}
-
-export interface RebalanceInput {
-    portfolio: BalanceData[]
-    prices: Price[]
-    supportedAssets: Asset[]
-    strategy: Strategy
-    allocation: Allocation
-}
-
-export interface RebalanceOutput {
-    valid: boolean
-    errorMessage?: string
-    uuid: string
-    createdAt: Date
-    actions: RebalanceAction[]
-    logs: string[]
-}
-
-export interface RebalanceAction {
-    // todo
-}
 
 export class InputItem {
     id: string
@@ -57,7 +29,7 @@ export class InputItem {
     }
 }
 
-class DesiredUsdAllocation {
+export class DesiredUsdAllocation {
     asset: Asset;
     price: Price;
     usdValue: number;
@@ -71,58 +43,6 @@ class DesiredUsdAllocation {
     // return allocation in token units
     tokenValue(): number {
         return this.usdValue / this.price.usdRate;
-    }
-}
-
-/**
- * Re-balances the portfolio based on the strategy and allocation
- * @param input RebalanceInput
- * @returns RebalanceOutput
- * @throws Validation error if the input is invalid
- */
-export function rebalance(input: RebalanceInput): RebalanceOutput {
-    let logs: string[] = [];
-
-    // 1. Combine (asset, price, balance)
-    const inputItems = buildInputItems(
-        input.supportedAssets,
-        input.prices,
-        input.portfolio,
-    );
-
-    // 2. Calculate total portfolio value
-    const totalUsdValue = inputItems.reduce((acc, item) => acc + item.usdPrice(), 0);
-    logs.push(`Portfolio value: $${totalUsdValue}`);
-
-    // 3. Normalize & validate allocation
-    const allocationUsdValue = calculateUsdAllocation(input.allocation, totalUsdValue);
-    logs.push(`Desired allocation value: $${allocationUsdValue}`);
-
-    // 4. Calculate desired allocations
-    const desiredAllocations = buildDesiredAllocations(
-        input.strategy.definitions,
-        input.supportedAssets,
-        input.prices,
-        allocationUsdValue,
-    );
-
-    desiredAllocations.forEach((d, idx) => {
-        const tokenValue = d.tokenValue()
-        const usdValue = d.usdValue
-        const tokenSymbol = d.asset.symbol
-
-        logs.push(`Desired allocation #${idx + 1}: ${tokenValue} ${tokenSymbol} ($${usdValue})`);
-    });
-
-    // 5. Now we have everything to calculate actions
-    // todo
-
-    return {
-        valid: true,
-        uuid: crypto.randomUUID(),
-        createdAt: new Date(),
-        actions: [],
-        logs: logs
     }
 }
 
@@ -191,21 +111,8 @@ export function buildInputItems(
     return inputItems
 }
 
-
-function balanceToAssetKey(b: BalanceData): string {
-    if (b.coin_type === "ZRC20" || b.coin_type === "ERC20") {
-        return `${b.chain_id}:${b.contract}`;
-    }
-
-    if (b.coin_type === "Gas") {
-        return `${b.chain_id}:gas`;
-    }
-
-    throw Error(`Unsupported coin type: ${b.coin_type} for balance ${b.id}`);
-}
-
 // Calculate input allocation to USD value
-function calculateUsdAllocation(alloc: Allocation, totalUsdValue: number): number {
+export function calculateUsdAllocation(alloc: Allocation, totalUsdValue: number): number {
     if (alloc.type === "percentage") {
         const isInvalid = !alloc.percentage || alloc.percentage < 0 || alloc.percentage > 100;
         if (isInvalid) {
@@ -231,11 +138,12 @@ function calculateUsdAllocation(alloc: Allocation, totalUsdValue: number): numbe
     return alloc.usdValue;
 }
 
+
 // Build desired allocations in $ for each distribution
 // Note: currently it picks the FIRST supported asset that matches the distribution
 // e.g. it might pick USDC.ETH instead of USDC.BASE.
 // todo: think about asset prioritization (we can hard-code .priority in assets.json)
-function buildDesiredAllocations(
+export function buildDesiredAllocations(
     distributions: Distribution[],
     supportedAssets: Asset[],
     prices: Price[],
@@ -290,4 +198,16 @@ function buildDesiredAllocations(
     }
 
     return out;
+}
+
+function balanceToAssetKey(b: BalanceData): string {
+    if (b.coin_type === "ZRC20" || b.coin_type === "ERC20") {
+        return `${b.chain_id}:${b.contract}`;
+    }
+
+    if (b.coin_type === "Gas") {
+        return `${b.chain_id}:gas`;
+    }
+
+    throw Error(`Unsupported coin type: ${b.coin_type} for balance ${b.id}`);
 }
