@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { ethers } from "ethers";
+import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -62,6 +64,7 @@ type TokenInfo = {
   decimals: number;
   contract?: string;
   zrc20?: string;
+  chainId: string;
 };
 
 type AggregatedToken = {
@@ -93,6 +96,7 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
       decimals: token.decimals,
       contract: token.contract,
       zrc20: token.zrc20,
+      chainId: token.chain_id,
     });
 
     const currentTotal = parseFloat(aggregated.totalBalance);
@@ -155,7 +159,85 @@ const columns: ColumnDef<AggregatedToken>[] = [
   },
 ];
 
+const ZETACHAIN_GATEWAY = "0x6c533f7fe93fae114d0954697069df33c9b74fd7";
+
+const gatewayABI = [
+  "function withdraw(bytes memory receiver, uint256 amount, address zrc20, tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit) calldata revertOptions) external",
+];
+
 function TokenDetails({ token }: { token: AggregatedToken }) {
+  const { primaryWallet } = useDynamicContext();
+
+  const handleWithdraw = async (tokenInfo: TokenInfo) => {
+    try {
+      if (!primaryWallet) {
+        alert("Please connect your wallet first");
+        return;
+      }
+
+      // Get the signer address
+      const address = primaryWallet.address;
+      console.log("address", address);
+      // Convert amount to wei (assuming the balance is in the token's decimals)
+      const amount = ethers.parseUnits(tokenInfo.balance, tokenInfo.decimals);
+
+      // Create empty revert options
+      const revertOptions = {
+        revertAddress: ethers.ZeroAddress,
+        callOnRevert: false,
+        abortAddress: ethers.ZeroAddress,
+        revertMessage: "0x",
+        onRevertGasLimit: 0,
+      };
+      console.log("revertOptions", revertOptions);
+
+      // Convert receiver address to bytes
+      const receiver = ethers.AbiCoder.defaultAbiCoder().encode(
+        ["address"],
+        [address]
+      );
+      console.log("receiver", receiver);
+
+      // Create the transaction data
+      const data = ethers.AbiCoder.defaultAbiCoder().encode(
+        [
+          "bytes",
+          "uint256",
+          "address",
+          "tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit)",
+        ],
+        [
+          receiver,
+          amount,
+          tokenInfo.contract,
+          [
+            revertOptions.revertAddress,
+            revertOptions.callOnRevert,
+            revertOptions.abortAddress,
+            revertOptions.revertMessage,
+            revertOptions.onRevertGasLimit,
+          ],
+        ]
+      );
+
+      console.log("data", data);
+
+      // Send the transaction using the connector
+      const walletClient = await primaryWallet.getWalletClient();
+
+      const tx = await walletClient.sendTransaction({
+        to: ZETACHAIN_GATEWAY,
+        data: data,
+      });
+
+      console.log("Withdrawal transaction:", tx);
+      await tx.wait();
+      console.log("Withdrawal successful!");
+    } catch (error) {
+      console.error("Withdrawal failed:", error);
+    }
+  };
+
   return (
     <div className="space-y-2 p-4">
       <div className="text-sm font-medium">Chain Details</div>
@@ -175,6 +257,16 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
                 <div className="text-xs text-muted-foreground">
                   {t.contract.slice(0, 6)}...{t.contract.slice(-4)}
                 </div>
+              )}
+              {(t.chainId === "7000" || t.chainId === "7001") && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => handleWithdraw(t)}
+                >
+                  Withdraw
+                </Button>
               )}
             </div>
           </div>
