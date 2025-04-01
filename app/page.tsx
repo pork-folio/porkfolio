@@ -14,6 +14,8 @@ import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
 
+const testnet = true;
+
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
   const { balances, setBalances, isLoading, setIsLoading } = useBalanceStore();
@@ -45,7 +47,6 @@ export default function Page() {
     };
 
     const loadAssetPrices = async () => {
-      const testnet = true;
       const assets = core.supportedAssets(testnet);
       console.log(`Supported assets (testnet=${testnet})`, assets);
 

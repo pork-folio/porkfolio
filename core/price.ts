@@ -6,6 +6,8 @@ export type Price = {
     publishedAt: Date;
     usdRate: number;
     ticker: string;
+    canonical: string;
+    chainId: string;
 }
 
 const apiUrl = "https://hermes.pyth.network"
@@ -27,7 +29,7 @@ export async function queryAssetPrices(assets: Asset[]): Promise<Price[]> {
     );
 
     // cache map
-    let priceSet = new Map<string, Price>();
+    let priceSet = new Map<string, priceItem>();
     for (const price of prices) {
         priceSet.set(price.id, price);
     }
@@ -40,12 +42,23 @@ export async function queryAssetPrices(assets: Asset[]): Promise<Price[]> {
             throw new Error(`Price not found for asset ${asset.symbol} (pyth id: ${asset.pythPriceId})`);
         }
 
-        return { ...price, ticker: asset.symbol };
+        return {
+            ...price,
+            ticker: asset.symbol,
+            canonical: asset.canonical,
+            chainId: asset.chainId,
+        };
     });
 
 }
 
-async function queryPrices(ids: string[]): Promise<Price[]> {
+type priceItem = {
+    id: string;
+    publishedAt: Date;
+    usdRate: number;
+}
+
+async function queryPrices(ids: string[]): Promise<priceItem[]> {
     // ensure ids are unique
     const uniqueIds = [...new Set(ids)];
     const priceItems = await pythClient.getLatestPriceFeeds(uniqueIds);
@@ -55,7 +68,6 @@ async function queryPrices(ids: string[]): Promise<Price[]> {
         const price = item.getPriceUnchecked();
 
         return {
-            ticker: '', // will be filled later
             id,
             publishedAt: new Date(price.publishTime * 1000),
             usdRate: price.getPriceAsNumberUnchecked(),

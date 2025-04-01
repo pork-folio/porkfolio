@@ -10,6 +10,7 @@ export type Asset = {
     symbol: string;
     coinType: string;
     pythPriceId: string;
+    canonical: string;
 }
 
 const zetaCoin: Asset = {
@@ -21,6 +22,7 @@ const zetaCoin: Asset = {
     symbol: "ZETA",
     coinType: "Gas",
     pythPriceId: "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
+    canonical: "ZETA",
 }
 
 export function supportedAssets(testnet: boolean = false): Asset[] {
@@ -46,5 +48,6 @@ function parseAsset(item: any): Asset {
         symbol: item.symbol,
         coinType: item.coin_type,
         pythPriceId: item.pyth_price_id,
+        canonical: item.canonical,
     }
 }
