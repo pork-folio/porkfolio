@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchBalances } from "@/lib/handlers/balances";
 import { useBalanceStore } from "@/store/balances";
+import { usePriceStore } from "@/store/prices";
 import { Button } from "@/components/ui/button";
 import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ import * as core from "@/core";
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
   const { balances, setBalances, isLoading, setIsLoading } = useBalanceStore();
+  const { setPrices } = usePriceStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refreshBalances = async () => {
@@ -51,11 +53,18 @@ export default function Page() {
 
       const prices = await core.queryAssetPrices(assets);
       console.log("Prices", prices);
+      setPrices(prices);
     };
 
     loadBalances();
     loadAssetPrices();
-  }, [primaryWallet?.address, setBalances, setIsLoading, balances.length]);
+  }, [
+    primaryWallet?.address,
+    setBalances,
+    setIsLoading,
+    balances.length,
+    setPrices,
+  ]);
 
   return (
     <SidebarProvider>

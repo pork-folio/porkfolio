@@ -19,6 +19,7 @@ import {
 } from "@tanstack/react-table";
 import { z } from "zod";
 import { useTransactionStore } from "@/store/transactions";
+import { usePriceStore } from "@/store/prices";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -68,6 +69,7 @@ type TokenInfo = {
   zrc20?: string;
   chainId: string;
   coin_type: string;
+  ticker: string;
 };
 
 type AggregatedToken = {
@@ -101,6 +103,7 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
       zrc20: token.zrc20,
       chainId: token.chain_id,
       coin_type: token.coin_type,
+      ticker: token.ticker,
     });
 
     const currentTotal = parseFloat(aggregated.totalBalance);
@@ -160,6 +163,22 @@ const columns: ColumnDef<AggregatedToken>[] = [
     cell: ({ row }) => (
       <div className="text-right font-medium">{row.original.totalBalance}</div>
     ),
+  },
+  {
+    id: "price",
+    header: () => <div className="w-full text-right">Price (USD)</div>,
+    cell: ({ row }) => {
+      const token = row.original;
+      const { prices } = usePriceStore();
+      const price = prices.find(
+        (p) => p.ticker === token.tokens[0]?.ticker
+      )?.usdRate;
+      return (
+        <div className="text-right font-medium">
+          {price ? `$${price.toFixed(2)}` : "-"}
+        </div>
+      );
+    },
   },
 ];
 
