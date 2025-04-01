@@ -12,6 +12,7 @@ import { useBalanceStore } from "@/store/balances";
 import { Button } from "@/components/ui/button";
 import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
+import * as core from "@/core";
 
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
@@ -43,7 +44,17 @@ export default function Page() {
       }
     };
 
+    const loadAssetPrices = async () => {
+      const testnet = true;
+      const assets = core.supportedAssets(testnet);
+      console.log(`Supported assets (testnet=${testnet})`, assets);
+
+      const prices = await core.queryAssetPrices(assets);
+      console.log("Prices", prices);
+    };
+
     loadBalances();
+    loadAssetPrices();
   }, [primaryWallet?.address, setBalances, setIsLoading, balances.length]);
 
   return (
