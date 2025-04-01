@@ -5,7 +5,13 @@ import { DynamicWagmiConnector } from "@dynamic-labs/wagmi-connector";
 import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
-import { Chain } from "viem/chains";
+import {
+  baseSepolia,
+  arbitrumSepolia,
+  bscTestnet,
+  avalancheFuji,
+  zetachainAthensTestnet,
+} from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
 
@@ -49,9 +55,19 @@ const zetaTestnet = {
 };
 
 const config = createConfig({
-  chains: [zetaTestnetChain],
+  chains: [
+    baseSepolia,
+    arbitrumSepolia,
+    bscTestnet,
+    avalancheFuji,
+    zetachainAthensTestnet,
+  ],
   transports: {
-    [zetaTestnetChain.id]: http(),
+    [baseSepolia.id]: http(),
+    [arbitrumSepolia.id]: http(),
+    [bscTestnet.id]: http(),
+    [avalancheFuji.id]: http(),
+    [zetachainAthensTestnet.id]: http(),
   },
 });
 

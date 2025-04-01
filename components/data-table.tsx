@@ -255,6 +255,9 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
       // Get the signer from Dynamic
       const signer = await getSigner(primaryWallet);
 
+      // Switch to the source chain
+      await primaryWallet.switchNetwork(parseInt(tokenInfo.chainId));
+
       // Initialize ZetaChain client with the signer
       const client = new ZetaChainClient({
         network: "testnet",
