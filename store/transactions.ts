@@ -1,7 +1,11 @@
 import { create } from "zustand";
 
 export type TransactionType = "deposit" | "withdraw";
-export type TransactionStatus = "pending" | "completed" | "failed";
+export type TransactionStatus =
+  | "pending"
+  | "completed"
+  | "failed"
+  | "Initiated";
 
 export interface Transaction {
   id: string;

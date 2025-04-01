@@ -1,7 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconRefresh,
+} from "@tabler/icons-react";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -16,6 +20,7 @@ import {
 } from "@tanstack/react-table";
 import { useTransactionStore, Transaction } from "@/store/transactions";
 import { formatDistanceToNow } from "date-fns";
+import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,18 +64,61 @@ const columns: ColumnDef<Transaction>[] = [
     header: "Status",
     cell: ({ row }) => {
       const status = row.getValue("status") as Transaction["status"];
-      return (
-        <Badge
-          variant={
-            status === "completed"
-              ? "default"
-              : status === "pending"
-              ? "secondary"
-              : "destructive"
+      const hash = row.original.hash;
+      const updateStatus =
+        useTransactionStore.getState().updateTransactionStatus;
+      const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+      const checkStatus = async () => {
+        setIsRefreshing(true);
+        try {
+          const response = await fetch(
+            `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
+          );
+
+          if (response.status === 404) {
+            updateStatus(hash, "Initiated");
+          } else if (response.ok) {
+            const data = await response.json();
+            const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+            if (cctxStatus === "OutboundMined") {
+              updateStatus(hash, "completed");
+            } else if (cctxStatus === "Aborted") {
+              updateStatus(hash, "failed");
+            }
           }
-        >
-          {status.charAt(0).toUpperCase() + status.slice(1)}
-        </Badge>
+        } catch (error) {
+          console.error("Error checking status:", error);
+        } finally {
+          setIsRefreshing(false);
+        }
+      };
+
+      return (
+        <div className="flex items-center gap-2">
+          <Badge
+            variant={
+              status === "completed"
+                ? "default"
+                : status === "pending" || status === "Initiated"
+                ? "secondary"
+                : "destructive"
+            }
+          >
+            {status.charAt(0).toUpperCase() + status.slice(1)}
+          </Badge>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-6 w-6"
+            onClick={checkStatus}
+            disabled={isRefreshing}
+          >
+            <IconRefresh
+              className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+            />
+          </Button>
+        </div>
       );
     },
   },
@@ -80,23 +128,6 @@ const columns: ColumnDef<Transaction>[] = [
     cell: ({ row }) => {
       const timestamp = row.getValue("timestamp") as number;
       return formatDistanceToNow(timestamp, { addSuffix: true });
-    },
-  },
-  {
-    accessorKey: "hash",
-    header: "Hash",
-    cell: ({ row }) => {
-      const hash = row.getValue("hash") as string;
-      return (
-        <a
-          href={`https://explorer.zetachain.com/tx/${hash}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline"
-        >
-          {hash.slice(0, 6)}...{hash.slice(-4)}
-        </a>
-      );
     },
   },
 ];
