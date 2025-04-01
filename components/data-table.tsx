@@ -24,6 +24,7 @@ import { getSigner } from "@dynamic-labs/ethers-v6";
 import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
 import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
 import { getAddress } from "@zetachain/protocol-contracts";
+import { useTransactionStore } from "@/store/transactions";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -201,15 +202,28 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
       // Get the gateway address
       const gatewayAddress = await client.getGatewayAddress();
 
-      // Create contract instance to get gas fee
+      // Create ZRC20 contract instance for approval
       const zrc20Contract = new ethers.Contract(
+        tokenInfo.contract!,
+        ERC20_ABI.abi,
+        signer
+      );
+
+      // Approve gateway to spend the full balance
+      const balance = await zrc20Contract.balanceOf(primaryWallet.address);
+      const approveTx = await zrc20Contract.approve(gatewayAddress, balance);
+      await approveTx.wait();
+      console.log("Gateway approved to spend tokens");
+
+      // Create contract instance to get gas fee
+      const zrc20ContractForGas = new ethers.Contract(
         tokenInfo.contract!,
         ["function withdrawGasFee() view returns (address, uint256)"],
         signer
       );
 
       // Get gas fee information
-      const [gasZRC20, gasFee] = await zrc20Contract.withdrawGasFee();
+      const [gasZRC20, gasFee] = await zrc20ContractForGas.withdrawGasFee();
       console.log("Gas fee:", gasFee.toString(), "Gas token:", gasZRC20);
 
       // Calculate withdrawal amount by subtracting gas fee and taking 99%
@@ -219,6 +233,16 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
       );
       const availableAmount = totalAmount - gasFee;
       const withdrawalAmount = (availableAmount * BigInt(90)) / BigInt(100);
+
+      // Add transaction to store
+      useTransactionStore.getState().addTransaction({
+        type: "withdraw",
+        tokenSymbol: tokenInfo.symbol,
+        chainName: tokenInfo.chainName,
+        amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
+        status: "pending",
+        hash: "",
+      });
 
       // Create revert options
       const revertOptions = {
@@ -237,6 +261,15 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
         nonce: undefined,
       };
 
+      console.log("zetachainWithdraw", {
+        amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
+        receiver: primaryWallet.address,
+        zrc20: tokenInfo.contract!,
+        gatewayZetaChain: gatewayAddress,
+        revertOptions,
+        txOptions,
+      });
+
       // Execute withdrawal with adjusted amount
       const { tx } = await client.zetachainWithdraw({
         amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
@@ -246,6 +279,11 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
         revertOptions,
         txOptions,
       });
+
+      // Update transaction status
+      useTransactionStore
+        .getState()
+        .updateTransactionStatus(tx.hash, "completed");
 
       console.log("Withdrawal transaction:", tx);
       await tx.wait();
@@ -312,43 +350,37 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
       // Calculate deposit amount
       let depositAmount = tokenInfo.balance;
       if (tokenInfo.coin_type === "Gas") {
-        // For gas tokens, estimate gas and reserve only what's needed
+        // For gas tokens, use 90% of the balance to ensure enough gas
         const totalAmount = ethers.parseUnits(
           tokenInfo.balance,
           tokenInfo.decimals
         );
-
-        // Create gateway contract instance
-        const gatewayContract = new ethers.Contract(
-          gatewayAddress,
-          GatewayABI as any,
-          signer
+        // Use 90% of the balance
+        const depositAmountBigInt = (totalAmount * BigInt(95)) / BigInt(100);
+        depositAmount = ethers.formatUnits(
+          depositAmountBigInt,
+          tokenInfo.decimals
         );
-
-        // Estimate gas for the deposit transaction
-        const gasEstimate = await gatewayContract.deposit.estimateGas(
-          primaryWallet.address,
-          ethers.parseUnits(tokenInfo.balance, tokenInfo.decimals),
-          ethers.ZeroAddress,
-          ethers.ZeroAddress,
-          "0x",
-          { value: ethers.parseUnits(tokenInfo.balance, tokenInfo.decimals) }
-        );
-
-        // Add 20% buffer to gas estimate
-        const gasBuffer = (gasEstimate * BigInt(120)) / BigInt(100);
-        const gasCost =
-          gasBuffer *
-          ((await signer.provider?.getFeeData()) || { gasPrice: BigInt(0) })
-            .gasPrice!;
-
-        // Reserve gas cost and convert back to token units
-        const reservedAmount = gasCost;
-        const availableAmount = totalAmount - reservedAmount;
-
-        // Convert back to string with proper decimals
-        depositAmount = ethers.formatUnits(availableAmount, tokenInfo.decimals);
       }
+
+      // Add transaction to store
+      useTransactionStore.getState().addTransaction({
+        type: "deposit",
+        tokenSymbol: tokenInfo.symbol,
+        chainName: tokenInfo.chainName,
+        amount: depositAmount,
+        status: "pending",
+        hash: "",
+      });
+
+      console.log("evmDeposit", {
+        amount: depositAmount,
+        ...(tokenInfo.coin_type !== "Gas" && { erc20: tokenInfo.contract }), // Only include erc20 for non-gas tokens
+        gatewayEvm: gatewayAddress,
+        receiver: primaryWallet.address,
+        revertOptions,
+        txOptions,
+      });
 
       // Execute deposit
       const tx = await client.evmDeposit({
@@ -359,6 +391,11 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
         revertOptions,
         txOptions,
       });
+
+      // Update transaction status
+      useTransactionStore
+        .getState()
+        .updateTransactionStatus(tx.hash, "completed");
 
       console.log("Deposit transaction:", tx);
       await tx.wait();

@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { TransactionsTable } from "@/components/transactions-table";
 
 export const metadata: Metadata = {
   title: "Transactions | Porkfolio",
@@ -20,16 +21,11 @@ export default function TransactionsPage() {
               <div className="px-4 lg:px-6">
                 <h1 className="text-3xl font-bold">Transactions</h1>
                 <p className="text-muted-foreground mt-2">
-                  View your transaction history here.
+                  View your deposit and withdrawal history
                 </p>
               </div>
               <div className="px-4 lg:px-6">
-                <div className="rounded-md border">
-                  {/* Transaction table will go here */}
-                  <div className="p-4 text-center text-muted-foreground">
-                    No transactions yet
-                  </div>
-                </div>
+                <TransactionsTable />
               </div>
             </div>
           </div>
