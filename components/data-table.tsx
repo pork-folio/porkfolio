@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
-import { ethers } from "ethers";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import {
   ColumnDef,
@@ -19,11 +18,6 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { z } from "zod";
-import { ZetaChainClient } from "@zetachain/toolkit/client";
-import { getSigner } from "@dynamic-labs/ethers-v6";
-import ERC20_ABI from "@openzeppelin/contracts/build/contracts/ERC20.json";
-import GatewayABI from "@zetachain/protocol-contracts/abi/GatewayEVM.sol/GatewayEVM.json";
-import { getAddress } from "@zetachain/protocol-contracts";
 import { useTransactionStore } from "@/store/transactions";
 
 import { Button } from "@/components/ui/button";

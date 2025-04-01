@@ -7,37 +7,11 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BalanceData, fetchBalances } from "@/lib/handlers/balances";
+import { fetchBalances } from "@/lib/handlers/balances";
 import { useBalanceStore } from "@/store/balances";
 import { Button } from "@/components/ui/button";
 import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
-
-const roundToSignificantDigits = (
-  value: number,
-  significantDigits: number
-): number => {
-  if (value === 0) return 0;
-  const digits =
-    -Math.floor(Math.log10(Math.abs(value))) + (significantDigits - 1);
-  const factor = 10 ** digits;
-  return Math.round(value * factor) / factor;
-};
-
-const roundNumber = (value: number): string => {
-  let roundedValue: number;
-  if (value >= 1) {
-    roundedValue = parseFloat(value.toFixed(1));
-  } else {
-    roundedValue = roundToSignificantDigits(value, 2);
-  }
-
-  return roundedValue.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 20,
-    useGrouping: false,
-  });
-};
 
 export default function Page() {
   const { primaryWallet } = useDynamicContext();

@@ -62,65 +62,7 @@ const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => {
-      const status = row.getValue("status") as Transaction["status"];
-      const hash = row.original.hash;
-      const updateStatus =
-        useTransactionStore.getState().updateTransactionStatus;
-      const [isRefreshing, setIsRefreshing] = React.useState(false);
-
-      const checkStatus = async () => {
-        setIsRefreshing(true);
-        try {
-          const response = await fetch(
-            `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
-          );
-
-          if (response.status === 404) {
-            updateStatus(hash, "Initiated");
-          } else if (response.ok) {
-            const data = await response.json();
-            const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
-            if (cctxStatus === "OutboundMined") {
-              updateStatus(hash, "completed");
-            } else if (cctxStatus === "Aborted") {
-              updateStatus(hash, "failed");
-            }
-          }
-        } catch (error) {
-          console.error("Error checking status:", error);
-        } finally {
-          setIsRefreshing(false);
-        }
-      };
-
-      return (
-        <div className="flex items-center gap-2">
-          <Badge
-            variant={
-              status === "completed"
-                ? "default"
-                : status === "pending" || status === "Initiated"
-                ? "secondary"
-                : "destructive"
-            }
-          >
-            {status.charAt(0).toUpperCase() + status.slice(1)}
-          </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            onClick={checkStatus}
-            disabled={isRefreshing}
-          >
-            <IconRefresh
-              className={cn("h-4 w-4", isRefreshing && "animate-spin")}
-            />
-          </Button>
-        </div>
-      );
-    },
+    cell: ({ row }) => <StatusCell row={row} />,
   },
   {
     accessorKey: "timestamp",
@@ -131,6 +73,72 @@ const columns: ColumnDef<Transaction>[] = [
     },
   },
 ];
+
+function StatusCell({
+  row,
+}: {
+  row: {
+    getValue: (key: keyof Transaction) => Transaction[keyof Transaction];
+    original: { hash: string };
+  };
+}) {
+  const status = row.getValue("status") as Transaction["status"];
+  const hash = row.original.hash;
+  const updateStatus = useTransactionStore.getState().updateTransactionStatus;
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  const checkStatus = async () => {
+    setIsRefreshing(true);
+    try {
+      const response = await fetch(
+        `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
+      );
+
+      if (response.status === 404) {
+        updateStatus(hash, "Initiated");
+      } else if (response.ok) {
+        const data = await response.json();
+        const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+        if (cctxStatus === "OutboundMined") {
+          updateStatus(hash, "completed");
+        } else if (cctxStatus === "Aborted") {
+          updateStatus(hash, "failed");
+        }
+      }
+    } catch (error) {
+      console.error("Error checking status:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <Badge
+        variant={
+          status === "completed"
+            ? "default"
+            : status === "pending" || status === "Initiated"
+            ? "secondary"
+            : "destructive"
+        }
+      >
+        {status.charAt(0).toUpperCase() + status.slice(1)}
+      </Badge>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6"
+        onClick={checkStatus}
+        disabled={isRefreshing}
+      >
+        <IconRefresh
+          className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+        />
+      </Button>
+    </div>
+  );
+}
 
 export function TransactionsTable() {
   const { transactions } = useTransactionStore();

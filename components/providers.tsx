@@ -4,7 +4,7 @@ import { DynamicContextProvider } from "@dynamic-labs/sdk-react-core";
 import { DynamicWagmiConnector } from "@dynamic-labs/wagmi-connector";
 import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { http, Chain } from "viem";
+import { http } from "viem";
 import {
   baseSepolia,
   arbitrumSepolia,

@@ -18,9 +18,22 @@ type TokenInfo = {
   coin_type: string;
 };
 
+type ChainName =
+  | "eth_mainnet"
+  | "bsc_mainnet"
+  | "polygon_mainnet"
+  | "arbitrum_mainnet"
+  | "avalanche_mainnet"
+  | "zeta_mainnet"
+  | "btc_mainnet";
+
+interface DynamicWallet extends ethers.Wallet {
+  switchNetwork: (chainId: number) => Promise<void>;
+}
+
 export async function handleDeposit(
   tokenInfo: TokenInfo,
-  primaryWallet: any,
+  primaryWallet: DynamicWallet | null,
   setLoadingStates: (
     callback: (prev: Record<string, boolean>) => Record<string, boolean>
   ) => void
@@ -47,7 +60,7 @@ export async function handleDeposit(
     // Get the gateway address for the source chain
     const gatewayAddress = getAddress(
       "gateway",
-      tokenInfo.chainName.toLowerCase().replace(" ", "_") as any
+      tokenInfo.chainName.toLowerCase().replace(" ", "_") as ChainName
     );
 
     if (!gatewayAddress) {

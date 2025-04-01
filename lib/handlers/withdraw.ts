@@ -6,6 +6,7 @@ import { useTransactionStore } from "@/store/transactions";
 import { getAddress } from "@zetachain/protocol-contracts";
 import { useBalanceStore } from "@/store/balances";
 import { fetchBalances } from "./balances";
+import { Wallet } from "@dynamic-labs/sdk-react-core";
 
 type TokenInfo = {
   symbol: string;
@@ -21,7 +22,7 @@ type TokenInfo = {
 
 export async function handleWithdraw(
   tokenInfo: TokenInfo,
-  primaryWallet: any,
+  primaryWallet: Wallet | null,
   setLoadingStates: (
     callback: (prev: Record<string, boolean>) => Record<string, boolean>
   ) => void
@@ -50,17 +51,17 @@ export async function handleWithdraw(
     const gatewayAddress = getAddress("gateway", "zeta_testnet");
 
     // Create ZRC20 contract instance for approval
-    const zrc20Contract = new ethers.Contract(
+    const contract = new ethers.Contract(
       tokenInfo.contract!,
       ERC20_ABI.abi,
       signer
     );
 
-    // // Approve gateway to spend the full balance
-    // const balance = await zrc20Contract.balanceOf(primaryWallet.address);
-    // const approveTx = await zrc20Contract.approve(gatewayAddress, balance);
-    // await approveTx.wait();
-    // console.log("Gateway approved to spend tokens");
+    // Approve gateway to spend the full balance
+    const balance = await contract.balanceOf(primaryWallet.address);
+    const approveTx = await contract.approve(gatewayAddress, balance);
+    await approveTx.wait();
+    console.log("Gateway approved to spend tokens");
 
     // // Create contract instance to get gas fee
     const zrc20ContractForGas = new ethers.Contract(
