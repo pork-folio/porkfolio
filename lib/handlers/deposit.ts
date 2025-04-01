@@ -5,6 +5,7 @@ import { getAddress } from "@zetachain/protocol-contracts";
 import { useTransactionStore } from "@/store/transactions";
 import { useBalanceStore } from "@/store/balances";
 import { fetchBalances } from "./balances";
+import { Wallet } from "@dynamic-labs/sdk-react-core";
 
 type TokenInfo = {
   symbol: string;
@@ -27,13 +28,9 @@ type ChainName =
   | "zeta_mainnet"
   | "btc_mainnet";
 
-interface DynamicWallet extends ethers.Wallet {
-  switchNetwork: (chainId: number) => Promise<void>;
-}
-
 export async function handleDeposit(
   tokenInfo: TokenInfo,
-  primaryWallet: DynamicWallet | null,
+  primaryWallet: Wallet | null,
   setLoadingStates: (
     callback: (prev: Record<string, boolean>) => Record<string, boolean>
   ) => void
