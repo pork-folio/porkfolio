@@ -1,3 +1,5 @@
+"use client";
+
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { DynamicWallet } from "@/components/dynamic-wallet";
 import { useNetwork } from "@/components/providers";
