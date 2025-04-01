@@ -5,6 +5,7 @@ import {
   IconChartBar,
   IconFolder,
   IconInnerShadowTop,
+  IconHistory,
 } from "@tabler/icons-react";
 import Link from "next/link";
 
@@ -36,6 +37,11 @@ const data = {
       title: "Strategies",
       url: "/strategies",
       icon: IconChartBar,
+    },
+    {
+      title: "Transactions",
+      url: "/transactions",
+      icon: IconHistory,
     },
   ],
 };

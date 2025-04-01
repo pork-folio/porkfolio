@@ -5,31 +5,47 @@ import { DynamicWagmiConnector } from "@dynamic-labs/wagmi-connector";
 import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
-import { mainnet } from "viem/chains";
+import {
+  baseSepolia,
+  arbitrumSepolia,
+  bscTestnet,
+  avalancheFuji,
+  zetachainAthensTestnet,
+} from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
 
-const zetaMainnet = {
-  blockExplorerUrls: ["https://explorer.zetachain.com/"],
-  chainId: 7000,
-  chainName: "ZetaChain Mainnet",
+const zetaTestnet = {
+  blockExplorerUrls: ["https://athens.explorer.zetachain.com/"],
+  chainId: 7001,
+  chainName: "ZetaChain Testnet",
   iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
-  name: "ZetaChain",
+  name: "ZetaChain Testnet",
   nativeCurrency: {
     decimals: 18,
     name: "ZETA",
     symbol: "ZETA",
     iconUrl: "https://app.dynamic.xyz/assets/networks/eth.svg",
   },
-  networkId: 7000,
-  rpcUrls: ["https://zetachain-mainnet.g.allthatnode.com/archive/evm"],
-  vanityName: "ZetaChain Mainnet",
+  networkId: 7001,
+  rpcUrls: ["https://zetachain-athens.g.allthatnode.com/archive/evm"],
+  vanityName: "ZetaChain Testnet",
 };
 
 const config = createConfig({
-  chains: [mainnet],
+  chains: [
+    baseSepolia,
+    arbitrumSepolia,
+    bscTestnet,
+    avalancheFuji,
+    zetachainAthensTestnet,
+  ],
   transports: {
-    [mainnet.id]: http(),
+    [baseSepolia.id]: http(),
+    [arbitrumSepolia.id]: http(),
+    [bscTestnet.id]: http(),
+    [avalancheFuji.id]: http(),
+    [zetachainAthensTestnet.id]: http(),
   },
 });
 
@@ -42,7 +58,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         environmentId: "eaec6949-d524-40e7-81d2-80113243499a",
         walletConnectors: [EthereumWalletConnectors],
         overrides: {
-          evmNetworks: (networks) => mergeNetworks([zetaMainnet], networks),
+          evmNetworks: (networks) => mergeNetworks([zetaTestnet], networks),
         },
       }}
     >
