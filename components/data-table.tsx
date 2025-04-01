@@ -19,6 +19,8 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { z } from "zod";
+import { ZetaChainClient } from "@zetachain/toolkit/client";
+import { getSigner } from "@dynamic-labs/ethers-v6";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -175,59 +177,65 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
         return;
       }
 
-      // Get the signer address
-      const address = primaryWallet.address;
-      console.log("address", address);
-      // Convert amount to wei (assuming the balance is in the token's decimals)
-      const amount = ethers.parseUnits(tokenInfo.balance, tokenInfo.decimals);
+      // Get the signer from Dynamic
+      const signer = await getSigner(primaryWallet);
 
-      // Create empty revert options
+      // Determine which network to use
+      const network = tokenInfo.chainId === "7000" ? "mainnet" : "testnet";
+
+      // Initialize ZetaChain client with the signer
+      const client = new ZetaChainClient({
+        network,
+        signer,
+      });
+
+      // Get the gateway address
+      const gatewayAddress = await client.getGatewayAddress();
+
+      // Create contract instance to get gas fee
+      const zrc20Contract = new ethers.Contract(
+        tokenInfo.contract!,
+        ["function withdrawGasFee() view returns (address, uint256)"],
+        signer
+      );
+
+      // Get gas fee information
+      const [gasZRC20, gasFee] = await zrc20Contract.withdrawGasFee();
+      console.log("Gas fee:", gasFee.toString(), "Gas token:", gasZRC20);
+
+      // Calculate withdrawal amount by subtracting gas fee and taking 99%
+      const totalAmount = ethers.parseUnits(
+        tokenInfo.balance,
+        tokenInfo.decimals
+      );
+      const availableAmount = totalAmount - gasFee;
+      const withdrawalAmount = (availableAmount * BigInt(90)) / BigInt(100);
+
+      // Create revert options
       const revertOptions = {
         revertAddress: ethers.ZeroAddress,
         callOnRevert: false,
-        abortAddress: ethers.ZeroAddress,
-        revertMessage: "0x",
         onRevertGasLimit: 0,
+        revertMessage: "",
       };
-      console.log("revertOptions", revertOptions);
 
-      // Convert receiver address to bytes
-      const receiver = ethers.AbiCoder.defaultAbiCoder().encode(
-        ["address"],
-        [address]
-      );
-      console.log("receiver", receiver);
+      // Create transaction options
+      const txOptions = {
+        gasLimit: undefined,
+        gasPrice: undefined,
+        maxFeePerGas: undefined,
+        maxPriorityFeePerGas: undefined,
+        nonce: undefined,
+      };
 
-      // Create the transaction data
-      const data = ethers.AbiCoder.defaultAbiCoder().encode(
-        [
-          "bytes",
-          "uint256",
-          "address",
-          "tuple(address revertAddress, bool callOnRevert, address abortAddress, bytes revertMessage, uint256 onRevertGasLimit)",
-        ],
-        [
-          receiver,
-          amount,
-          tokenInfo.contract,
-          [
-            revertOptions.revertAddress,
-            revertOptions.callOnRevert,
-            revertOptions.abortAddress,
-            revertOptions.revertMessage,
-            revertOptions.onRevertGasLimit,
-          ],
-        ]
-      );
-
-      console.log("data", data);
-
-      // Send the transaction using the connector
-      const walletClient = await primaryWallet.getWalletClient();
-
-      const tx = await walletClient.sendTransaction({
-        to: ZETACHAIN_GATEWAY,
-        data: data,
+      // Execute withdrawal with adjusted amount
+      const { tx } = await client.zetachainWithdraw({
+        amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
+        receiver: primaryWallet.address,
+        zrc20: tokenInfo.contract!,
+        gatewayZetaChain: gatewayAddress,
+        revertOptions,
+        txOptions,
       });
 
       console.log("Withdrawal transaction:", tx);
