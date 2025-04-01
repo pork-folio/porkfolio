@@ -5,9 +5,10 @@ import { DataTable } from "@/components/data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BalanceData, fetchBalances } from "@/lib/handlers/balances";
+import { useBalanceStore } from "@/store/balances";
 
 const roundToSignificantDigits = (
   value: number,
@@ -37,12 +38,11 @@ const roundNumber = (value: number): string => {
 
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
-  const [balances, setBalances] = useState<BalanceData[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { balances, setBalances, isLoading, setIsLoading } = useBalanceStore();
 
   useEffect(() => {
     const loadBalances = async () => {
-      if (primaryWallet?.address) {
+      if (primaryWallet?.address && balances.length === 0) {
         setIsLoading(true);
         try {
           const balancesData = await fetchBalances(primaryWallet.address);
@@ -54,7 +54,7 @@ export default function Page() {
     };
 
     loadBalances();
-  }, [primaryWallet?.address]);
+  }, [primaryWallet?.address, setBalances, setIsLoading, balances.length]);
 
   return (
     <SidebarProvider>
