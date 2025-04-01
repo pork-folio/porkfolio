@@ -260,7 +260,7 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
                   {t.contract.slice(0, 6)}...{t.contract.slice(-4)}
                 </div>
               )}
-              {(t.chainId === "7000" || t.chainId === "7001") && (
+              {t.chainId === "7000" || t.chainId === "7001" ? (
                 <Button
                   variant="outline"
                   size="sm"
@@ -268,6 +268,15 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
                   onClick={() => handleWithdraw(t)}
                 >
                   Withdraw
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => console.log("Deposit token:", t)}
+                >
+                  Deposit
                 </Button>
               )}
             </div>
