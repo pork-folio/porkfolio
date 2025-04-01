@@ -136,7 +136,10 @@ export async function handleWithdraw(
 
     // Refresh balances after successful withdrawal
     if (primaryWallet.address) {
-      const balancesData = await fetchBalances(primaryWallet.address);
+      const balancesData = await fetchBalances(
+        primaryWallet.address,
+        tokenInfo.chainId !== "7000"
+      );
       useBalanceStore.getState().setBalances(balancesData);
     }
   } catch (error) {

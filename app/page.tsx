@@ -14,18 +14,23 @@ import { Button } from "@/components/ui/button";
 import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
+import { useNetwork } from "@/components/providers";
 
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
   const { balances, setBalances, isLoading, setIsLoading } = useBalanceStore();
   const { setPrices } = usePriceStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { isTestnet } = useNetwork();
 
   const refreshBalances = async () => {
     if (primaryWallet?.address) {
       setIsRefreshing(true);
       try {
-        const balancesData = await fetchBalances(primaryWallet.address);
+        const balancesData = await fetchBalances(
+          primaryWallet.address,
+          isTestnet
+        );
         setBalances(balancesData);
       } finally {
         setIsRefreshing(false);
@@ -35,10 +40,13 @@ export default function Page() {
 
   useEffect(() => {
     const loadBalances = async () => {
-      if (primaryWallet?.address && balances.length === 0) {
+      if (primaryWallet?.address) {
         setIsLoading(true);
         try {
-          const balancesData = await fetchBalances(primaryWallet.address);
+          const balancesData = await fetchBalances(
+            primaryWallet.address,
+            isTestnet
+          );
           setBalances(balancesData);
         } finally {
           setIsLoading(false);
@@ -47,9 +55,9 @@ export default function Page() {
     };
 
     const loadAssetPrices = async () => {
-      const testnet = true;
-      const assets = core.supportedAssets(testnet);
-      console.log(`Supported assets (testnet=${testnet})`, assets);
+      // Always use mainnet prices regardless of network setting
+      const assets = core.supportedAssets(false);
+      console.log("Supported assets (mainnet)", assets);
 
       const prices = await core.queryAssetPrices(assets);
       console.log("Prices", prices);
@@ -58,13 +66,7 @@ export default function Page() {
 
     loadBalances();
     loadAssetPrices();
-  }, [
-    primaryWallet?.address,
-    setBalances,
-    setIsLoading,
-    balances.length,
-    setPrices,
-  ]);
+  }, [primaryWallet?.address, setBalances, setIsLoading, setPrices, isTestnet]);
 
   return (
     <SidebarProvider>

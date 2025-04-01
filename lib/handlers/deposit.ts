@@ -50,7 +50,7 @@ export async function handleDeposit(
     const signer = await getSigner(primaryWallet);
 
     const client = new ZetaChainClient({
-      network: "testnet",
+      network: tokenInfo.chainId === "7000" ? "mainnet" : "testnet",
       signer,
     });
 
@@ -131,7 +131,10 @@ export async function handleDeposit(
 
     // Refresh balances after successful deposit
     if (primaryWallet.address) {
-      const balancesData = await fetchBalances(primaryWallet.address);
+      const balancesData = await fetchBalances(
+        primaryWallet.address,
+        tokenInfo.chainId !== "7000"
+      );
       useBalanceStore.getState().setBalances(balancesData);
     }
   } catch (error) {

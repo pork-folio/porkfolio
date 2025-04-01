@@ -39,8 +39,13 @@ export interface BalanceData {
   balance: string;
 }
 
-export async function fetchBalances(address: string): Promise<BalanceData[]> {
-  const client = new ZetaChainClient({ network: "testnet" });
+export async function fetchBalances(
+  address: string,
+  isTestnet: boolean = true
+): Promise<BalanceData[]> {
+  const client = new ZetaChainClient({
+    network: isTestnet ? "testnet" : "mainnet",
+  });
 
   const balancesData = await client.getBalances({
     evmAddress: address,
