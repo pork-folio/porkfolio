@@ -115,6 +115,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     environmentId: "eaec6949-d524-40e7-81d2-80113243499a",
     walletConnectors: [EthereumWalletConnectors],
     overrides: {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       evmNetworks: (networks: any[]) => {
         const filteredNetworks = networks.filter((network) => {
           const chainId = network.chainId;
