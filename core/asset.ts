@@ -1,6 +1,6 @@
 import assetsData from './data/assets.json';
 
-type Asset = {
+export type Asset = {
     zrc20: string;
     asset: string;
     chainId: string;
