@@ -31,6 +31,7 @@ export const useTransactionStore = create<TransactionStore>((set) => ({
       transactions: [
         {
           ...transaction,
+          status: "Initiated",
           id: Math.random().toString(36).substring(7),
           timestamp: Date.now(),
         },

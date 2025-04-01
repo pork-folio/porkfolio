@@ -174,69 +174,92 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
   const [loadingStates, setLoadingStates] = React.useState<
     Record<string, boolean>
   >({});
+  const { transactions } = useTransactionStore();
 
   return (
     <div className="space-y-2 p-4">
       <div className="text-sm font-medium">Chain Details</div>
       <div className="grid gap-2">
-        {token.tokens.map((t) => (
-          <div
-            key={`${t.symbol}-${t.chainName}`}
-            className="flex items-center justify-between rounded-md border p-2"
-          >
-            <div className="flex flex-col">
-              <div className="font-medium">{t.chainName}</div>
-              <div className="text-sm text-muted-foreground">{t.symbol}</div>
+        {token.tokens.map((t) => {
+          // Find pending transactions for this token and chain
+          const pendingTransactions = transactions.filter(
+            (tx) =>
+              tx.tokenSymbol === t.symbol &&
+              tx.chainName === t.chainName &&
+              (tx.status === "pending" || tx.status === "Initiated")
+          );
+
+          // Calculate total pending amount
+          const pendingAmount = pendingTransactions.reduce((sum, tx) => {
+            const amount = parseFloat(tx.amount);
+            return sum + (tx.type === "deposit" ? amount : -amount);
+          }, 0);
+
+          return (
+            <div
+              key={`${t.symbol}-${t.chainName}`}
+              className="flex items-center justify-between rounded-md border p-2"
+            >
+              <div className="flex flex-col">
+                <div className="font-medium">{t.chainName}</div>
+                <div className="text-sm text-muted-foreground">{t.symbol}</div>
+              </div>
+              <div className="text-right">
+                <div className="font-medium">{t.balance}</div>
+                {pendingTransactions.length > 0 && (
+                  <div className="text-sm text-muted-foreground">
+                    {pendingAmount > 0 ? "+" : ""}
+                    {pendingAmount.toFixed(4)} pending
+                  </div>
+                )}
+                {t.contract && (
+                  <div className="text-xs text-muted-foreground">
+                    {t.contract.slice(0, 6)}...{t.contract.slice(-4)}
+                  </div>
+                )}
+                {t.chainId === "7000" || t.chainId === "7001" ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() =>
+                      handleWithdraw(t, primaryWallet, setLoadingStates)
+                    }
+                    disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
+                  >
+                    {loadingStates[`${t.symbol}-${t.chainName}`] ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        Withdrawing...
+                      </div>
+                    ) : (
+                      "Withdraw"
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-2"
+                    onClick={() =>
+                      handleDeposit(t, primaryWallet, setLoadingStates)
+                    }
+                    disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
+                  >
+                    {loadingStates[`${t.symbol}-${t.chainName}`] ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        Depositing...
+                      </div>
+                    ) : (
+                      "Deposit"
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
-            <div className="text-right">
-              <div className="font-medium">{t.balance}</div>
-              {t.contract && (
-                <div className="text-xs text-muted-foreground">
-                  {t.contract.slice(0, 6)}...{t.contract.slice(-4)}
-                </div>
-              )}
-              {t.chainId === "7000" || t.chainId === "7001" ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() =>
-                    handleWithdraw(t, primaryWallet, setLoadingStates)
-                  }
-                  disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
-                >
-                  {loadingStates[`${t.symbol}-${t.chainName}`] ? (
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                      Withdrawing...
-                    </div>
-                  ) : (
-                    "Withdraw"
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="mt-2"
-                  onClick={() =>
-                    handleDeposit(t, primaryWallet, setLoadingStates)
-                  }
-                  disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
-                >
-                  {loadingStates[`${t.symbol}-${t.chainName}`] ? (
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                      Depositing...
-                    </div>
-                  ) : (
-                    "Deposit"
-                  )}
-                </Button>
-              )}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
