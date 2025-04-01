@@ -37,6 +37,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { handleWithdraw } from "@/lib/handlers/withdraw";
+import { handleDeposit } from "@/lib/handlers/deposit";
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -173,298 +175,6 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
     Record<string, boolean>
   >({});
 
-  const handleWithdraw = async (tokenInfo: TokenInfo) => {
-    try {
-      setLoadingStates((prev) => ({
-        ...prev,
-        [`${tokenInfo.symbol}-${tokenInfo.chainName}`]: true,
-      }));
-      if (!primaryWallet) {
-        alert("Please connect your wallet first");
-        return;
-      }
-
-      // Get the signer from Dynamic
-      const signer = await getSigner(primaryWallet);
-
-      // Determine which network to use
-      const network = tokenInfo.chainId === "7000" ? "mainnet" : "testnet";
-
-      // Switch to ZetaChain network and wait for the switch to complete
-      try {
-        console.log(`Switching to network ${tokenInfo.chainId}...`);
-        await primaryWallet.switchNetwork(parseInt(tokenInfo.chainId));
-        console.log("Network switch initiated, waiting for completion...");
-
-        // Add a longer delay to ensure the network switch is complete
-        await new Promise((resolve) => setTimeout(resolve, 3000));
-
-        // Verify network switch
-        const currentNetwork = await signer.provider?.getNetwork();
-        console.log("Current network:", currentNetwork?.chainId);
-
-        if (currentNetwork?.chainId !== BigInt(parseInt(tokenInfo.chainId))) {
-          throw new Error(
-            `Network switch verification failed. Expected ${tokenInfo.chainId}, got ${currentNetwork?.chainId}`
-          );
-        }
-
-        console.log("Network switch completed and verified");
-
-        // Initialize ZetaChain client with the signer after network switch
-        const client = new ZetaChainClient({
-          network,
-          signer,
-        });
-
-        // Retry getting gateway address with backoff
-        let gatewayAddress;
-        let retries = 3;
-        while (retries > 0) {
-          try {
-            gatewayAddress = await client.getGatewayAddress();
-            console.log("Gateway address obtained:", gatewayAddress);
-            break;
-          } catch (error: any) {
-            retries--;
-            if (retries === 0) throw error;
-            console.log(
-              `Retrying gateway address fetch (${retries} attempts left)...`
-            );
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
-        }
-
-        if (!gatewayAddress) {
-          throw new Error(
-            "Failed to get gateway address after multiple attempts"
-          );
-        }
-
-        // Create ZRC20 contract instance for approval
-        const zrc20Contract = new ethers.Contract(
-          tokenInfo.contract!,
-          ERC20_ABI.abi,
-          signer
-        );
-
-        // Approve gateway to spend the full balance
-        const balance = await zrc20Contract.balanceOf(primaryWallet.address);
-        const approveTx = await zrc20Contract.approve(gatewayAddress, balance);
-        await approveTx.wait();
-        console.log("Gateway approved to spend tokens");
-
-        // Create contract instance to get gas fee
-        const zrc20ContractForGas = new ethers.Contract(
-          tokenInfo.contract!,
-          ["function withdrawGasFee() view returns (address, uint256)"],
-          signer
-        );
-
-        // Get gas fee information
-        const [gasZRC20, gasFee] = await zrc20ContractForGas.withdrawGasFee();
-        console.log("Gas fee:", gasFee.toString(), "Gas token:", gasZRC20);
-
-        // Calculate withdrawal amount by subtracting gas fee and taking 90%
-        const totalAmount = ethers.parseUnits(
-          tokenInfo.balance,
-          tokenInfo.decimals
-        );
-        const availableAmount = totalAmount - gasFee;
-        const withdrawalAmount = (availableAmount * BigInt(90)) / BigInt(100);
-
-        // Create revert options
-        const revertOptions = {
-          revertAddress: ethers.ZeroAddress,
-          callOnRevert: false,
-          onRevertGasLimit: 0,
-          revertMessage: "",
-        };
-
-        // Create transaction options
-        const txOptions = {
-          gasLimit: undefined,
-          gasPrice: undefined,
-          maxFeePerGas: undefined,
-          maxPriorityFeePerGas: undefined,
-          nonce: undefined,
-        };
-
-        console.log("zetachainWithdraw", {
-          amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
-          receiver: primaryWallet.address,
-          zrc20: tokenInfo.contract!,
-          gatewayZetaChain: gatewayAddress,
-          revertOptions,
-          txOptions,
-        });
-
-        // Execute withdrawal with adjusted amount
-        const { tx } = await client.zetachainWithdraw({
-          amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
-          receiver: primaryWallet.address,
-          zrc20: tokenInfo.contract!,
-          gatewayZetaChain: gatewayAddress,
-          revertOptions,
-          txOptions,
-        });
-
-        // Add transaction to store with hash
-        useTransactionStore.getState().addTransaction({
-          type: "withdraw",
-          tokenSymbol: tokenInfo.symbol,
-          chainName: tokenInfo.chainName,
-          amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
-          status: "pending",
-          hash: tx.hash,
-        });
-
-        console.log("Withdrawal transaction:", tx);
-        await tx.wait();
-        console.log("Withdrawal successful!");
-      } catch (error: any) {
-        console.error("Operation failed:", error);
-        if (error.code === "NETWORK_ERROR") {
-          throw new Error(
-            `Network operation failed. Please make sure you're connected to the correct network (${tokenInfo.chainName}) and try again.`
-          );
-        }
-        throw error;
-      }
-    } catch (error) {
-      console.error("Withdrawal failed:", error);
-    } finally {
-      setLoadingStates((prev) => ({
-        ...prev,
-        [`${tokenInfo.symbol}-${tokenInfo.chainName}`]: false,
-      }));
-    }
-  };
-
-  const handleDeposit = async (tokenInfo: TokenInfo) => {
-    try {
-      setLoadingStates((prev) => ({
-        ...prev,
-        [`${tokenInfo.symbol}-${tokenInfo.chainName}`]: true,
-      }));
-      if (!primaryWallet) {
-        alert("Please connect your wallet first");
-        return;
-      }
-
-      // Get the signer from Dynamic
-      const signer = await getSigner(primaryWallet);
-
-      // Switch to the source chain and wait for the switch to complete
-      try {
-        console.log(`Switching to network ${tokenInfo.chainId}...`);
-        await primaryWallet.switchNetwork(parseInt(tokenInfo.chainId));
-        console.log("Network switch initiated, waiting for completion...");
-        // Add a small delay to ensure the network switch is complete
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        console.log("Network switch completed");
-      } catch (error: any) {
-        console.error("Failed to switch network:", error);
-        if (error.code === "NETWORK_ERROR") {
-          throw new Error(
-            `Network switch failed. Please make sure you're connected to the correct network (${tokenInfo.chainName}) and try again.`
-          );
-        }
-        throw new Error(
-          `Failed to switch to ${tokenInfo.chainName} network. Please try again.`
-        );
-      }
-
-      // Initialize ZetaChain client with the signer
-      const client = new ZetaChainClient({
-        network: "testnet",
-        signer,
-      });
-
-      // Get the gateway address for the source chain
-      const gatewayAddress = getAddress(
-        "gateway",
-        tokenInfo.chainName.toLowerCase().replace(" ", "_") as any
-      );
-
-      if (!gatewayAddress) {
-        throw new Error(
-          `Gateway address not found for chain ${tokenInfo.chainName}`
-        );
-      }
-
-      // Calculate deposit amount
-      let depositAmount = tokenInfo.balance;
-      if (tokenInfo.coin_type === "Gas") {
-        // For gas tokens, use 90% of the balance to ensure enough gas
-        const totalAmount = ethers.parseUnits(
-          tokenInfo.balance,
-          tokenInfo.decimals
-        );
-        // Use 90% of the balance
-        const depositAmountBigInt = (totalAmount * BigInt(95)) / BigInt(100);
-        depositAmount = ethers.formatUnits(
-          depositAmountBigInt,
-          tokenInfo.decimals
-        );
-      }
-
-      // Create revert options
-      const revertOptions = {
-        revertAddress: ethers.ZeroAddress,
-        callOnRevert: false,
-        onRevertGasLimit: 0,
-        revertMessage: "",
-      };
-
-      // Create transaction options
-      const txOptions = {
-        gasLimit: undefined,
-        gasPrice: undefined,
-      };
-
-      console.log("evmDeposit", {
-        amount: depositAmount,
-        ...(tokenInfo.coin_type !== "Gas" && { erc20: tokenInfo.contract }), // Only include erc20 for non-gas tokens
-        gatewayEvm: gatewayAddress,
-        receiver: primaryWallet.address,
-        revertOptions,
-        txOptions,
-      });
-
-      // Execute deposit
-      const tx = await client.evmDeposit({
-        amount: depositAmount,
-        ...(tokenInfo.coin_type !== "Gas" && { erc20: tokenInfo.contract }), // Only include erc20 for non-gas tokens
-        gatewayEvm: gatewayAddress,
-        receiver: primaryWallet.address,
-        revertOptions,
-        txOptions,
-      });
-
-      // Add transaction to store with hash
-      useTransactionStore.getState().addTransaction({
-        type: "deposit",
-        tokenSymbol: tokenInfo.symbol,
-        chainName: tokenInfo.chainName,
-        amount: depositAmount,
-        status: "pending",
-        hash: tx.hash,
-      });
-
-      console.log("Deposit transaction:", tx);
-      await tx.wait();
-      console.log("Deposit successful!");
-    } catch (error) {
-      console.error("Deposit failed:", error);
-    } finally {
-      setLoadingStates((prev) => ({
-        ...prev,
-        [`${tokenInfo.symbol}-${tokenInfo.chainName}`]: false,
-      }));
-    }
-  };
-
   return (
     <div className="space-y-2 p-4">
       <div className="text-sm font-medium">Chain Details</div>
@@ -490,7 +200,9 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
                   variant="outline"
                   size="sm"
                   className="mt-2"
-                  onClick={() => handleWithdraw(t)}
+                  onClick={() =>
+                    handleWithdraw(t, primaryWallet, setLoadingStates)
+                  }
                   disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
                 >
                   {loadingStates[`${t.symbol}-${t.chainName}`] ? (
@@ -507,7 +219,9 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
                   variant="outline"
                   size="sm"
                   className="mt-2"
-                  onClick={() => handleDeposit(t)}
+                  onClick={() =>
+                    handleDeposit(t, primaryWallet, setLoadingStates)
+                  }
                   disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
                 >
                   {loadingStates[`${t.symbol}-${t.chainName}`] ? (
