@@ -28,7 +28,7 @@ const roundNumber = (value: number): string => {
 
 export interface BalanceData {
   chain_id: string;
-  coin_type: string;
+  coin_type: "ZRC20" | "ERC20" | "Gas";
   contract: string;
   decimals: number;
   symbol: string;
@@ -54,5 +54,6 @@ export async function fetchBalances(address: string): Promise<BalanceData[]> {
     chain_name: balance.chain_name || "",
     ticker: balance.ticker || balance.symbol,
     balance: roundNumber(parseFloat(balance.balance)),
+    coin_type: balance.coin_type as "ZRC20" | "ERC20" | "Gas",
   }));
 }

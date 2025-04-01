@@ -14,15 +14,15 @@
     "percentage_strategy": [
         {
             "percentage": 5000,
-            "asset": "BTC.BTC"
+            "asset": "BTC"
         },
         {
             "percentage": 3000,
-            "asset": "ETH.ETH"
+            "asset": "ETH"
         },
         {
             "percentage": 2000,
-            "asset": "SOL.SOL"
+            "asset": "SOL"
         }
     ]
 }

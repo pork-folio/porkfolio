@@ -14,11 +14,11 @@
     "percentage_strategy": [
         {
             "percentage": 5000,
-            "asset": "SHIB.ETH"
+            "asset": "SHIB"
         },
         {
             "percentage": 5000,
-            "asset": "PEPE.ETH"
+            "asset": "PEPE"
         }
     ]
 }

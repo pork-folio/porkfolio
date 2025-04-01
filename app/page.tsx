@@ -39,6 +39,7 @@ export default function Page() {
         setIsLoading(true);
         try {
           const balancesData = await fetchBalances(primaryWallet.address);
+          console.log("Balances", balancesData);
           setBalances(balancesData);
         } finally {
           setIsLoading(false);

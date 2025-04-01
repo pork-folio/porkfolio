@@ -8,7 +8,7 @@ export type Asset = {
     decimals: number;
     name: string;
     symbol: string;
-    coinType: string;
+    coinType: "ERC20" | "Gas";
     pythPriceId: string;
     canonical: string;
 }

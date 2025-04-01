@@ -15,15 +15,15 @@
     "percentage_strategy": [
         {
             "percentage": 5000,
-            "asset": "USDC.ETH"
+            "asset": "USDC"
         },
         {
             "percentage": 4000,
-            "asset": "USDT.ETH"
+            "asset": "USDT"
         },
         {
             "percentage": 1000,
-            "asset": "BTC.BTC"
+            "asset": "BTC"
         }
     ]
 }
