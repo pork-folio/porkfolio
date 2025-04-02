@@ -480,33 +480,54 @@ export function BalancesTable({
   );
 
   // Calculate total portfolio value in USD and track included/excluded tokens
-  const { totalValue, includedTokens, excludedTokens } = React.useMemo(() => {
-    const included: string[] = [];
-    const excluded: string[] = [];
+  const { totalValue, includedTokens, excludedTokens, assetDistribution } =
+    React.useMemo(() => {
+      const included: string[] = [];
+      const excluded: string[] = [];
+      const distribution: { symbol: string; percentage: number }[] = [];
+      const assetValues: { symbol: string; value: number }[] = [];
 
-    const total = aggregatedData.reduce((total, token) => {
-      const price = prices.find(
-        (p) => p.ticker === token.tokens[0]?.ticker
-      )?.usdRate;
-      const balance = parseFloat(token.totalBalance);
+      // First pass: calculate all values
+      const total = aggregatedData.reduce((total, token) => {
+        const price = prices.find(
+          (p) => p.ticker === token.tokens[0]?.ticker
+        )?.usdRate;
+        const balance = parseFloat(token.totalBalance);
 
-      if (balance > 0) {
-        if (price) {
-          included.push(token.baseSymbol);
-          return total + price * balance;
-        } else {
-          excluded.push(token.baseSymbol);
+        if (balance > 0) {
+          if (price) {
+            included.push(token.baseSymbol);
+            const value = price * balance;
+            assetValues.push({
+              symbol: token.baseSymbol,
+              value: value,
+            });
+            return total + value;
+          } else {
+            excluded.push(token.baseSymbol);
+          }
         }
-      }
-      return total;
-    }, 0);
+        return total;
+      }, 0);
 
-    return {
-      totalValue: total,
-      includedTokens: included,
-      excludedTokens: excluded,
-    };
-  }, [aggregatedData, prices]);
+      // Second pass: calculate percentages using the final total
+      distribution.push(
+        ...assetValues.map(({ symbol, value }) => ({
+          symbol,
+          percentage: (value / total) * 100,
+        }))
+      );
+
+      // Sort distribution by percentage in descending order
+      distribution.sort((a, b) => b.percentage - a.percentage);
+
+      return {
+        totalValue: total,
+        includedTokens: included,
+        excludedTokens: excluded,
+        assetDistribution: distribution,
+      };
+    }, [aggregatedData, prices]);
 
   // Filter out zero balances if showZeroBalances is false
   const filteredData = React.useMemo(() => {
@@ -554,22 +575,49 @@ export function BalancesTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col">
-          <div className="text-sm text-muted-foreground">Total Value</div>
-          <div className="text-3xl font-bold">
-            $
-            {totalValue.toLocaleString(undefined, {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}
+        <div className="flex items-start gap-4">
+          <div className="flex flex-col p-4 min-w-[200px]">
+            <div className="text-sm text-muted-foreground">Total Value</div>
+            <div className="text-3xl font-bold mt-1">
+              $
+              {totalValue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </div>
+            <div className="text-sm text-muted-foreground mt-2">
+              {excludedTokens.length > 0 && (
+                <span>
+                  excluding {excludedTokens.slice(0, 5).join(", ")}
+                  {excludedTokens.length > 5 && "..."}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="text-sm text-muted-foreground mt-1">
-            {excludedTokens.length > 0 && (
-              <span>
-                + {excludedTokens.slice(0, 5).join(", ")}
-                {excludedTokens.length > 5 && "..."}
-              </span>
-            )}
+          <div className="flex flex-col p-4 min-w-[300px]">
+            <div className="text-sm text-muted-foreground mb-2">
+              Portfolio Distribution
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {assetDistribution.slice(0, 3).map((asset) => (
+                <div
+                  key={asset.symbol}
+                  className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md"
+                >
+                  <span className="font-medium">{asset.symbol}</span>
+                  <span className="text-muted-foreground text-sm">
+                    {asset.percentage.toFixed(1)}%
+                  </span>
+                </div>
+              ))}
+              {assetDistribution.length > 3 && (
+                <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
+                  <span className="text-muted-foreground text-sm">
+                    +{assetDistribution.length - 3} more
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex items-center justify-between">
