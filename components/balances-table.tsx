@@ -588,35 +588,30 @@ export function BalancesTable({
             <div className="text-sm text-muted-foreground mt-2">
               {excludedTokens.length > 0 && (
                 <span>
-                  excluding {excludedTokens.slice(0, 5).join(", ")}
+                  + {excludedTokens.slice(0, 5).join(", ")}
                   {excludedTokens.length > 5 && "..."}
                 </span>
               )}
             </div>
           </div>
           <div className="flex flex-col p-4 min-w-[300px]">
-            <div className="text-sm text-muted-foreground mb-2">
-              Portfolio Distribution
+            <div className="text-sm text-muted-foreground">Diversification</div>
+            <div className="text-3xl font-bold mt-1">
+              {Math.round(100 - assetDistribution[0]?.percentage || 0)}%
             </div>
-            <div className="flex flex-wrap gap-2">
-              {assetDistribution.slice(0, 3).map((asset) => (
-                <div
-                  key={asset.symbol}
-                  className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md"
-                >
-                  <span className="font-medium">{asset.symbol}</span>
-                  <span className="text-muted-foreground text-sm">
-                    {asset.percentage.toFixed(1)}%
-                  </span>
-                </div>
-              ))}
-              {assetDistribution.length > 3 && (
-                <div className="flex items-center gap-1.5 bg-muted/50 px-2 py-1 rounded-md">
-                  <span className="text-muted-foreground text-sm">
-                    +{assetDistribution.length - 3} more
-                  </span>
-                </div>
-              )}
+            <div className="text-sm text-muted-foreground mt-2">
+              {(() => {
+                const diversification = Math.round(
+                  100 - assetDistribution[0]?.percentage || 0
+                );
+                if (diversification >= 90) return "highly diversified";
+                if (diversification >= 70) return "well diversified";
+                if (diversification >= 50) return "moderately diversified";
+                if (diversification >= 30) return "slightly concentrated";
+                if (diversification >= 20) return "concentrated";
+                if (diversification >= 10) return "highly concentrated";
+                return "extremely concentrated";
+              })()}
             </div>
           </div>
         </div>
