@@ -68,7 +68,7 @@ export default function Page() {
     loadAssetPrices();
   }, [primaryWallet?.address, setBalances, setIsLoading, setPrices, isTestnet]);
 
-  const strategies = core.getStrategies(testnet);
+  const strategies = core.getStrategies(isTestnet);
   console.log("Strategies", strategies);
 
   return (
