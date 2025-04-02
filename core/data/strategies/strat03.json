@@ -1,0 +1,24 @@
+{
+    "name": "Meme Master",
+    "description": "A portfolio focused on memecoins",
+    "sort_index": 2,
+    "tags": [
+        "meme",
+        "yolo"
+    ],
+    "env": [
+        "testnet",
+        "mainnet"
+    ],
+    "type": "percentage_strategy",
+    "percentage_strategy": [
+        {
+            "percentage": 5000,
+            "asset": "SHIB.ETH"
+        },
+        {
+            "percentage": 5000,
+            "asset": "PEPE.ETH"
+        }
+    ]
+}

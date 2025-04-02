@@ -68,6 +68,9 @@ export default function Page() {
     loadAssetPrices();
   }, [primaryWallet?.address, setBalances, setIsLoading, setPrices, isTestnet]);
 
+  const strategies = core.getStrategies(testnet);
+  console.log("Strategies", strategies);
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
