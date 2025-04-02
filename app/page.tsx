@@ -26,10 +26,24 @@ import {
 
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
-  const { balances, setBalances, isLoading, setIsLoading } = useBalanceStore();
+  const {
+    balances,
+    setBalances,
+    isLoading: isBalancesLoading,
+    setIsLoading: setBalancesLoading,
+  } = useBalanceStore();
   const { setPrices } = usePriceStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const { isTestnet } = useNetwork();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Set loading to false after a short delay to prevent flash
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Add effect to check pending transactions on load
   useEffect(() => {
@@ -151,14 +165,28 @@ export default function Page() {
 
     loadBalances();
     loadAssetPrices();
-  }, [primaryWallet?.address, setBalances, setIsLoading, setPrices, isTestnet]);
+  }, [
+    primaryWallet?.address,
+    setBalances,
+    setBalancesLoading,
+    setPrices,
+    isTestnet,
+  ]);
 
   const strategies = core.getStrategies(isTestnet);
   console.log("Strategies", strategies);
 
   return (
     <>
-      {!primaryWallet?.address ? (
+      {isLoading ? (
+        <div className="flex min-h-screen items-center justify-center bg-background">
+          <div className="w-full max-w-md flex flex-col items-center justify-center text-center space-y-6">
+            <div className="space-y-2">
+              <h1 className="text-4xl font-bold tracking-tight">Porkfolio</h1>
+            </div>
+          </div>
+        </div>
+      ) : !primaryWallet?.address ? (
         <div className="flex min-h-screen items-center justify-center bg-background">
           <div className="w-full max-w-md flex flex-col items-center justify-center text-center space-y-6">
             <div className="space-y-2">
@@ -248,7 +276,7 @@ export default function Page() {
                     </div>
                   </div>
                   <div className="px-4 lg:px-6">
-                    {isLoading && !balances.length ? (
+                    {isBalancesLoading && !balances.length ? (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Skeleton className="h-4 w-[200px]" />
