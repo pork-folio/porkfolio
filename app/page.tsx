@@ -160,7 +160,7 @@ export default function Page() {
     <>
       {!primaryWallet?.address ? (
         <div className="flex min-h-screen items-center justify-center bg-background">
-          <div className="flex flex-col items-center justify-center text-center space-y-6">
+          <div className="w-full max-w-md flex flex-col items-center justify-center text-center space-y-6">
             <div className="space-y-2">
               <h1 className="text-4xl font-bold tracking-tight">Porkfolio</h1>
               <p className="text-muted-foreground text-lg">
@@ -168,7 +168,7 @@ export default function Page() {
               </p>
             </div>
             <DynamicConnectButton />
-            <div className="w-full max-w-md mt-8">
+            <div className="w-full">
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="item-1" className="border-none">
                   <AccordionTrigger className="text-left">
