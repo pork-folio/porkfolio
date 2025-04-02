@@ -5,6 +5,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconRefresh,
+  IconTrash,
 } from "@tabler/icons-react";
 import {
   ColumnDef,
@@ -21,6 +22,7 @@ import {
 import { useTransactionStore, Transaction } from "@/store/transactions";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useNetwork } from "@/components/providers";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +35,35 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+
+// Add keyframes for rotation animation
+const refreshAnimation = `
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
+// Utility function to format chain names
+function formatChainName(chainName: string): string {
+  // Replace underscores with spaces
+  let formatted = chainName.replace(/_/g, " ");
+
+  // Capitalize each word
+  formatted = formatted
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+  // Replace "Zeta" with "ZetaChain"
+  formatted = formatted.replace(/Zeta\b/g, "ZetaChain");
+
+  return formatted;
+}
 
 const columns: ColumnDef<Transaction>[] = [
   {
@@ -48,12 +79,23 @@ const columns: ColumnDef<Transaction>[] = [
     },
   },
   {
-    accessorKey: "tokenSymbol",
+    accessorKey: "targetToken.symbol",
     header: "Token",
+    cell: ({ row }) => {
+      const targetToken = row.original.targetToken;
+      return targetToken ? targetToken.symbol : row.original.tokenSymbol;
+    },
   },
   {
-    accessorKey: "chainName",
+    accessorKey: "targetToken.chainName",
     header: "Chain",
+    cell: ({ row }) => {
+      const targetToken = row.original.targetToken;
+      const chainName = targetToken
+        ? targetToken.chainName
+        : row.original.chainName;
+      return formatChainName(chainName);
+    },
   },
   {
     accessorKey: "amount",
@@ -67,10 +109,7 @@ const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "timestamp",
     header: "Time",
-    cell: ({ row }) => {
-      const timestamp = row.getValue("timestamp") as number;
-      return formatDistanceToNow(timestamp, { addSuffix: true });
-    },
+    cell: ({ row }) => <TimestampCell row={row} />,
   },
 ];
 
@@ -86,13 +125,17 @@ function StatusCell({
   const hash = row.original.hash;
   const updateStatus = useTransactionStore.getState().updateTransactionStatus;
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const { isTestnet } = useNetwork();
 
   const checkStatus = async () => {
     setIsRefreshing(true);
+    const startTime = Date.now();
     try {
-      const response = await fetch(
-        `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
-      );
+      const apiUrl = isTestnet
+        ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
+        : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+
+      const response = await fetch(apiUrl);
 
       if (response.status === 404) {
         updateStatus(hash, "Initiated");
@@ -108,6 +151,11 @@ function StatusCell({
     } catch (error) {
       console.error("Error checking status:", error);
     } finally {
+      // Ensure the animation runs for at least 1 second
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < 1000) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 - elapsedTime));
+      }
       setIsRefreshing(false);
     }
   };
@@ -132,16 +180,47 @@ function StatusCell({
         onClick={checkStatus}
         disabled={isRefreshing}
       >
+        <style>{refreshAnimation}</style>
         <IconRefresh
-          className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+          className={cn(
+            "h-4 w-4",
+            isRefreshing && "animate-[spin_1s_linear_infinite]"
+          )}
         />
       </Button>
     </div>
   );
 }
 
+function TimestampCell({
+  row,
+}: {
+  row: {
+    getValue: (key: keyof Transaction) => Transaction[keyof Transaction];
+    original: { hash: string };
+  };
+}) {
+  const timestamp = row.getValue("timestamp") as number;
+  const hash = row.original.hash;
+  const { isTestnet } = useNetwork();
+  const apiUrl = isTestnet
+    ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
+    : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+
+  return (
+    <a
+      href={apiUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-500 hover:underline"
+    >
+      {formatDistanceToNow(timestamp, { addSuffix: true })}
+    </a>
+  );
+}
+
 export function TransactionsTable() {
-  const { transactions } = useTransactionStore();
+  const { transactions, clearTransactions } = useTransactionStore();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -172,14 +251,25 @@ export function TransactionsTable() {
         <div className="flex flex-1 items-center space-x-2">
           <Input
             placeholder="Filter transactions..."
-            value={
-              (table.getColumn("tokenSymbol")?.getFilterValue() as string) ?? ""
-            }
+            value={(table.getColumn("type")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-              table.getColumn("tokenSymbol")?.setFilterValue(event.target.value)
+              table.getColumn("type")?.setFilterValue(event.target.value)
             }
             className="h-8 w-[150px] lg:w-[250px]"
           />
+        </div>
+        <div className="flex items-center space-x-2">
+          {transactions.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={clearTransactions}
+            >
+              <IconTrash className="mr-2 h-4 w-4" />
+              Clear Transactions
+            </Button>
+          )}
         </div>
       </div>
       <div className="rounded-md border">

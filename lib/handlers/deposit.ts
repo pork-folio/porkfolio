@@ -50,7 +50,7 @@ export async function handleDeposit(
     const signer = await getSigner(primaryWallet);
 
     const client = new ZetaChainClient({
-      network: "testnet",
+      network: tokenInfo.chainId === "7000" ? "mainnet" : "testnet",
       signer,
     });
 
@@ -69,13 +69,24 @@ export async function handleDeposit(
     // Calculate deposit amount
     let depositAmount = tokenInfo.balance;
     if (tokenInfo.coin_type === "Gas") {
-      // For gas tokens, use 90% of the balance to ensure enough gas
+      // For gas tokens, leave some for gas and deposit the rest
       const totalAmount = ethers.parseUnits(
         tokenInfo.balance,
         tokenInfo.decimals
       );
-      // Use 90% of the balance
-      const depositAmountBigInt = (totalAmount * BigInt(95)) / BigInt(100);
+
+      // Estimate gas cost for a typical transaction (can be adjusted based on network)
+      const estimatedGasCost = ethers.parseUnits("0.01", tokenInfo.decimals);
+
+      // If balance is less than 2x the estimated gas cost, use 50% of balance
+      // Otherwise, leave the estimated gas cost and deposit the rest
+      let depositAmountBigInt;
+      if (totalAmount < estimatedGasCost * BigInt(2)) {
+        depositAmountBigInt = totalAmount / BigInt(2);
+      } else {
+        depositAmountBigInt = totalAmount - estimatedGasCost;
+      }
+
       depositAmount = ethers.formatUnits(
         depositAmountBigInt,
         tokenInfo.decimals
@@ -115,7 +126,15 @@ export async function handleDeposit(
       txOptions,
     });
 
-    // Add transaction to store with hash
+    // Find the target token (the corresponding ZRC20 token on ZetaChain)
+    const balances = useBalanceStore.getState().balances;
+    const targetToken = balances.find(
+      (token) =>
+        token.contract?.toLowerCase() === tokenInfo.zrc20?.toLowerCase() &&
+        (token.chain_id === "7000" || token.chain_id === "7001")
+    );
+
+    // Add transaction to store with hash and token information
     useTransactionStore.getState().addTransaction({
       type: "deposit",
       tokenSymbol: tokenInfo.symbol,
@@ -123,6 +142,22 @@ export async function handleDeposit(
       amount: depositAmount,
       status: "pending",
       hash: tx.hash,
+      sourceToken: {
+        symbol: tokenInfo.symbol,
+        chainName: tokenInfo.chainName,
+        contract: tokenInfo.contract,
+        chainId: tokenInfo.chainId,
+        coin_type: tokenInfo.coin_type,
+      },
+      targetToken: targetToken
+        ? {
+            symbol: targetToken.symbol,
+            chainName: targetToken.chain_name,
+            contract: targetToken.contract,
+            chainId: targetToken.chain_id,
+            coin_type: targetToken.coin_type,
+          }
+        : undefined,
     });
 
     console.log("Deposit transaction:", tx);
@@ -131,7 +166,10 @@ export async function handleDeposit(
 
     // Refresh balances after successful deposit
     if (primaryWallet.address) {
-      const balancesData = await fetchBalances(primaryWallet.address);
+      const balancesData = await fetchBalances(
+        primaryWallet.address,
+        tokenInfo.chainId !== "7000"
+      );
       useBalanceStore.getState().setBalances(balancesData);
     }
   } catch (error) {
