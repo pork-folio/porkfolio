@@ -15,6 +15,7 @@ import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
 import { useNetwork } from "@/components/providers";
+import { BalancesTable } from "@/components/balances-table";
 
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
@@ -135,7 +136,7 @@ export default function Page() {
                       isRefreshing && "opacity-50"
                     )}
                   >
-                    <DataTable data={balances} />
+                    <BalancesTable data={balances} />
                   </div>
                 )}
               </div>

@@ -82,7 +82,28 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
   const tokenMap = new Map<string, AggregatedToken>();
 
   data.forEach((token) => {
-    const baseSymbol = token.symbol.split(".")[0];
+    // Extract base symbol by removing chain suffixes and ZRC-20 prefixes
+    let baseSymbol = token.symbol;
+
+    // Handle ZRC-20 tokens
+    if (token.symbol.includes("ZRC20")) {
+      // Extract the actual token name from ZRC-20 token names
+      // Example: "ZetaChain ZRC20 USDC on ETH" -> "USDC"
+      const match = token.symbol.match(/ZRC20\s+([A-Za-z0-9]+)/);
+      if (match) {
+        baseSymbol = match[1];
+      }
+    } else {
+      // Remove chain suffixes (e.g., ".ETH", ".BSC", etc.)
+      baseSymbol = token.symbol.split(".")[0];
+    }
+
+    // Special case handling for certain tokens
+    if (baseSymbol === "tBNB") baseSymbol = "BNB";
+    if (baseSymbol === "tBTC") baseSymbol = "BTC";
+    if (baseSymbol === "sBTC") baseSymbol = "BTC";
+    if (baseSymbol === "sETH") baseSymbol = "ETH";
+    if (baseSymbol === "WZETA") baseSymbol = "ZETA";
 
     if (!tokenMap.has(baseSymbol)) {
       tokenMap.set(baseSymbol, {
@@ -305,7 +326,7 @@ function TokenDetails({ token }: { token: AggregatedToken }) {
   );
 }
 
-export function DataTable({
+export function BalancesTable({
   data: initialData,
 }: {
   data: z.infer<typeof schema>[];
