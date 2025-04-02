@@ -42,6 +42,43 @@ const zetaTestnet = {
   vanityName: "ZetaChain Testnet",
 };
 
+const zetaMainnetDynamic = {
+  blockExplorerUrls: ["https://explorer.zetachain.com/"],
+  chainId: 7000,
+  chainName: "ZetaChain Mainnet",
+  iconUrls: ["https://app.dynamic.xyz/assets/networks/eth.svg"],
+  name: "ZetaChain Mainnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "ZETA",
+    symbol: "ZETA",
+    iconUrl: "https://app.dynamic.xyz/assets/networks/eth.svg",
+  },
+  networkId: 7000,
+  rpcUrls: ["https://zetachain-mainnet.g.allthatnode.com/archive/evm"],
+  vanityName: "ZetaChain Mainnet",
+};
+
+const zetaMainnetWagmi = {
+  id: 7000,
+  name: "ZetaChain Mainnet",
+  network: "zetachain",
+  nativeCurrency: {
+    decimals: 18,
+    name: "ZETA",
+    symbol: "ZETA",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://zetachain-mainnet.g.allthatnode.com/archive/evm"],
+    },
+  },
+  blockExplorers: {
+    default: { name: "ZetaScan", url: "https://explorer.zetachain.com" },
+  },
+  testnet: false,
+};
+
 const amoyTestnet = {
   id: 80001,
   name: "Amoy Testnet",
@@ -61,7 +98,7 @@ const amoyTestnet = {
 };
 
 const mainnetConfig = createConfig({
-  chains: [base, arbitrum, bsc, avalanche, mainnet, polygon],
+  chains: [base, arbitrum, bsc, avalanche, mainnet, polygon, zetaMainnetWagmi],
   transports: {
     [base.id]: http(),
     [arbitrum.id]: http(),
@@ -69,6 +106,7 @@ const mainnetConfig = createConfig({
     [avalanche.id]: http(),
     [mainnet.id]: http(),
     [polygon.id]: http(),
+    [zetaMainnetWagmi.id]: http(),
   },
 });
 
@@ -144,6 +182,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
               avalanche.id,
               mainnet.id,
               polygon.id,
+              zetaMainnetWagmi.id,
             ].includes(chainId);
           }
         });
@@ -151,7 +190,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         if (isTestnet) {
           return mergeNetworks([zetaTestnet], filteredNetworks);
         }
-        return filteredNetworks;
+        return mergeNetworks([zetaMainnetDynamic], filteredNetworks);
       },
     },
   };
