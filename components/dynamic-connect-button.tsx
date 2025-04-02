@@ -1,12 +1,12 @@
 import { DynamicConnectButton as DynamicConnectButtonBase } from "@dynamic-labs/sdk-react-core";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function DynamicConnectButton() {
   return (
     <DynamicConnectButtonBase>
-      <Button size="lg" className="w-[200px]">
+      <div className="inline-flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow-xs transition-all hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50">
         Connect Wallet
-      </Button>
+      </div>
     </DynamicConnectButtonBase>
   );
 }
