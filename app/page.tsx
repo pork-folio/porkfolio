@@ -185,9 +185,10 @@ export default function Page() {
                     How do I connect my wallet?
                   </AccordionTrigger>
                   <AccordionContent className="text-left">
-                    Click the "Connect Wallet" button above and select your
-                    preferred wallet from the list of supported options. Make
-                    sure you have a compatible wallet installed in your browser.
+                    Click the &quot;Connect Wallet&quot; button above and select
+                    your preferred wallet from the list of supported options.
+                    Make sure you have a compatible wallet installed in your
+                    browser.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-3" className="border-none">

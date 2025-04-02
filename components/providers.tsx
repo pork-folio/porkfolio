@@ -8,7 +8,6 @@ import { http } from "viem";
 import {
   baseSepolia,
   arbitrumSepolia,
-  bscTestnet,
   avalancheFuji,
   zetachainAthensTestnet,
   base,
@@ -24,6 +23,7 @@ import { SolanaWalletConnectors } from "@dynamic-labs/solana";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useChainsStore } from "@/store/chains";
+import { ProviderRpcError } from "viem";
 
 const zetaTestnet = {
   blockExplorerUrls: ["https://athens.explorer.zetachain.com/"],
@@ -214,7 +214,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           method: "wallet_switchEthereumChain",
           params: [{ chainId: `0x${zetaChainId.toString(16)}` }],
         })
-        .catch((error: any) => {
+        .catch((error: ProviderRpcError) => {
           // This error code indicates that the chain has not been added to MetaMask
           if (error.code === 4902) {
             console.log("Chain not added to MetaMask");
