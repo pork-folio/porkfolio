@@ -51,6 +51,18 @@ export function WithdrawConfirmationSheet({
   ) => void;
   chains: any[];
 }) {
+  const [recipientAddress, setRecipientAddress] = React.useState("");
+  const targetChain = token.coin_type === "ZRC20" ? nativeAsset : token;
+  const isTargetChainEVM = targetChain
+    ? isChainEVM(targetChain.chainId, chains)
+    : false;
+
+  React.useEffect(() => {
+    if (isTargetChainEVM) {
+      setRecipientAddress(primaryWallet.address);
+    }
+  }, [isTargetChainEVM, primaryWallet.address]);
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -60,8 +72,6 @@ export function WithdrawConfirmationSheet({
           className="mt-2"
           disabled={
             loadingStates[`${token.symbol}-${token.chainName}`] ||
-            (token.coin_type === "ZRC20" &&
-              (!nativeAsset || !isChainEVM(nativeAsset.chainId, chains))) ||
             token.symbol === "ZETA" ||
             token.symbol === "WZETA"
           }
@@ -89,17 +99,14 @@ export function WithdrawConfirmationSheet({
               .
             </DialogDescription>
             <div className="space-y-2 mt-4">
-              <Label htmlFor="recipient">
-                Recipient on{" "}
-                {token.coin_type === "ZRC20" && nativeAsset
-                  ? formatChainName(nativeAsset.chainName)
-                  : formatChainName(token.chainName)}
-              </Label>
+              <Label htmlFor="recipient">Recipient</Label>
               <Input
                 id="recipient"
-                value={primaryWallet.address}
-                readOnly
+                value={recipientAddress}
+                onChange={(e) => setRecipientAddress(e.target.value)}
+                readOnly={isTargetChainEVM}
                 className="font-mono"
+                placeholder={isTargetChainEVM ? "" : "Enter recipient address"}
               />
             </div>
           </div>
@@ -109,9 +116,17 @@ export function WithdrawConfirmationSheet({
             variant="default"
             className="w-full"
             onClick={() => {
-              handleWithdraw(token, primaryWallet, setLoadingStates);
+              handleWithdraw(
+                token,
+                primaryWallet,
+                setLoadingStates,
+                recipientAddress
+              );
             }}
-            disabled={loadingStates[`${token.symbol}-${token.chainName}`]}
+            disabled={
+              loadingStates[`${token.symbol}-${token.chainName}`] ||
+              (!isTargetChainEVM && !recipientAddress)
+            }
           >
             {loadingStates[`${token.symbol}-${token.chainName}`] ? (
               <div className="flex items-center gap-2">
