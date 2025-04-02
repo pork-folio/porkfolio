@@ -76,17 +76,16 @@ export function WithdrawConfirmationSheet({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Confirm Withdrawal</DialogTitle>
+          <DialogTitle>Withdraw</DialogTitle>
           <div className="space-y-2">
             <DialogDescription>
-              Are you sure you want to withdraw {token.balance} {token.symbol}{" "}
-              from {formatChainName(token.chainName)}?
+              Please confirm that you want to withdraw {token.balance}{" "}
+              {token.symbol} from {formatChainName(token.chainName)}
+              {token.coin_type === "ZRC20" &&
+                nativeAsset &&
+                ` to ${formatChainName(nativeAsset.chainName)}`}
+              .
             </DialogDescription>
-            {token.coin_type === "ZRC20" && nativeAsset && (
-              <div className="text-sm text-muted-foreground">
-                This will withdraw to {formatChainName(nativeAsset.chainName)}.
-              </div>
-            )}
           </div>
         </DialogHeader>
         <div className="mt-4">
