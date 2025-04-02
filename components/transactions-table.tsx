@@ -109,25 +109,7 @@ const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "timestamp",
     header: "Time",
-    cell: ({ row }) => {
-      const timestamp = row.getValue("timestamp") as number;
-      const hash = row.original.hash;
-      const { isTestnet } = useNetwork();
-      const apiUrl = isTestnet
-        ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
-        : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
-
-      return (
-        <a
-          href={apiUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-500 hover:underline"
-        >
-          {formatDistanceToNow(timestamp, { addSuffix: true })}
-        </a>
-      );
-    },
+    cell: ({ row }) => <TimestampCell row={row} />,
   },
 ];
 
@@ -207,6 +189,33 @@ function StatusCell({
         />
       </Button>
     </div>
+  );
+}
+
+function TimestampCell({
+  row,
+}: {
+  row: {
+    getValue: (key: keyof Transaction) => Transaction[keyof Transaction];
+    original: { hash: string };
+  };
+}) {
+  const timestamp = row.getValue("timestamp") as number;
+  const hash = row.original.hash;
+  const { isTestnet } = useNetwork();
+  const apiUrl = isTestnet
+    ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
+    : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+
+  return (
+    <a
+      href={apiUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-blue-500 hover:underline"
+    >
+      {formatDistanceToNow(timestamp, { addSuffix: true })}
+    </a>
   );
 }
 
