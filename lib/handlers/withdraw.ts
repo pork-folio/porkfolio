@@ -76,13 +76,23 @@ export async function handleWithdraw(
     const [gasZRC20, gasFee] = await zrc20ContractForGas.withdrawGasFee();
     console.log("Gas fee:", gasFee.toString(), "Gas token:", gasZRC20);
 
-    // Calculate withdrawal amount by subtracting gas fee and taking 90%
+    // Calculate withdrawal amount based on whether the token is a gas token or not
     const totalAmount = ethers.parseUnits(
       tokenInfo.balance,
       tokenInfo.decimals
     );
-    const availableAmount = totalAmount - gasFee;
-    const withdrawalAmount = (availableAmount * BigInt(90)) / BigInt(100);
+
+    let withdrawalAmount;
+
+    // Check if the token being withdrawn is the same as the gas token
+    if (tokenInfo.contract?.toLowerCase() === gasZRC20.toLowerCase()) {
+      // For gas tokens, deduct the gas fee from the withdrawal amount
+      const availableAmount = totalAmount - gasFee;
+      withdrawalAmount = (availableAmount * BigInt(90)) / BigInt(100);
+    } else {
+      // For non-gas tokens, use the full balance without deducting gas fee
+      withdrawalAmount = (totalAmount * BigInt(90)) / BigInt(100);
+    }
 
     // Create revert options
     const revertOptions = {
@@ -95,7 +105,7 @@ export async function handleWithdraw(
     // Create transaction options
     const txOptions = {
       gasLimit: undefined,
-      gasPrice: undefined,
+      gasPrice: ethers.parseUnits("50", "gwei"),
       maxFeePerGas: undefined,
       maxPriorityFeePerGas: undefined,
       nonce: undefined,
