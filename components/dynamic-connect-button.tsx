@@ -1,5 +1,4 @@
 import { DynamicConnectButton as DynamicConnectButtonBase } from "@dynamic-labs/sdk-react-core";
-import { cn } from "@/lib/utils";
 
 export function DynamicConnectButton() {
   return (

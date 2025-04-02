@@ -480,7 +480,7 @@ export function BalancesTable({
   );
 
   // Calculate total portfolio value in USD and track included/excluded tokens
-  const { totalValue, includedTokens, excludedTokens, assetDistribution } =
+  const { totalValue, excludedTokens, assetDistribution } =
     React.useMemo(() => {
       const included: string[] = [];
       const excluded: string[] = [];
@@ -523,7 +523,6 @@ export function BalancesTable({
 
       return {
         totalValue: total,
-        includedTokens: included,
         excludedTokens: excluded,
         assetDistribution: distribution,
       };
