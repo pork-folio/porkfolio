@@ -223,7 +223,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
   },
   {
     accessorKey: "totalBalance",
-    header: () => <div className="w-full text-right">Total Balance</div>,
+    header: () => <div className="w-full text-right">Balance</div>,
     cell: ({ row }) => (
       <div className="text-right font-medium">{row.original.totalBalance}</div>
     ),

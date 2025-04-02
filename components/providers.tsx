@@ -79,9 +79,43 @@ const zetaMainnetWagmi = {
   testnet: false,
 };
 
-const amoyTestnet = {
-  id: 80001,
-  name: "Amoy Testnet",
+const amoyTestnetDynamic = {
+  blockExplorerUrls: ["https://amoy.polygonscan.com/"],
+  chainId: 80002,
+  chainName: "Polygon Amoy Testnet",
+  iconUrls: ["https://app.dynamic.xyz/assets/networks/polygon.svg"],
+  name: "Polygon Amoy Testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "MATIC",
+    symbol: "MATIC",
+    iconUrl: "https://app.dynamic.xyz/assets/networks/polygon.svg",
+  },
+  networkId: 80001,
+  rpcUrls: ["https://rpc-amoy.polygon.technology"],
+  vanityName: "Polygon Amoy Testnet",
+};
+
+const bnbTestnetDynamic = {
+  blockExplorerUrls: ["https://testnet.bscscan.com/"],
+  chainId: 97,
+  chainName: "BNB Chain Testnet",
+  iconUrls: ["https://app.dynamic.xyz/assets/networks/bnb.svg"],
+  name: "BNB Chain Testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "BNB",
+    symbol: "BNB",
+    iconUrl: "https://app.dynamic.xyz/assets/networks/bnb.svg",
+  },
+  networkId: 97,
+  rpcUrls: ["https://data-seed-prebsc-1-s1.binance.org:8545"],
+  vanityName: "BNB Chain Testnet",
+};
+
+const amoyTestnetWagmi = {
+  id: 80002,
+  name: "Polygon Amoy Testnet",
   network: "amoy",
   nativeCurrency: {
     decimals: 18,
@@ -89,10 +123,28 @@ const amoyTestnet = {
     symbol: "MATIC",
   },
   rpcUrls: {
-    default: { http: ["https://rpc-amoy.polygon.technology"] },
+    default: { http: ["https://polygon-amoy-bor-rpc.publicnode.com"] },
   },
   blockExplorers: {
     default: { name: "PolygonScan", url: "https://amoy.polygonscan.com" },
+  },
+  testnet: true,
+};
+
+const bnbTestnetWagmi = {
+  id: 97,
+  name: "BNB Chain Testnet",
+  network: "bsc-testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "BNB",
+    symbol: "BNB",
+  },
+  rpcUrls: {
+    default: { http: ["https://data-seed-prebsc-1-s1.binance.org:8545"] },
+  },
+  blockExplorers: {
+    default: { name: "BscScan", url: "https://testnet.bscscan.com" },
   },
   testnet: true,
 };
@@ -114,20 +166,20 @@ const testnetConfig = createConfig({
   chains: [
     baseSepolia,
     arbitrumSepolia,
-    bscTestnet,
+    bnbTestnetWagmi,
     avalancheFuji,
     zetachainAthensTestnet,
     sepolia,
-    amoyTestnet,
+    amoyTestnetWagmi,
   ],
   transports: {
     [baseSepolia.id]: http(),
     [arbitrumSepolia.id]: http(),
-    [bscTestnet.id]: http(),
+    [bnbTestnetWagmi.id]: http(),
     [avalancheFuji.id]: http(),
     [zetachainAthensTestnet.id]: http(),
     [sepolia.id]: http(),
-    [amoyTestnet.id]: http(),
+    [amoyTestnetWagmi.id]: http(),
   },
 });
 
@@ -168,11 +220,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
             return [
               baseSepolia.id,
               arbitrumSepolia.id,
-              bscTestnet.id,
+              bnbTestnetWagmi.id,
               avalancheFuji.id,
               zetachainAthensTestnet.id,
               sepolia.id,
-              amoyTestnet.id,
+              amoyTestnetWagmi.id,
             ].includes(chainId);
           } else {
             return [
@@ -188,7 +240,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         });
 
         if (isTestnet) {
-          return mergeNetworks([zetaTestnet], filteredNetworks);
+          return mergeNetworks(
+            [zetaTestnet, amoyTestnetDynamic, bnbTestnetDynamic],
+            filteredNetworks
+          );
         }
         return mergeNetworks([zetaMainnetDynamic], filteredNetworks);
       },
