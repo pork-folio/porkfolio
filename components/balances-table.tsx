@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/table";
 import { handleWithdraw } from "@/lib/handlers/withdraw";
 import { handleDeposit } from "@/lib/handlers/deposit";
+import { roundNumber } from "@/lib/handlers/balances";
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -129,7 +130,9 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
 
     const currentTotal = parseFloat(aggregated.totalBalance);
     const newBalance = parseFloat(token.balance);
-    aggregated.totalBalance = (currentTotal + newBalance).toString();
+    const total = currentTotal + newBalance;
+    // Use the first token's ticker for rounding since it represents the same base token
+    aggregated.totalBalance = roundNumber(total, token.ticker);
   });
 
   return Array.from(tokenMap.values());
