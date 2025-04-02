@@ -33,17 +33,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { handleWithdraw } from "@/lib/handlers/withdraw";
 import { handleDeposit } from "@/lib/handlers/deposit";
 import { roundNumber } from "@/lib/handlers/balances";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sheet";
 import { formatChainName } from "@/lib/utils";
 
@@ -232,12 +223,6 @@ const columns: ColumnDef<AggregatedToken>[] = [
     },
   },
 ];
-
-// Function to check if a chain is EVM-compatible
-function isChainEVM(chainId: string, chains: any[]): boolean {
-  const chain = chains.find((c) => c.chain_id === chainId);
-  return chain?.vm === "evm";
-}
 
 function TokenDetails({
   token,

@@ -14,6 +14,14 @@ import { handleWithdraw } from "@/lib/handlers/withdraw";
 import { formatChainName } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Wallet } from "@dynamic-labs/sdk-react-core";
+
+// Add proper type for chain
+type Chain = {
+  chain_id: string;
+  vm: string;
+  // Add other chain properties as needed
+};
 
 type TokenInfo = {
   symbol: string;
@@ -29,7 +37,7 @@ type TokenInfo = {
 };
 
 // Function to check if a chain is EVM-compatible
-function isChainEVM(chainId: string, chains: any[]): boolean {
+function isChainEVM(chainId: string, chains: Chain[]): boolean {
   const chain = chains.find((c) => c.chain_id === chainId);
   return chain?.vm === "evm";
 }
@@ -45,11 +53,11 @@ export function WithdrawConfirmationSheet({
   token: TokenInfo;
   nativeAsset: TokenInfo | null;
   loadingStates: Record<string, boolean>;
-  primaryWallet: any;
+  primaryWallet: Wallet | null;
   setLoadingStates: (
     value: React.SetStateAction<Record<string, boolean>>
   ) => void;
-  chains: any[];
+  chains: Chain[];
 }) {
   const [recipientAddress, setRecipientAddress] = React.useState("");
   const targetChain = token.coin_type === "ZRC20" ? nativeAsset : token;
@@ -59,9 +67,9 @@ export function WithdrawConfirmationSheet({
 
   React.useEffect(() => {
     if (isTargetChainEVM) {
-      setRecipientAddress(primaryWallet.address);
+      setRecipientAddress(primaryWallet?.address || "");
     }
-  }, [isTargetChainEVM, primaryWallet.address]);
+  }, [isTargetChainEVM, primaryWallet?.address]);
 
   return (
     <Dialog>
