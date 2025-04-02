@@ -69,13 +69,24 @@ export async function handleDeposit(
     // Calculate deposit amount
     let depositAmount = tokenInfo.balance;
     if (tokenInfo.coin_type === "Gas") {
-      // For gas tokens, use 90% of the balance to ensure enough gas
+      // For gas tokens, leave some for gas and deposit the rest
       const totalAmount = ethers.parseUnits(
         tokenInfo.balance,
         tokenInfo.decimals
       );
-      // Use 90% of the balance
-      const depositAmountBigInt = (totalAmount * BigInt(95)) / BigInt(100);
+
+      // Estimate gas cost for a typical transaction (can be adjusted based on network)
+      const estimatedGasCost = ethers.parseUnits("0.01", tokenInfo.decimals);
+
+      // If balance is less than 2x the estimated gas cost, use 50% of balance
+      // Otherwise, leave the estimated gas cost and deposit the rest
+      let depositAmountBigInt;
+      if (totalAmount < estimatedGasCost * BigInt(2)) {
+        depositAmountBigInt = totalAmount / BigInt(2);
+      } else {
+        depositAmountBigInt = totalAmount - estimatedGasCost;
+      }
+
       depositAmount = ethers.formatUnits(
         depositAmountBigInt,
         tokenInfo.decimals

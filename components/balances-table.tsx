@@ -377,9 +377,7 @@ export function BalancesTable({
 }: {
   data: z.infer<typeof schema>[];
 }) {
-  const [sorting, setSorting] = React.useState<SortingState>([
-    { id: "value", desc: true },
-  ]);
+  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
