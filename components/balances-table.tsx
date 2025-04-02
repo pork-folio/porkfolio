@@ -472,11 +472,23 @@ export function BalancesTable({
     new Set()
   );
   const [showZeroBalances, setShowZeroBalances] = React.useState(false);
+  const { prices } = usePriceStore();
 
   const aggregatedData = React.useMemo(
     () => aggregateTokens(initialData),
     [initialData]
   );
+
+  // Calculate total portfolio value in USD
+  const totalPortfolioValue = React.useMemo(() => {
+    return aggregatedData.reduce((total, token) => {
+      const price = prices.find(
+        (p) => p.ticker === token.tokens[0]?.ticker
+      )?.usdRate;
+      const balance = parseFloat(token.totalBalance);
+      return total + (price ? price * balance : 0);
+    }, 0);
+  }, [aggregatedData, prices]);
 
   // Filter out zero balances if showZeroBalances is false
   const filteredData = React.useMemo(() => {
@@ -523,26 +535,41 @@ export function BalancesTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-1 items-center space-x-2">
-          <Input
-            placeholder="Filter tokens..."
-            value={
-              (table.getColumn("baseSymbol")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn("baseSymbol")?.setFilterValue(event.target.value)
-            }
-            className="h-8 w-[150px] lg:w-[250px]"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowZeroBalances(!showZeroBalances)}
-            className="h-8"
-          >
-            {showZeroBalances ? "Hide Zero Balances" : "Show Zero Balances"}
-          </Button>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col">
+          <div className="text-sm text-muted-foreground">Total Value</div>
+          <div className="text-3xl font-bold">
+            $
+            {totalPortfolioValue.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-1 items-center space-x-2">
+            <Input
+              placeholder="Filter tokens..."
+              value={
+                (table.getColumn("baseSymbol")?.getFilterValue() as string) ??
+                ""
+              }
+              onChange={(event) =>
+                table
+                  .getColumn("baseSymbol")
+                  ?.setFilterValue(event.target.value)
+              }
+              className="h-8 w-[150px] lg:w-[250px]"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowZeroBalances(!showZeroBalances)}
+              className="h-8"
+            >
+              {showZeroBalances ? "Hide Zero Balances" : "Show Zero Balances"}
+            </Button>
+          </div>
         </div>
       </div>
       <div className="rounded-md border">
