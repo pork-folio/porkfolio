@@ -242,15 +242,9 @@ export function TransactionsTable() {
         <div className="flex flex-1 items-center space-x-2">
           <Input
             placeholder="Filter transactions..."
-            value={
-              (table
-                .getColumn("targetToken.symbol")
-                ?.getFilterValue() as string) ?? ""
-            }
+            value={(table.getColumn("type")?.getFilterValue() as string) ?? ""}
             onChange={(event) =>
-              table
-                .getColumn("targetToken.symbol")
-                ?.setFilterValue(event.target.value)
+              table.getColumn("type")?.setFilterValue(event.target.value)
             }
             className="h-8 w-[150px] lg:w-[250px]"
           />
