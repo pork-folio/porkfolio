@@ -274,25 +274,12 @@ function TokenDetails({
       <div className="grid gap-2">
         {filteredTokens.map((t) => {
           // Find pending transactions for this token and chain
-          const pendingTransactions = transactions.filter((tx) => {
-            // For deposits, show pending on ZetaChain (destination)
-            if (tx.type === "deposit") {
-              // Check if this is a ZetaChain token that matches the deposit
-              return (
-                t.chainId === "7000" &&
-                tx.tokenSymbol.includes(t.baseSymbol) &&
-                (tx.status === "pending" || tx.status === "Initiated")
-              );
-            }
-            // For withdrawals, show pending on the source chain
-            else {
-              return (
-                tx.tokenSymbol === t.symbol &&
-                tx.chainName === t.chainName &&
-                (tx.status === "pending" || tx.status === "Initiated")
-              );
-            }
-          });
+          const pendingTransactions = transactions.filter(
+            (tx) =>
+              tx.tokenSymbol === t.symbol &&
+              tx.chainName === t.chainName &&
+              (tx.status === "pending" || tx.status === "Initiated")
+          );
 
           // Calculate total pending amount
           const pendingAmount = pendingTransactions.reduce((sum, tx) => {
@@ -377,7 +364,9 @@ export function BalancesTable({
 }: {
   data: z.infer<typeof schema>[];
 }) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([
+    { id: "value", desc: true },
+  ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
