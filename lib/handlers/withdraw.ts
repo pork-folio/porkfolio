@@ -86,12 +86,9 @@ export async function handleWithdraw(
 
     // Check if the token being withdrawn is the same as the gas token
     if (tokenInfo.contract?.toLowerCase() === gasZRC20.toLowerCase()) {
-      // For gas tokens, deduct the gas fee from the withdrawal amount
-      const availableAmount = totalAmount - gasFee;
-      withdrawalAmount = (availableAmount * BigInt(90)) / BigInt(100);
+      withdrawalAmount = totalAmount - gasFee;
     } else {
-      // For non-gas tokens, use the full balance without deducting gas fee
-      withdrawalAmount = (totalAmount * BigInt(90)) / BigInt(100);
+      withdrawalAmount = totalAmount;
     }
 
     // Create revert options
@@ -130,6 +127,8 @@ export async function handleWithdraw(
       txOptions,
     });
 
+    console.log("Withdrawal transaction:", tx);
+    await tx.wait();
     // Add transaction to store with hash
     useTransactionStore.getState().addTransaction({
       type: "withdraw",
@@ -139,9 +138,6 @@ export async function handleWithdraw(
       status: "pending",
       hash: tx.hash,
     });
-
-    console.log("Withdrawal transaction:", tx);
-    await tx.wait();
     console.log("Withdrawal successful!");
 
     // Refresh balances after successful withdrawal
