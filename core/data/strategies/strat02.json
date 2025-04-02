@@ -1,4 +1,5 @@
 {
+    "id": "low-risk",
     "name": "Low Risk",
     "description": "Stable coin with minor BTC percentage",
     "sort_index": 1,

@@ -105,7 +105,7 @@ export function buildInputItems(
         inputItems.push(new InputItem(balance, asset, price));
     }
 
-    // now let's sort by price DESC
+    // now let's sort by total user's USD value DESC
     inputItems.sort((a, b) => b.usdPrice() - a.usdPrice());
 
     return inputItems
