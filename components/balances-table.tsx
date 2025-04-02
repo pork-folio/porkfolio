@@ -276,8 +276,9 @@ function TokenDetails({
           // Find pending transactions for this token and chain
           const pendingTransactions = transactions.filter(
             (tx) =>
-              tx.tokenSymbol === t.symbol &&
-              tx.chainName === t.chainName &&
+              // Check if this token is the target token of a pending transaction
+              tx.targetToken?.symbol === t.symbol &&
+              tx.targetToken?.chainName === t.chainName &&
               (tx.status === "pending" || tx.status === "Initiated")
           );
 

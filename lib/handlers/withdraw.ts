@@ -130,7 +130,16 @@ export async function handleWithdraw(
 
     console.log("Withdrawal transaction:", tx);
     await tx.wait();
-    // Add transaction to store with hash
+
+    // Find the target token (the corresponding token on the destination chain)
+    const balances = useBalanceStore.getState().balances;
+    const targetToken = balances.find(
+      (token) =>
+        token.zrc20?.toLowerCase() === tokenInfo.contract?.toLowerCase() &&
+        token.chain_id !== tokenInfo.chainId
+    );
+
+    // Add transaction to store with hash and token information
     useTransactionStore.getState().addTransaction({
       type: "withdraw",
       tokenSymbol: tokenInfo.symbol,
@@ -138,6 +147,22 @@ export async function handleWithdraw(
       amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
       status: "pending",
       hash: tx.hash,
+      sourceToken: {
+        symbol: tokenInfo.symbol,
+        chainName: tokenInfo.chainName,
+        contract: tokenInfo.contract,
+        chainId: tokenInfo.chainId,
+        coin_type: tokenInfo.coin_type,
+      },
+      targetToken: targetToken
+        ? {
+            symbol: targetToken.symbol,
+            chainName: targetToken.chain_name,
+            contract: targetToken.zrc20,
+            chainId: targetToken.chain_id,
+            coin_type: targetToken.coin_type,
+          }
+        : undefined,
     });
     console.log("Withdrawal successful!");
 

@@ -79,14 +79,21 @@ const columns: ColumnDef<Transaction>[] = [
     },
   },
   {
-    accessorKey: "tokenSymbol",
+    accessorKey: "targetToken.symbol",
     header: "Token",
+    cell: ({ row }) => {
+      const targetToken = row.original.targetToken;
+      return targetToken ? targetToken.symbol : row.original.tokenSymbol;
+    },
   },
   {
-    accessorKey: "chainName",
+    accessorKey: "targetToken.chainName",
     header: "Chain",
     cell: ({ row }) => {
-      const chainName = row.getValue("chainName") as string;
+      const targetToken = row.original.targetToken;
+      const chainName = targetToken
+        ? targetToken.chainName
+        : row.original.chainName;
       return formatChainName(chainName);
     },
   },
@@ -236,10 +243,14 @@ export function TransactionsTable() {
           <Input
             placeholder="Filter transactions..."
             value={
-              (table.getColumn("tokenSymbol")?.getFilterValue() as string) ?? ""
+              (table
+                .getColumn("targetToken.symbol")
+                ?.getFilterValue() as string) ?? ""
             }
             onChange={(event) =>
-              table.getColumn("tokenSymbol")?.setFilterValue(event.target.value)
+              table
+                .getColumn("targetToken.symbol")
+                ?.setFilterValue(event.target.value)
             }
             className="h-8 w-[150px] lg:w-[250px]"
           />

@@ -126,7 +126,15 @@ export async function handleDeposit(
       txOptions,
     });
 
-    // Add transaction to store with hash
+    // Find the target token (the corresponding ZRC20 token on ZetaChain)
+    const balances = useBalanceStore.getState().balances;
+    const targetToken = balances.find(
+      (token) =>
+        token.contract?.toLowerCase() === tokenInfo.zrc20?.toLowerCase() &&
+        (token.chain_id === "7000" || token.chain_id === "7001")
+    );
+
+    // Add transaction to store with hash and token information
     useTransactionStore.getState().addTransaction({
       type: "deposit",
       tokenSymbol: tokenInfo.symbol,
@@ -134,6 +142,22 @@ export async function handleDeposit(
       amount: depositAmount,
       status: "pending",
       hash: tx.hash,
+      sourceToken: {
+        symbol: tokenInfo.symbol,
+        chainName: tokenInfo.chainName,
+        contract: tokenInfo.contract,
+        chainId: tokenInfo.chainId,
+        coin_type: tokenInfo.coin_type,
+      },
+      targetToken: targetToken
+        ? {
+            symbol: targetToken.symbol,
+            chainName: targetToken.chain_name,
+            contract: targetToken.contract,
+            chainId: targetToken.chain_id,
+            coin_type: targetToken.coin_type,
+          }
+        : undefined,
     });
 
     console.log("Deposit transaction:", tx);

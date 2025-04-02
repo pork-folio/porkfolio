@@ -8,6 +8,14 @@ export type TransactionStatus =
   | "failed"
   | "Initiated";
 
+export interface TokenInfo {
+  symbol: string;
+  chainName: string;
+  contract?: string;
+  chainId: string;
+  coin_type: string;
+}
+
 export interface Transaction {
   id: string;
   type: TransactionType;
@@ -17,6 +25,8 @@ export interface Transaction {
   status: TransactionStatus;
   hash: string;
   timestamp: number;
+  sourceToken?: TokenInfo;
+  targetToken?: TokenInfo;
 }
 
 interface TransactionStore {
