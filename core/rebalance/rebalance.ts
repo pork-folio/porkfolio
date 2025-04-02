@@ -26,7 +26,6 @@ export interface RebalanceInput {
 
 export interface RebalanceOutput {
     valid: boolean
-    errorMessage?: string
     uuid: string
     createdAt: Date
     actions: RebalanceAction[]
@@ -34,7 +33,17 @@ export interface RebalanceOutput {
 }
 
 export interface RebalanceAction {
-    // todo
+    // only swap is supported for now
+    type: "swap"
+
+    // user's current balance and amount to spend
+    from: BalanceData
+    fromUsdValue: number
+    fromTokenValue: number
+
+    // target asset with its price
+    to: Asset
+    toPrice: Price
 }
 
 /**
@@ -68,14 +77,6 @@ export function rebalance(input: RebalanceInput): RebalanceOutput {
         input.prices,
         allocationUsdValue,
     );
-
-    desiredAllocations.forEach((d, idx) => {
-        const tokenValue = d.tokenValue()
-        const usdValue = d.usdValue
-        const tokenSymbol = d.asset.symbol
-
-        logs.push(`Desired allocation #${idx + 1}: ${tokenValue} ${tokenSymbol} ($${usdValue})`);
-    });
 
     // 5. Now we have everything to calculate the actions
     let out = determineRebalanceActions(inputItems, desiredAllocations);
