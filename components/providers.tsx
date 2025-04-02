@@ -21,7 +21,8 @@ import {
 } from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { useChainsStore } from "@/store/chains";
 
 const zetaTestnet = {
   blockExplorerUrls: ["https://athens.explorer.zetachain.com/"],
@@ -106,6 +107,11 @@ export const useNetwork = () => useContext(NetworkContext);
 export function Providers({ children }: { children: React.ReactNode }) {
   const [isTestnet, setIsTestnet] = useState(true);
   const config = isTestnet ? testnetConfig : mainnetConfig;
+  const fetchChains = useChainsStore((state) => state.fetchChains);
+
+  useEffect(() => {
+    fetchChains(isTestnet);
+  }, [isTestnet, fetchChains]);
 
   const toggleNetwork = () => {
     setIsTestnet(!isTestnet);

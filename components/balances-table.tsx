@@ -20,6 +20,7 @@ import {
 import { z } from "zod";
 import { useTransactionStore } from "@/store/transactions";
 import { usePriceStore } from "@/store/prices";
+import { useChainsStore } from "@/store/chains";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -262,6 +263,7 @@ function TokenDetails({
     Record<string, boolean>
   >({});
   const { transactions } = useTransactionStore();
+  const { chains } = useChainsStore();
 
   // Filter tokens based on showZeroBalances setting
   const filteredTokens = React.useMemo(() => {
@@ -269,24 +271,94 @@ function TokenDetails({
     return token.tokens.filter((t) => parseFloat(t.balance) > 0);
   }, [token.tokens, showZeroBalances]);
 
+  // Function to check if a chain is EVM-compatible
+  const isChainEVM = React.useCallback(
+    (chainId: string) => {
+      const chain = chains.find((c) => c.chain_id === chainId);
+      console.log("Chain found:", chain);
+      return chain?.vm === "evm";
+    },
+    [chains]
+  );
+
+  // Function to find native asset for a ZRC20 token
+  const findNativeAsset = React.useCallback(
+    (currentToken: TokenInfo) => {
+      if (currentToken.coin_type !== "ZRC20" || !currentToken.contract)
+        return null;
+
+      console.log(
+        "Looking for native asset with contract:",
+        currentToken.contract
+      );
+      console.log(
+        "Available tokens:",
+        token.tokens.map((t) => ({
+          symbol: t.symbol,
+          zrc20: t.zrc20,
+          contract: t.contract,
+          chainName: t.chainName,
+        }))
+      );
+
+      // Find the corresponding native asset by matching only the ZRC20 contract
+      const nativeAsset = token.tokens.find((t: TokenInfo) => {
+        // The native asset has the ZRC20 contract in its zrc20 field
+        const matches = t.zrc20 === currentToken.contract;
+        console.log(
+          "Checking token:",
+          t.symbol,
+          "zrc20:",
+          t.zrc20,
+          "matches:",
+          matches
+        );
+        return matches;
+      });
+
+      console.log("Found native asset:", nativeAsset);
+      return nativeAsset;
+    },
+    [token.tokens]
+  );
+
   return (
     <div className="space-y-2 p-4">
       <div className="grid gap-2">
         {filteredTokens.map((t) => {
-          // Find pending transactions for this token and chain
           const pendingTransactions = transactions.filter(
             (tx) =>
-              // Check if this token is the target token of a pending transaction
               tx.targetToken?.symbol === t.symbol &&
               tx.targetToken?.chainName === t.chainName &&
               (tx.status === "pending" || tx.status === "Initiated")
           );
 
-          // Calculate total pending amount
           const pendingAmount = pendingTransactions.reduce((sum, tx) => {
             const amount = parseFloat(tx.amount);
-            return sum + Math.abs(amount); // Always use absolute value
+            return sum + Math.abs(amount);
           }, 0);
+
+          // For ZRC20 tokens, find the native asset and check if its chain is EVM
+          const nativeAsset =
+            t.coin_type === "ZRC20" ? findNativeAsset(t) : null;
+          const targetChainId = nativeAsset?.chainId;
+          console.log(
+            "Token:",
+            t.symbol,
+            "Type:",
+            t.coin_type,
+            "Contract:",
+            t.contract
+          );
+          console.log(
+            "Native Asset:",
+            nativeAsset?.symbol,
+            "Chain ID:",
+            targetChainId
+          );
+          const isTargetChainEVM = targetChainId
+            ? isChainEVM(targetChainId)
+            : true;
 
           return (
             <div
@@ -298,6 +370,11 @@ function TokenDetails({
                   {formatChainName(t.chainName)}
                 </div>
                 <div className="text-sm text-muted-foreground">{t.symbol}</div>
+                {t.coin_type === "ZRC20" && (
+                  <div className="text-xs text-muted-foreground">
+                    Target Chain: {nativeAsset?.chainName || "Unknown"}
+                  </div>
+                )}
               </div>
               <div className="text-right">
                 <div className="font-medium">{t.balance}</div>
@@ -319,13 +396,25 @@ function TokenDetails({
                     onClick={() =>
                       handleWithdraw(t, primaryWallet, setLoadingStates)
                     }
-                    disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
+                    disabled={
+                      loadingStates[`${t.symbol}-${t.chainName}`] ||
+                      (t.coin_type === "ZRC20" &&
+                        (!nativeAsset || !isTargetChainEVM)) ||
+                      t.symbol === "ZETA" ||
+                      t.symbol === "WZETA"
+                    }
                   >
                     {loadingStates[`${t.symbol}-${t.chainName}`] ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         Withdrawing...
                       </div>
+                    ) : t.symbol === "ZETA" || t.symbol === "WZETA" ? (
+                      "Withdraw"
+                    ) : t.coin_type === "ZRC20" && !nativeAsset ? (
+                      "Withdraw"
+                    ) : t.coin_type === "ZRC20" && !isTargetChainEVM ? (
+                      "Withdraw"
                     ) : (
                       "Withdraw"
                     )}
@@ -338,13 +427,19 @@ function TokenDetails({
                     onClick={() =>
                       handleDeposit(t, primaryWallet, setLoadingStates)
                     }
-                    disabled={loadingStates[`${t.symbol}-${t.chainName}`]}
+                    disabled={
+                      loadingStates[`${t.symbol}-${t.chainName}`] ||
+                      t.symbol === "ZETA" ||
+                      t.symbol === "WZETA"
+                    }
                   >
                     {loadingStates[`${t.symbol}-${t.chainName}`] ? (
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         Depositing...
                       </div>
+                    ) : t.symbol === "ZETA" || t.symbol === "WZETA" ? (
+                      "Deposit"
                     ) : (
                       "Deposit"
                     )}
