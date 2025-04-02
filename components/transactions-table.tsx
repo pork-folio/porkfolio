@@ -34,6 +34,18 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
+// Add keyframes for rotation animation
+const refreshAnimation = `
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
+
 // Utility function to format chain names
 function formatChainName(chainName: string): string {
   // Replace underscores with spaces
@@ -110,6 +122,7 @@ function StatusCell({
 
   const checkStatus = async () => {
     setIsRefreshing(true);
+    const startTime = Date.now();
     try {
       const response = await fetch(
         `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
@@ -129,6 +142,11 @@ function StatusCell({
     } catch (error) {
       console.error("Error checking status:", error);
     } finally {
+      // Ensure the animation runs for at least 1 second
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < 1000) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 - elapsedTime));
+      }
       setIsRefreshing(false);
     }
   };
@@ -153,8 +171,12 @@ function StatusCell({
         onClick={checkStatus}
         disabled={isRefreshing}
       >
+        <style>{refreshAnimation}</style>
         <IconRefresh
-          className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+          className={cn(
+            "h-4 w-4",
+            isRefreshing && "animate-[spin_1s_linear_infinite]"
+          )}
         />
       </Button>
     </div>
