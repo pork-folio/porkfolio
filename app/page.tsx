@@ -155,9 +155,13 @@ export default function Page() {
     };
 
     const loadAssetPrices = async () => {
-      // Always use mainnet prices regardless of network setting
-      const assets = core.supportedAssets(false);
-      console.log("Supported assets (mainnet)", assets);
+      // Use the correct network's assets based on isTestnet flag
+      const assets = core.supportedAssets(isTestnet);
+      console.log(
+        "Supported assets",
+        isTestnet ? "(testnet)" : "(mainnet)",
+        assets
+      );
 
       const prices = await core.queryAssetPrices(assets);
       console.log("Prices", prices);
