@@ -209,7 +209,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
   },
   {
     id: "price",
-    header: () => <div className="w-full text-right">Price (USD)</div>,
+    header: () => <div className="w-full text-right">Price</div>,
     cell: ({ row }) => {
       const token = row.original;
       return <PriceCell ticker={token.tokens[0]?.ticker} />;
@@ -217,7 +217,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
   },
   {
     id: "value",
-    header: () => <div className="w-full text-right">Value (USD)</div>,
+    header: () => <div className="w-full text-right">Value</div>,
     cell: ({ row }) => {
       const token = row.original;
       return (
@@ -331,7 +331,9 @@ export function BalancesTable({
 }: {
   data: z.infer<typeof schema>[];
 }) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>([
+    { id: "value", desc: true },
+  ]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
@@ -341,14 +343,24 @@ export function BalancesTable({
   const [expandedRows, setExpandedRows] = React.useState<Set<string>>(
     new Set()
   );
+  const [showZeroBalances, setShowZeroBalances] = React.useState(false);
 
   const aggregatedData = React.useMemo(
     () => aggregateTokens(initialData),
     [initialData]
   );
 
+  // Filter out zero balances if showZeroBalances is false
+  const filteredData = React.useMemo(() => {
+    if (showZeroBalances) return aggregatedData;
+    return aggregatedData.filter((token) => {
+      const balance = parseFloat(token.totalBalance);
+      return balance > 0;
+    });
+  }, [aggregatedData, showZeroBalances]);
+
   const table = useReactTable({
-    data: aggregatedData,
+    data: filteredData,
     columns,
     state: {
       sorting,
@@ -395,6 +407,14 @@ export function BalancesTable({
             }
             className="h-8 w-[150px] lg:w-[250px]"
           />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowZeroBalances(!showZeroBalances)}
+            className="h-8"
+          >
+            {showZeroBalances ? "Hide Zero Balances" : "Show Zero Balances"}
+          </Button>
         </div>
       </div>
       <div className="rounded-md border">
