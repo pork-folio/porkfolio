@@ -34,6 +34,23 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
+// Utility function to format chain names
+function formatChainName(chainName: string): string {
+  // Replace underscores with spaces
+  let formatted = chainName.replace(/_/g, " ");
+
+  // Capitalize each word
+  formatted = formatted
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+  // Replace "Zeta" with "ZetaChain"
+  formatted = formatted.replace(/Zeta\b/g, "ZetaChain");
+
+  return formatted;
+}
+
 const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "type",
@@ -54,6 +71,10 @@ const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "chainName",
     header: "Chain",
+    cell: ({ row }) => {
+      const chainName = row.getValue("chainName") as string;
+      return formatChainName(chainName);
+    },
   },
   {
     accessorKey: "amount",

@@ -36,6 +36,23 @@ import { handleWithdraw } from "@/lib/handlers/withdraw";
 import { handleDeposit } from "@/lib/handlers/deposit";
 import { roundNumber } from "@/lib/handlers/balances";
 
+// Utility function to format chain names
+function formatChainName(chainName: string): string {
+  // Replace underscores with spaces
+  let formatted = chainName.replace(/_/g, " ");
+
+  // Capitalize each word
+  formatted = formatted
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
+  // Replace "Zeta" with "ZetaChain"
+  formatted = formatted.replace(/Zeta\b/g, "ZetaChain");
+
+  return formatted;
+}
+
 export const schema = z.object({
   chain_id: z.string(),
   coin_type: z.string(),
@@ -277,7 +294,9 @@ function TokenDetails({
               className="flex items-center justify-between rounded-md border p-2"
             >
               <div className="flex flex-col">
-                <div className="font-medium">{t.chainName}</div>
+                <div className="font-medium">
+                  {formatChainName(t.chainName)}
+                </div>
                 <div className="text-sm text-muted-foreground">{t.symbol}</div>
               </div>
               <div className="text-right">
