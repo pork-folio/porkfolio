@@ -271,7 +271,6 @@ function TokenDetails({
 
   return (
     <div className="space-y-2 p-4">
-      <div className="text-sm font-medium">Chain Details</div>
       <div className="grid gap-2">
         {filteredTokens.map((t) => {
           // Find pending transactions for this token and chain
