@@ -20,6 +20,7 @@ import {
   polygon,
 } from "viem/chains";
 import { EthereumWalletConnectors } from "@dynamic-labs/ethereum";
+import { SolanaWalletConnectors } from "@dynamic-labs/solana";
 import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useChainsStore } from "@/store/chains";
@@ -119,7 +120,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   const dynamicSettings = {
     environmentId: "eaec6949-d524-40e7-81d2-80113243499a",
-    walletConnectors: [EthereumWalletConnectors],
+    walletConnectors: [EthereumWalletConnectors, SolanaWalletConnectors],
     overrides: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       evmNetworks: (networks: any[]) => {

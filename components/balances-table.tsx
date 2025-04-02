@@ -370,11 +370,11 @@ function TokenDetails({
                   {formatChainName(t.chainName)}
                 </div>
                 <div className="text-sm text-muted-foreground">{t.symbol}</div>
-                {t.coin_type === "ZRC20" && (
+                {/* {t.coin_type === "ZRC20" && (
                   <div className="text-xs text-muted-foreground">
                     Target Chain: {nativeAsset?.chainName || "Unknown"}
                   </div>
-                )}
+                )} */}
               </div>
               <div className="text-right">
                 <div className="font-medium">{t.balance}</div>

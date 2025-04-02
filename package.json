@@ -16,6 +16,7 @@
     "@dynamic-labs/ethereum": "^4.10.0",
     "@dynamic-labs/ethers-v6": "^4.10.0",
     "@dynamic-labs/sdk-react-core": "^4.10.0",
+    "@dynamic-labs/solana": "4.10.0",
     "@dynamic-labs/wagmi-connector": "^4.10.0",
     "@pythnetwork/price-service-client": "^1.9.0",
     "@radix-ui/react-avatar": "^1.1.3",
