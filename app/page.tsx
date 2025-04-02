@@ -1,7 +1,6 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { DataTable } from "@/components/data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
@@ -9,24 +8,108 @@ import { useEffect, useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchBalances } from "@/lib/handlers/balances";
 import { useBalanceStore } from "@/store/balances";
+import { usePriceStore } from "@/store/prices";
 import { Button } from "@/components/ui/button";
 import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
+import { useNetwork } from "@/components/providers";
+import { BalancesTable } from "@/components/balances-table";
+import { useTransactionStore } from "@/store/transactions";
 
-const testnet = true;
 
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
   const { balances, setBalances, isLoading, setIsLoading } = useBalanceStore();
+  const { setPrices } = usePriceStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const { isTestnet } = useNetwork();
+
+  // Add effect to check pending transactions on load
+  useEffect(() => {
+    const checkPendingTransactions = async () => {
+      const { transactions } = useTransactionStore.getState();
+      const nonCompletedTransactions = transactions.filter(
+        (tx) => tx.status !== "completed" && tx.status !== "failed"
+      );
+
+      for (const tx of nonCompletedTransactions) {
+        const apiUrl = isTestnet
+          ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
+          : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
+
+        try {
+          const response = await fetch(apiUrl);
+          if (response.status === 404) {
+            useTransactionStore
+              .getState()
+              .updateTransactionStatus(tx.hash, "Initiated");
+          } else if (response.ok) {
+            const data = await response.json();
+            const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+            if (cctxStatus === "OutboundMined") {
+              useTransactionStore
+                .getState()
+                .updateTransactionStatus(tx.hash, "completed");
+            } else if (cctxStatus === "Aborted") {
+              useTransactionStore
+                .getState()
+                .updateTransactionStatus(tx.hash, "failed");
+            }
+          }
+        } catch (error) {
+          console.error("Error checking transaction status:", error);
+        }
+      }
+    };
+
+    checkPendingTransactions();
+  }, [isTestnet]);
 
   const refreshBalances = async () => {
     if (primaryWallet?.address) {
       setIsRefreshing(true);
       try {
-        const balancesData = await fetchBalances(primaryWallet.address);
+        const balancesData = await fetchBalances(
+          primaryWallet.address,
+          isTestnet
+        );
         setBalances(balancesData);
+
+        // Check status of non-completed transactions
+        const { transactions } = useTransactionStore.getState();
+        const nonCompletedTransactions = transactions.filter(
+          (tx) => tx.status !== "completed" && tx.status !== "failed"
+        );
+
+        for (const tx of nonCompletedTransactions) {
+          const apiUrl = isTestnet
+            ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
+            : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
+
+          try {
+            const response = await fetch(apiUrl);
+            if (response.status === 404) {
+              useTransactionStore
+                .getState()
+                .updateTransactionStatus(tx.hash, "Initiated");
+            } else if (response.ok) {
+              const data = await response.json();
+              const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+              if (cctxStatus === "OutboundMined") {
+                useTransactionStore
+                  .getState()
+                  .updateTransactionStatus(tx.hash, "completed");
+              } else if (cctxStatus === "Aborted") {
+                useTransactionStore
+                  .getState()
+                  .updateTransactionStatus(tx.hash, "failed");
+              }
+            }
+          } catch (error) {
+            console.error("Error checking transaction status:", error);
+          }
+        }
       } finally {
         setIsRefreshing(false);
       }
@@ -35,31 +118,36 @@ export default function Page() {
 
   useEffect(() => {
     const loadBalances = async () => {
-      if (primaryWallet?.address && balances.length === 0) {
-        setIsLoading(true);
+      if (primaryWallet?.address) {
+        // Don't set isLoading to true to avoid showing skeleton
+        setIsRefreshing(true);
         try {
-          const balancesData = await fetchBalances(primaryWallet.address);
-          console.log("Balances", balancesData);
+          const balancesData = await fetchBalances(
+            primaryWallet.address,
+            isTestnet
+          );
           setBalances(balancesData);
         } finally {
-          setIsLoading(false);
+          setIsRefreshing(false);
         }
       }
     };
 
     const loadAssetPrices = async () => {
-      const assets = core.supportedAssets(testnet);
-      console.log(`Supported assets (testnet=${testnet})`, assets);
+      // Always use mainnet prices regardless of network setting
+      const assets = core.supportedAssets(false);
+      console.log("Supported assets (mainnet)", assets);
 
       const prices = await core.queryAssetPrices(assets);
       console.log("Prices", prices);
+      setPrices(prices);
     };
 
     loadBalances();
     loadAssetPrices();
-  }, [primaryWallet?.address, setBalances, setIsLoading, balances.length]);
+  }, [primaryWallet?.address, setBalances, setIsLoading, setPrices, isTestnet]);
 
-  const strategies = core.getStrategies(testnet);
+  const strategies = core.getStrategies(isTestnet);
   console.log("Strategies", strategies);
 
   return (
@@ -95,7 +183,7 @@ export default function Page() {
                 </div>
               </div>
               <div className="px-4 lg:px-6">
-                {isLoading ? (
+                {isLoading && !balances.length ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Skeleton className="h-4 w-[200px]" />
@@ -126,7 +214,7 @@ export default function Page() {
                       isRefreshing && "opacity-50"
                     )}
                   >
-                    <DataTable data={balances} />
+                    <BalancesTable data={balances} />
                   </div>
                 )}
               </div>

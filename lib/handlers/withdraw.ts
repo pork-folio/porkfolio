@@ -76,13 +76,21 @@ export async function handleWithdraw(
     const [gasZRC20, gasFee] = await zrc20ContractForGas.withdrawGasFee();
     console.log("Gas fee:", gasFee.toString(), "Gas token:", gasZRC20);
 
-    // Calculate withdrawal amount by subtracting gas fee and taking 90%
-    const totalAmount = ethers.parseUnits(
-      tokenInfo.balance,
-      tokenInfo.decimals
-    );
-    const availableAmount = totalAmount - gasFee;
-    const withdrawalAmount = (availableAmount * BigInt(90)) / BigInt(100);
+    // Calculate withdrawal amount based on whether the token is a gas token or not
+    const totalAmount = balance;
+
+    let withdrawalAmount;
+
+    // console.log("balance", balance);
+    // console.log("totalAmount", totalAmount);
+    // console.log("gasFee", gasFee);
+    // console.log("withdrawalAmount", totalAmount - gasFee);
+    // Check if the token being withdrawn is the same as the gas token
+    if (tokenInfo.contract?.toLowerCase() === gasZRC20.toLowerCase()) {
+      withdrawalAmount = totalAmount - gasFee;
+    } else {
+      withdrawalAmount = totalAmount;
+    }
 
     // Create revert options
     const revertOptions = {
@@ -95,7 +103,7 @@ export async function handleWithdraw(
     // Create transaction options
     const txOptions = {
       gasLimit: undefined,
-      gasPrice: undefined,
+      gasPrice: ethers.parseUnits("50", "gwei"),
       maxFeePerGas: undefined,
       maxPriorityFeePerGas: undefined,
       nonce: undefined,
@@ -120,7 +128,18 @@ export async function handleWithdraw(
       txOptions,
     });
 
-    // Add transaction to store with hash
+    console.log("Withdrawal transaction:", tx);
+    await tx.wait();
+
+    // Find the target token (the corresponding token on the destination chain)
+    const balances = useBalanceStore.getState().balances;
+    const targetToken = balances.find(
+      (token) =>
+        token.zrc20?.toLowerCase() === tokenInfo.contract?.toLowerCase() &&
+        token.chain_id !== tokenInfo.chainId
+    );
+
+    // Add transaction to store with hash and token information
     useTransactionStore.getState().addTransaction({
       type: "withdraw",
       tokenSymbol: tokenInfo.symbol,
@@ -128,15 +147,31 @@ export async function handleWithdraw(
       amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
       status: "pending",
       hash: tx.hash,
+      sourceToken: {
+        symbol: tokenInfo.symbol,
+        chainName: tokenInfo.chainName,
+        contract: tokenInfo.contract,
+        chainId: tokenInfo.chainId,
+        coin_type: tokenInfo.coin_type,
+      },
+      targetToken: targetToken
+        ? {
+            symbol: targetToken.symbol,
+            chainName: targetToken.chain_name,
+            contract: targetToken.zrc20,
+            chainId: targetToken.chain_id,
+            coin_type: targetToken.coin_type,
+          }
+        : undefined,
     });
-
-    console.log("Withdrawal transaction:", tx);
-    await tx.wait();
     console.log("Withdrawal successful!");
 
     // Refresh balances after successful withdrawal
     if (primaryWallet.address) {
-      const balancesData = await fetchBalances(primaryWallet.address);
+      const balancesData = await fetchBalances(
+        primaryWallet.address,
+        tokenInfo.chainId !== "7000"
+      );
       useBalanceStore.getState().setBalances(balancesData);
     }
   } catch (error) {
