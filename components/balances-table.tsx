@@ -479,15 +479,33 @@ export function BalancesTable({
     [initialData]
   );
 
-  // Calculate total portfolio value in USD
-  const totalPortfolioValue = React.useMemo(() => {
-    return aggregatedData.reduce((total, token) => {
+  // Calculate total portfolio value in USD and track included/excluded tokens
+  const { totalValue, includedTokens, excludedTokens } = React.useMemo(() => {
+    const included: string[] = [];
+    const excluded: string[] = [];
+
+    const total = aggregatedData.reduce((total, token) => {
       const price = prices.find(
         (p) => p.ticker === token.tokens[0]?.ticker
       )?.usdRate;
       const balance = parseFloat(token.totalBalance);
-      return total + (price ? price * balance : 0);
+
+      if (balance > 0) {
+        if (price) {
+          included.push(token.baseSymbol);
+          return total + price * balance;
+        } else {
+          excluded.push(token.baseSymbol);
+        }
+      }
+      return total;
     }, 0);
+
+    return {
+      totalValue: total,
+      includedTokens: included,
+      excludedTokens: excluded,
+    };
   }, [aggregatedData, prices]);
 
   // Filter out zero balances if showZeroBalances is false
@@ -540,10 +558,18 @@ export function BalancesTable({
           <div className="text-sm text-muted-foreground">Total Value</div>
           <div className="text-3xl font-bold">
             $
-            {totalPortfolioValue.toLocaleString(undefined, {
+            {totalValue.toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
+          </div>
+          <div className="text-sm text-muted-foreground mt-1">
+            {excludedTokens.length > 0 && (
+              <span>
+                + {excludedTokens.slice(0, 5).join(", ")}
+                {excludedTokens.length > 5 && "..."}
+              </span>
+            )}
           </div>
         </div>
         <div className="flex items-center justify-between">
