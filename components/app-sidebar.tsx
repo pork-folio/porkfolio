@@ -8,6 +8,7 @@ import {
   IconHistory,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import Image from "next/image";
 
 import { NavMain } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
@@ -54,11 +55,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:!p-1"
             >
-              <Link href="/">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+              <Link href="/" className="flex items-center gap-1">
+                <Image
+                  src="/logo.svg"
+                  alt="Porkfolio Logo"
+                  width={28}
+                  height={28}
+                  className="dark:invert"
+                />
+                <span className="text-base text-xl font-semibold">
+                  Porkfolio
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
