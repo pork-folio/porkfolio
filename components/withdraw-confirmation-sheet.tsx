@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import { handleWithdraw } from "@/lib/handlers/withdraw";
 import { formatChainName } from "@/lib/utils";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type TokenInfo = {
   symbol: string;
@@ -74,7 +76,7 @@ export function WithdrawConfirmationSheet({
           )}
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
           <DialogTitle>Withdraw</DialogTitle>
           <div className="space-y-2">
@@ -86,6 +88,20 @@ export function WithdrawConfirmationSheet({
                 ` to ${formatChainName(nativeAsset.chainName)}`}
               .
             </DialogDescription>
+            <div className="space-y-2 mt-4">
+              <Label htmlFor="recipient">
+                Recipient on{" "}
+                {token.coin_type === "ZRC20" && nativeAsset
+                  ? formatChainName(nativeAsset.chainName)
+                  : formatChainName(token.chainName)}
+              </Label>
+              <Input
+                id="recipient"
+                value={primaryWallet.address}
+                readOnly
+                className="font-mono"
+              />
+            </div>
           </div>
         </DialogHeader>
         <div className="mt-4">
