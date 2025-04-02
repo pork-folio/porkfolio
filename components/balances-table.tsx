@@ -285,7 +285,7 @@ function TokenDetails({
           // Calculate total pending amount
           const pendingAmount = pendingTransactions.reduce((sum, tx) => {
             const amount = parseFloat(tx.amount);
-            return sum + (tx.type === "deposit" ? amount : -amount);
+            return sum + Math.abs(amount); // Always use absolute value
           }, 0);
 
           return (
@@ -303,8 +303,7 @@ function TokenDetails({
                 <div className="font-medium">{t.balance}</div>
                 {pendingTransactions.length > 0 && (
                   <div className="text-sm text-muted-foreground">
-                    {pendingAmount > 0 ? "+" : ""}
-                    {pendingAmount.toFixed(4)} pending
+                    +{pendingAmount.toFixed(4)} pending
                   </div>
                 )}
                 {t.contract && (
