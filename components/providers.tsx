@@ -206,6 +206,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   const toggleNetwork = () => {
     setIsTestnet(!isTestnet);
+    // Automatically switch to ZetaChain
+    const zetaChainId = isTestnet ? 7000 : 7001; // Switch to mainnet ZetaChain when going to mainnet, testnet ZetaChain when going to testnet
+    if (typeof window !== "undefined" && window.ethereum) {
+      window.ethereum
+        .request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: `0x${zetaChainId.toString(16)}` }],
+        })
+        .catch((error: any) => {
+          // This error code indicates that the chain has not been added to MetaMask
+          if (error.code === 4902) {
+            console.log("Chain not added to MetaMask");
+          }
+        });
+    }
   };
 
   const dynamicSettings = {
