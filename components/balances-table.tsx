@@ -233,18 +233,30 @@ const columns: ColumnDef<AggregatedToken>[] = [
   },
 ];
 
-function TokenDetails({ token }: { token: AggregatedToken }) {
+function TokenDetails({
+  token,
+  showZeroBalances,
+}: {
+  token: AggregatedToken;
+  showZeroBalances: boolean;
+}) {
   const { primaryWallet } = useDynamicContext();
   const [loadingStates, setLoadingStates] = React.useState<
     Record<string, boolean>
   >({});
   const { transactions } = useTransactionStore();
 
+  // Filter tokens based on showZeroBalances setting
+  const filteredTokens = React.useMemo(() => {
+    if (showZeroBalances) return token.tokens;
+    return token.tokens.filter((t) => parseFloat(t.balance) > 0);
+  }, [token.tokens, showZeroBalances]);
+
   return (
     <div className="space-y-2 p-4">
       <div className="text-sm font-medium">Chain Details</div>
       <div className="grid gap-2">
-        {token.tokens.map((t) => {
+        {filteredTokens.map((t) => {
           // Find pending transactions for this token and chain
           const pendingTransactions = transactions.filter(
             (tx) =>
@@ -458,7 +470,10 @@ export function BalancesTable({
                   {expandedRows.has(row.original.baseSymbol) && (
                     <TableRow>
                       <TableCell colSpan={columns.length}>
-                        <TokenDetails token={row.original} />
+                        <TokenDetails
+                          token={row.original}
+                          showZeroBalances={showZeroBalances}
+                        />
                       </TableCell>
                     </TableRow>
                   )}
