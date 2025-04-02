@@ -77,13 +77,14 @@ export async function handleWithdraw(
     console.log("Gas fee:", gasFee.toString(), "Gas token:", gasZRC20);
 
     // Calculate withdrawal amount based on whether the token is a gas token or not
-    const totalAmount = ethers.parseUnits(
-      tokenInfo.balance,
-      tokenInfo.decimals
-    );
+    const totalAmount = balance;
 
     let withdrawalAmount;
 
+    // console.log("balance", balance);
+    // console.log("totalAmount", totalAmount);
+    // console.log("gasFee", gasFee);
+    // console.log("withdrawalAmount", totalAmount - gasFee);
     // Check if the token being withdrawn is the same as the gas token
     if (tokenInfo.contract?.toLowerCase() === gasZRC20.toLowerCase()) {
       withdrawalAmount = totalAmount - gasFee;
