@@ -1,7 +1,6 @@
 "use client";
 
 import { AppSidebar } from "@/components/app-sidebar";
-import { DataTable } from "@/components/data-table";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
@@ -42,7 +41,8 @@ export default function Page() {
   useEffect(() => {
     const loadBalances = async () => {
       if (primaryWallet?.address) {
-        setIsLoading(true);
+        // Don't set isLoading to true to avoid showing skeleton
+        setIsRefreshing(true);
         try {
           const balancesData = await fetchBalances(
             primaryWallet.address,
@@ -50,7 +50,7 @@ export default function Page() {
           );
           setBalances(balancesData);
         } finally {
-          setIsLoading(false);
+          setIsRefreshing(false);
         }
       }
     };
@@ -105,7 +105,7 @@ export default function Page() {
                 </div>
               </div>
               <div className="px-4 lg:px-6">
-                {isLoading ? (
+                {isLoading && !balances.length ? (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Skeleton className="h-4 w-[200px]" />

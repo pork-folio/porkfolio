@@ -5,6 +5,7 @@ import {
   IconChevronLeft,
   IconChevronRight,
   IconRefresh,
+  IconTrash,
 } from "@tabler/icons-react";
 import {
   ColumnDef,
@@ -21,6 +22,7 @@ import {
 import { useTransactionStore, Transaction } from "@/store/transactions";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useNetwork } from "@/components/providers";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,7 +104,22 @@ const columns: ColumnDef<Transaction>[] = [
     header: "Time",
     cell: ({ row }) => {
       const timestamp = row.getValue("timestamp") as number;
-      return formatDistanceToNow(timestamp, { addSuffix: true });
+      const hash = row.original.hash;
+      const { isTestnet } = useNetwork();
+      const apiUrl = isTestnet
+        ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
+        : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+
+      return (
+        <a
+          href={apiUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-500 hover:underline"
+        >
+          {formatDistanceToNow(timestamp, { addSuffix: true })}
+        </a>
+      );
     },
   },
 ];
@@ -119,14 +136,17 @@ function StatusCell({
   const hash = row.original.hash;
   const updateStatus = useTransactionStore.getState().updateTransactionStatus;
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const { isTestnet } = useNetwork();
 
   const checkStatus = async () => {
     setIsRefreshing(true);
     const startTime = Date.now();
     try {
-      const response = await fetch(
-        `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
-      );
+      const apiUrl = isTestnet
+        ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
+        : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+
+      const response = await fetch(apiUrl);
 
       if (response.status === 404) {
         updateStatus(hash, "Initiated");
@@ -184,7 +204,7 @@ function StatusCell({
 }
 
 export function TransactionsTable() {
-  const { transactions } = useTransactionStore();
+  const { transactions, clearTransactions } = useTransactionStore();
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -223,6 +243,19 @@ export function TransactionsTable() {
             }
             className="h-8 w-[150px] lg:w-[250px]"
           />
+        </div>
+        <div className="flex items-center space-x-2">
+          {transactions.length > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={clearTransactions}
+            >
+              <IconTrash className="mr-2 h-4 w-4" />
+              Clear Transactions
+            </Button>
+          )}
         </div>
       </div>
       <div className="rounded-md border">

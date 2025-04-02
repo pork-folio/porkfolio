@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
 export type TransactionType = "deposit" | "withdraw";
 export type TransactionStatus =
@@ -22,26 +23,35 @@ interface TransactionStore {
   transactions: Transaction[];
   addTransaction: (transaction: Omit<Transaction, "id" | "timestamp">) => void;
   updateTransactionStatus: (hash: string, status: TransactionStatus) => void;
+  clearTransactions: () => void;
 }
 
-export const useTransactionStore = create<TransactionStore>((set) => ({
-  transactions: [],
-  addTransaction: (transaction) =>
-    set((state) => ({
-      transactions: [
-        {
-          ...transaction,
-          status: "Initiated",
-          id: Math.random().toString(36).substring(7),
-          timestamp: Date.now(),
-        },
-        ...state.transactions,
-      ],
-    })),
-  updateTransactionStatus: (hash, status) =>
-    set((state) => ({
-      transactions: state.transactions.map((tx) =>
-        tx.hash === hash ? { ...tx, status } : tx
-      ),
-    })),
-}));
+export const useTransactionStore = create<TransactionStore>()(
+  persist(
+    (set) => ({
+      transactions: [],
+      addTransaction: (transaction) =>
+        set((state) => ({
+          transactions: [
+            {
+              ...transaction,
+              status: "Initiated",
+              id: Math.random().toString(36).substring(7),
+              timestamp: Date.now(),
+            },
+            ...state.transactions,
+          ],
+        })),
+      updateTransactionStatus: (hash, status) =>
+        set((state) => ({
+          transactions: state.transactions.map((tx) =>
+            tx.hash === hash ? { ...tx, status } : tx
+          ),
+        })),
+      clearTransactions: () => set({ transactions: [] }),
+    }),
+    {
+      name: "transactions-storage",
+    }
+  )
+);
