@@ -23,7 +23,7 @@ import { usePriceStore } from "@/store/prices";
 import { useChainsStore } from "@/store/chains";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -179,32 +179,32 @@ function ValueCell({ ticker, balance }: { ticker: string; balance: string }) {
 }
 
 const columns: ColumnDef<AggregatedToken>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   id: "select",
+  //   header: ({ table }) => (
+  //     <div className="flex items-center justify-center">
+  //       <Checkbox
+  //         checked={
+  //           table.getIsAllPageRowsSelected() ||
+  //           (table.getIsSomePageRowsSelected() && "indeterminate")
+  //         }
+  //         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //         aria-label="Select all"
+  //       />
+  //     </div>
+  //   ),
+  //   cell: ({ row }) => (
+  //     <div className="flex items-center justify-center">
+  //       <Checkbox
+  //         checked={row.getIsSelected()}
+  //         onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //         aria-label="Select row"
+  //       />
+  //     </div>
+  //   ),
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: "baseSymbol",
     header: "Symbol",
@@ -214,7 +214,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
         <div className="flex flex-col">
           <div className="font-medium">{token.baseSymbol}</div>
           <div className="text-sm text-muted-foreground">
-            {token.tokens.length} chains
+            {token.tokens.length} tokens
           </div>
         </div>
       );
@@ -383,11 +383,11 @@ function TokenDetails({
                     +{pendingAmount.toFixed(4)} pending
                   </div>
                 )}
-                {t.contract && (
+                {/* {t.contract && (
                   <div className="text-xs text-muted-foreground">
                     {t.contract.slice(0, 6)}...{t.contract.slice(-4)}
                   </div>
-                )}
+                )} */}
                 {t.chainId === "7000" || t.chainId === "7001" ? (
                   <Button
                     variant="outline"
@@ -606,10 +606,10 @@ export function BalancesTable({
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2">
-        <div className="flex-1 text-sm text-muted-foreground">
+        {/* <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
+        </div> */}
         <div className="space-x-2">
           <Button
             variant="outline"

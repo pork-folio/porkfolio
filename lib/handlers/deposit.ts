@@ -134,6 +134,9 @@ export async function handleDeposit(
         (token.chain_id === "7000" || token.chain_id === "7001")
     );
 
+    console.log("Deposit transaction:", tx);
+    await tx.wait();
+
     // Add transaction to store with hash and token information
     useTransactionStore.getState().addTransaction({
       type: "deposit",
@@ -159,9 +162,6 @@ export async function handleDeposit(
           }
         : undefined,
     });
-
-    console.log("Deposit transaction:", tx);
-    await tx.wait();
     console.log("Deposit successful!");
 
     // Refresh balances after successful deposit
