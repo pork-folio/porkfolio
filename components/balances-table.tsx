@@ -214,7 +214,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
         <div className="flex flex-col">
           <div className="font-medium">{token.baseSymbol}</div>
           <div className="text-sm text-muted-foreground">
-            {token.tokens.length} chains
+            {token.tokens.length} tokens
           </div>
         </div>
       );
@@ -575,8 +575,8 @@ export function BalancesTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4">
-        <div className="flex items-start gap-4">
-          <div className="flex flex-col p-4 min-w-[200px]">
+        <div className="flex flex-wrap items-start gap-4">
+          <div className="flex flex-col p-4 min-w-[300px] border rounded-lg">
             <div className="text-sm text-muted-foreground">Total Value</div>
             <div className="text-4xl font-bold mt-1">
               $
@@ -594,7 +594,7 @@ export function BalancesTable({
               )}
             </div>
           </div>
-          <div className="flex flex-col p-4 min-w-[300px]">
+          <div className="flex flex-col p-4 min-w-[300px] border rounded-lg">
             <div className="text-sm text-muted-foreground">Diversification</div>
             <div className="text-4xl font-bold mt-1">
               {Math.round(100 - assetDistribution[0]?.percentage || 0)}%
