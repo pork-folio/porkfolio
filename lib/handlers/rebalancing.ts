@@ -34,6 +34,7 @@ export async function executeRebalancingSwap(
   action: SwapAction,
   primaryWallet: Wallet | null
 ) {
+  console.log("swap", action);
   try {
     if (!primaryWallet?.address) {
       console.error("Wallet state:", {
@@ -67,16 +68,52 @@ export async function executeRebalancingSwap(
     });
 
     // Gateway address for BSC testnet
-    const gatewayAddress = "0x0c487a766110c85d301d96e33579c5b317fa4995";
+    const gatewayAddress =
+      action.from.chain_id === "7001"
+        ? "0x6c533f7fe93fae114d0954697069df33c9b74fd7" // ZetaChain gateway
+        : "0x0c487a766110c85d301d96e33579c5b317fa4995"; // Other chains gateway
     const receiverAddress = "0x0cf3e61a95137172bb064C209a12e31003a23B8B";
 
     // Prepare parameters for the swap
-    const types = ["address", "address", "bool"];
+    if (!action.to.zrc20 && action.to.symbol !== "ZETA") {
+      throw new Error(
+        `Missing ZRC20 address for target token ${action.to.symbol}`
+      );
+    }
+
+    const zetaAddress =
+      action.from.chain_id === "7000"
+        ? "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf" // mainnet
+        : "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"; // testnet
+
+    const types = ["address", "bytes", "bool"];
     const values: [string, string, boolean] = [
-      action.to.zrc20 || "", // target token address
+      action.to.symbol === "ZETA"
+        ? zetaAddress // Use specific ZETA address
+        : action.to.zrc20!, // target token address (we know it exists due to the check above)
       primaryWallet.address, // recipient
       true, // boolean flag
     ];
+
+    console.log({
+      amount: action.from.balance,
+      erc20: action.from.contract,
+      gatewayEvm: gatewayAddress,
+      receiver: receiverAddress,
+      types,
+      values,
+      revertOptions: {
+        revertAddress: ethers.ZeroAddress,
+        callOnRevert: false,
+        onRevertGasLimit: 0,
+        revertMessage: "",
+        abortAddress: ethers.ZeroAddress,
+      },
+      txOptions: {
+        gasLimit: BigInt(500000), // High gas limit for complex operations
+        gasPrice: ethers.parseUnits("50", "gwei"), // High gas price
+      },
+    });
 
     // Execute deposit and call
     const tx = await client.evmDepositAndCall({
@@ -93,8 +130,8 @@ export async function executeRebalancingSwap(
         revertMessage: "",
       },
       txOptions: {
-        gasLimit: undefined,
-        gasPrice: undefined,
+        gasLimit: BigInt(500000), // High gas limit for complex operations
+        gasPrice: ethers.parseUnits("50", "gwei"), // High gas price
       },
     });
 
