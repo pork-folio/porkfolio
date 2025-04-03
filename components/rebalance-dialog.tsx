@@ -84,7 +84,7 @@ export function RebalanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Rebalance Portfolio</DialogTitle>
           <DialogDescription>
@@ -93,63 +93,104 @@ export function RebalanceDialog({
               : "Select a strategy and allocation percentage to rebalance your portfolio."}
           </DialogDescription>
         </DialogHeader>
-        {!showActions ? (
-          <>
-            <div className="grid gap-4 py-4">
-              <div className="flex gap-4">
-                {strategies.map((strategy) => (
-                  <div
-                    key={strategy.id}
-                    className={cn(
-                      "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors hover:bg-accent flex-1",
-                      selectedStrategy?.id === strategy.id &&
-                        "border-primary bg-accent"
-                    )}
-                    onClick={() => setSelectedStrategy(strategy)}
-                  >
-                    <h3 className="font-semibold">{strategy.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {strategy.description}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {strategy.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-secondary px-2 py-0.5 text-xs"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+        <div className="flex-1 overflow-y-auto">
+          {!showActions ? (
+            <>
+              <div className="grid gap-4 py-4">
+                <div className="flex gap-4">
+                  {strategies.map((strategy) => (
+                    <div
+                      key={strategy.id}
+                      className={cn(
+                        "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors hover:bg-accent flex-1",
+                        selectedStrategy?.id === strategy.id &&
+                          "border-primary bg-accent"
+                      )}
+                      onClick={() => setSelectedStrategy(strategy)}
+                    >
+                      <h3 className="font-semibold">{strategy.name}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {strategy.description}
+                      </p>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {strategy.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full bg-secondary px-2 py-0.5 text-xs"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="allocation">Allocation Percentage</Label>
+                  <div className="flex items-center gap-4">
+                    <Slider
+                      value={[Number(allocation)]}
+                      onValueChange={handleAllocationChange}
+                      max={100}
+                      step={1}
+                      className="flex-1"
+                    />
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="allocation"
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={allocation}
+                        onChange={(e) => handleAllocationChange(e.target.value)}
+                        className="w-20"
+                      />
+                      <span className="text-sm text-muted-foreground">%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="py-4">
+              <div className="space-y-4">
+                {rebalanceOutput?.actions.map((action, index) => (
+                  <div key={index} className="rounded-lg border p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-semibold">
+                          Swap {action.from.symbol} for {action.to.symbol}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          From: {action.from.balance} {action.from.symbol} ($
+                          {action.fromUsdValue.toFixed(2)})
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          To: {action.to.symbol} ($
+                          {(
+                            action.fromUsdValue / action.toPrice.usdRate
+                          ).toFixed(6)}
+                          )
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-medium">
+                          ${action.fromUsdValue.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          USD Value
+                        </p>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="allocation">Allocation Percentage</Label>
-                <div className="flex items-center gap-4">
-                  <Slider
-                    value={[Number(allocation)]}
-                    onValueChange={handleAllocationChange}
-                    max={100}
-                    step={1}
-                    className="flex-1"
-                  />
-                  <div className="flex items-center gap-2">
-                    <Input
-                      id="allocation"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={allocation}
-                      onChange={(e) => handleAllocationChange(e.target.value)}
-                      className="w-20"
-                    />
-                    <span className="text-sm text-muted-foreground">%</span>
-                  </div>
-                </div>
-              </div>
             </div>
-            <DialogFooter>
+          )}
+        </div>
+        <DialogFooter className="mt-4">
+          {!showActions ? (
+            <>
               <Button
                 variant="outline"
                 onClick={() => onOpenChange(false)}
@@ -163,51 +204,17 @@ export function RebalanceDialog({
               >
                 {isRebalancing ? "Rebalancing..." : "Rebalance"}
               </Button>
-            </DialogFooter>
-          </>
-        ) : (
-          <div className="py-4">
-            <div className="space-y-4">
-              {rebalanceOutput?.actions.map((action, index) => (
-                <div key={index} className="rounded-lg border p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">
-                        Swap {action.from.symbol} for {action.to.symbol}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">
-                        From: {action.from.balance} {action.from.symbol} ($
-                        {action.fromUsdValue.toFixed(2)})
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        To: {action.to.symbol} ($
-                        {(action.fromUsdValue / action.toPrice.usdRate).toFixed(
-                          6
-                        )}
-                        )
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">
-                        ${action.fromUsdValue.toFixed(2)}
-                      </p>
-                      <p className="text-xs text-muted-foreground">USD Value</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <DialogFooter className="mt-4">
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isRebalancing}
-              >
-                Close
-              </Button>
-            </DialogFooter>
-          </div>
-        )}
+            </>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isRebalancing}
+            >
+              Close
+            </Button>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
