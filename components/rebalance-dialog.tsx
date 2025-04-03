@@ -15,6 +15,7 @@ import { Slider } from "@/components/ui/slider";
 import { Strategy } from "@/core";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { useRebalancingStore } from "@/store/rebalancing";
 
 interface RebalanceDialogProps {
   open: boolean;
@@ -57,6 +58,7 @@ export function RebalanceDialog({
   );
   const [allocation, setAllocation] = useState("100");
   const [showActions, setShowActions] = useState(false);
+  const addOperation = useRebalancingStore((state) => state.addOperation);
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -79,6 +81,17 @@ export function RebalanceDialog({
     if (selectedStrategy) {
       setShowActions(true);
       onRebalance(selectedStrategy, Number(allocation));
+    }
+  };
+
+  const handleSave = () => {
+    if (selectedStrategy && rebalanceOutput) {
+      addOperation({
+        strategy: selectedStrategy,
+        allocation: Number(allocation),
+        actions: rebalanceOutput.actions,
+      });
+      onOpenChange(false);
     }
   };
 
@@ -207,11 +220,10 @@ export function RebalanceDialog({
             </>
           ) : (
             <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isRebalancing}
+              onClick={handleSave}
+              disabled={!rebalanceOutput || isRebalancing}
             >
-              Close
+              Save Rebalancing
             </Button>
           )}
         </DialogFooter>
