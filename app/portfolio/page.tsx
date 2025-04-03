@@ -188,7 +188,8 @@ export default function PortfolioPage() {
       console.error("Error during rebalancing:", error);
     } finally {
       setIsRebalancing(false);
-      setIsRebalanceDialogOpen(false);
+      // Only close the dialog after rebalancing is complete
+      // setIsRebalanceDialogOpen(false);
     }
   };
 
