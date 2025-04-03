@@ -73,7 +73,17 @@ export default function RebalancingPage() {
   ]);
 
   const handleRebalance = async (strategy: Strategy, allocation: number) => {
-    if (!primaryWallet?.address || !balances.length || !prices.length) return;
+    console.log("handleRebalance called with:", { strategy, allocation });
+    console.log("Current state:", {
+      hasWallet: !!primaryWallet?.address,
+      balancesLength: balances.length,
+      pricesLength: prices.length,
+    });
+
+    if (!primaryWallet?.address || !balances.length || !prices.length) {
+      console.log("Early return due to missing data");
+      return;
+    }
 
     setIsRebalancing(true);
     try {
@@ -88,6 +98,14 @@ export default function RebalancingPage() {
           percentage: allocation,
         },
       };
+
+      console.log("Rebalance input:", {
+        portfolio: balances,
+        prices,
+        supportedAssets,
+        strategy,
+        allocation,
+      });
 
       const output = rebalance(rebalanceInput);
       console.log("Rebalance output:", output);
