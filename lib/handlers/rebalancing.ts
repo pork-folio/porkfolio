@@ -111,7 +111,7 @@ export async function executeRebalancingSwap(
       );
 
       const amount = ethers.parseUnits(
-        action.fromTokenValue.toString(),
+        Number(action.fromTokenValue.toFixed(action.from.decimals)).toString(),
         action.from.decimals
       );
 
