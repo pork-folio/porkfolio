@@ -76,6 +76,8 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --color-pork: #df91a4;
+  --filter-pork: invert(86%) sepia(16%) saturate(5841%) hue-rotate(295deg) brightness(107%) contrast(75%);
 }
 
 .dark {
@@ -119,4 +121,8 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.text-color-pork {
+  color: var(--color-pork);
 }

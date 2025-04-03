@@ -58,15 +58,16 @@ export function AppSidebar({
               className="data-[slot=sidebar-menu-button]:!p-1"
             >
               <Link href="/" className="flex items-center gap-1">
-                <Image
+                <img
                   src="/logo.svg"
                   alt="Porkfolio Logo"
                   width={28}
                   height={28}
                   className="dark:invert"
+                  style={{ filter: 'var(--filter-pork)' }}
                 />
                 <span className="text-base text-xl font-semibold">
-                  Porkfolio
+                  <span className="text-color-pork">Pork</span>folio
                 </span>
               </Link>
             </SidebarMenuButton>

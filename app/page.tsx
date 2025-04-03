@@ -45,7 +45,7 @@ export default function Page() {
             <PortfolioVideo src="/porkfolio-looped.mp4" className="w-3/4 max-w-xs mt-6 mb-2" />
             <div className="py-2 mt-4">
               <h1 className="text-4xl font-bold tracking-tight">
-                Por<span style={{color: 'rgb(223,145,164)'}}>k</span>folio 🐽
+                <span className="text-color-pork">Pork</span>folio 🐽
               </h1>
             </div>
             <p className="text-muted-foreground text-lg">Connect wallet to manage your portfolio</p>
