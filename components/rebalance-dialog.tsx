@@ -57,7 +57,7 @@ export function RebalanceDialog({
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(
     null
   );
-  const [allocation, setAllocation] = useState("100");
+  const [allocation, setAllocation] = useState("2");
   const [showActions, setShowActions] = useState(false);
   const addOperation = useRebalancingStore((state) => state.addOperation);
 
@@ -66,7 +66,7 @@ export function RebalanceDialog({
     if (open) {
       setShowActions(false);
       setSelectedStrategy(null);
-      setAllocation("100");
+      setAllocation("2");
     }
   }, [open]);
 
