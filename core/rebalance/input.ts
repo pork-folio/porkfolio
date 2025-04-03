@@ -46,69 +46,61 @@ export class DesiredUsdAllocation {
     }
 }
 
+/**
+ * Combines input intro triplets of (asset, price, balance).
+ * Filters out unsupported assets and empty balances.
+ * @param supportedAssets Supported assets
+ * @param prices Prices
+ * @param balances Balances
+ * @returns Input items and logs
+ */
 export function buildInputItems(
     supportedAssets: Asset[],
     prices: Price[],
     balances: BalanceData[],
-): InputItem[] {
+): { inputItems: InputItem[], logs: string[] } {
+    let logs: string[] = [];
     let inputItems: InputItem[] = [];
 
-    // chainId+canonical => asset
-    // chainId+externalContract => asset
-    // chainId+zrc20 => asset
-    let assetsMap = new Map<string, Asset>();
-    for (let asset of supportedAssets) {
-        const canonicalKey = `${asset.chainId}:${asset.canonical}`;
-        const zrc20Key = `${asset.chainId}:${asset.zrc20}`;
-        const externalContractKey = asset.coinType === "ERC20"
-            ? `${asset.chainId}:${asset.asset}`
-            : `${asset.chainId}:gas`;
+    // 1. Match supported assets to prices
+    const assetPriceMap: [Asset, Price][] = [];
 
-        assetsMap.set(canonicalKey, asset);
-        assetsMap.set(zrc20Key, asset);
-        assetsMap.set(externalContractKey, asset);
-    }
-
-    // chainId+canonical => price
-    let pricesMap = new Map<string, Price>();
-    for (let price of prices) {
-        const key = `${price.chainId}:${price.canonical}`;
-        pricesMap.set(key, price);
-    }
-
-    let balancesMap = new Map<string, BalanceData>();
-    for (let b of balances) {
-        const asset = assetsMap.get(balanceToAssetKey(b));
-        if (!asset) {
-            throw Error(`Asset not found for balance ${b.id}`);
-        }
-
-        const canonicalKey = `${asset.chainId}:${asset.canonical}`;
-        balancesMap.set(canonicalKey, b);
-    }
-
-    // okay, now we have each entity in a map of "chainId+canonical" => entity,
-    // let's build an ultimate map
-    for (let asset of supportedAssets) {
+    for (const asset of supportedAssets) {
         const key = `${asset.chainId}:${asset.canonical}`;
+        const price = prices.find(
+            p => p.chainId === asset.chainId && p.canonical === asset.canonical
+        );
 
-        const balance = balancesMap.get(key);
-        if (!balance) {
-            throw Error(`Balance not found for asset ${key}`);
-        }
-
-        const price = pricesMap.get(key);
         if (!price) {
             throw Error(`Price not found for asset ${key}`);
         }
 
+        assetPriceMap.push([asset, price]);
+    }
+
+    // 2. Match balances
+    for (const balance of balances) {
+        const assetPrice = assetPriceMap.find(
+            ([asset, _]) => assetMatchesBalance(asset, balance)
+        );
+
+        if (!assetPrice) {
+            logs.push(`Asset not found for balance ${balance.id}. Skipped`);
+            continue;
+        }
+
+        const [asset, price] = assetPrice;
+
         inputItems.push(new InputItem(balance, asset, price));
     }
 
-    // now let's sort by total user's USD value DESC
+    // filter out empty balances
+    inputItems = inputItems.filter(item => item.usdPrice() > 0);
+
+    // sort by total user's $ DESC
     inputItems.sort((a, b) => b.usdPrice() - a.usdPrice());
 
-    return inputItems
+    return { inputItems, logs }
 }
 
 // Calculate input allocation to USD value
@@ -200,14 +192,20 @@ export function buildDesiredAllocations(
     return out;
 }
 
-function balanceToAssetKey(b: BalanceData): string {
-    if (b.coin_type === "ZRC20" || b.coin_type === "ERC20") {
-        return `${b.chain_id}:${b.contract}`;
+
+function assetMatchesBalance(asset: Asset, balance: BalanceData): boolean {
+    if (balance.coin_type === "Gas") {
+        return balance.chain_id == asset.chainId && balance.ticker == asset.symbol;
     }
 
-    if (b.coin_type === "Gas") {
-        return `${b.chain_id}:gas`;
+    if (balance.coin_type === "ERC20") {
+        return balance.chain_id === asset.chainId
+            && balance.contract.toLowerCase() === asset.asset.toLowerCase();
     }
 
-    throw Error(`Unsupported coin type: ${b.coin_type} for balance ${b.id}`);
+    if (balance.coin_type === "ZRC20") {
+        return balance.contract.toLowerCase() === asset.zrc20.toLowerCase();
+    }
+
+    return false
 }
