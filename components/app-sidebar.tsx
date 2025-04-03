@@ -26,7 +26,7 @@ const data = {
   navMain: [
     {
       title: "Portfolio",
-      url: "/",
+      url: "/portfolio",
       icon: IconFolder,
     },
     {

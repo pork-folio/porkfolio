@@ -25,7 +25,8 @@ export async function handleWithdraw(
   primaryWallet: Wallet | null,
   setLoadingStates: (
     callback: (prev: Record<string, boolean>) => Record<string, boolean>
-  ) => void
+  ) => void,
+  recipientAddress: string
 ) {
   try {
     setLoadingStates((prev) => ({
@@ -111,7 +112,7 @@ export async function handleWithdraw(
 
     console.log("zetachainWithdraw", {
       amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
-      receiver: primaryWallet.address,
+      receiver: recipientAddress,
       zrc20: tokenInfo.contract!,
       gatewayZetaChain: gatewayAddress,
       revertOptions,
@@ -121,7 +122,7 @@ export async function handleWithdraw(
     // Execute withdrawal with adjusted amount
     const { tx } = await client.zetachainWithdraw({
       amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
-      receiver: primaryWallet.address,
+      receiver: recipientAddress,
       zrc20: tokenInfo.contract!,
       gatewayZetaChain: gatewayAddress,
       revertOptions,

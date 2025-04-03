@@ -23,7 +23,7 @@ import { usePriceStore } from "@/store/prices";
 import { useChainsStore } from "@/store/chains";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+// import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -33,26 +33,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { handleWithdraw } from "@/lib/handlers/withdraw";
 import { handleDeposit } from "@/lib/handlers/deposit";
 import { roundNumber } from "@/lib/handlers/balances";
-
-// Utility function to format chain names
-function formatChainName(chainName: string): string {
-  // Replace underscores with spaces
-  let formatted = chainName.replace(/_/g, " ");
-
-  // Capitalize each word
-  formatted = formatted
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
-
-  // Replace "Zeta" with "ZetaChain"
-  formatted = formatted.replace(/Zeta\b/g, "ZetaChain");
-
-  return formatted;
-}
+import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sheet";
+import { formatChainName } from "@/lib/utils";
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -65,18 +49,7 @@ export const schema = z.object({
   id: z.string(),
   ticker: z.string(),
   balance: z.string(),
-}) as z.ZodType<{
-  chain_id: string;
-  coin_type: string;
-  contract?: string;
-  decimals: number;
-  symbol: string;
-  zrc20?: string;
-  chain_name: string;
-  id: string;
-  ticker: string;
-  balance: string;
-}>;
+});
 
 type TokenInfo = {
   symbol: string;
@@ -179,32 +152,32 @@ function ValueCell({ ticker, balance }: { ticker: string; balance: string }) {
 }
 
 const columns: ColumnDef<AggregatedToken>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
-          }
-          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
-          aria-label="Select all"
-        />
-      </div>
-    ),
-    cell: ({ row }) => (
-      <div className="flex items-center justify-center">
-        <Checkbox
-          checked={row.getIsSelected()}
-          onCheckedChange={(value) => row.toggleSelected(!!value)}
-          aria-label="Select row"
-        />
-      </div>
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
+  // {
+  //   id: "select",
+  //   header: ({ table }) => (
+  //     <div className="flex items-center justify-center">
+  //       <Checkbox
+  //         checked={
+  //           table.getIsAllPageRowsSelected() ||
+  //           (table.getIsSomePageRowsSelected() && "indeterminate")
+  //         }
+  //         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+  //         aria-label="Select all"
+  //       />
+  //     </div>
+  //   ),
+  //   cell: ({ row }) => (
+  //     <div className="flex items-center justify-center">
+  //       <Checkbox
+  //         checked={row.getIsSelected()}
+  //         onCheckedChange={(value) => row.toggleSelected(!!value)}
+  //         aria-label="Select row"
+  //       />
+  //     </div>
+  //   ),
+  //   enableSorting: false,
+  //   enableHiding: false,
+  // },
   {
     accessorKey: "baseSymbol",
     header: "Symbol",
@@ -214,7 +187,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
         <div className="flex flex-col">
           <div className="font-medium">{token.baseSymbol}</div>
           <div className="text-sm text-muted-foreground">
-            {token.tokens.length} chains
+            {token.tokens.length} tokens
           </div>
         </div>
       );
@@ -223,7 +196,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
   },
   {
     accessorKey: "totalBalance",
-    header: () => <div className="w-full text-right">Total Balance</div>,
+    header: () => <div className="w-full text-right">Balance</div>,
     cell: ({ row }) => (
       <div className="text-right font-medium">{row.original.totalBalance}</div>
     ),
@@ -271,52 +244,18 @@ function TokenDetails({
     return token.tokens.filter((t) => parseFloat(t.balance) > 0);
   }, [token.tokens, showZeroBalances]);
 
-  // Function to check if a chain is EVM-compatible
-  const isChainEVM = React.useCallback(
-    (chainId: string) => {
-      const chain = chains.find((c) => c.chain_id === chainId);
-      console.log("Chain found:", chain);
-      return chain?.vm === "evm";
-    },
-    [chains]
-  );
-
   // Function to find native asset for a ZRC20 token
   const findNativeAsset = React.useCallback(
     (currentToken: TokenInfo) => {
       if (currentToken.coin_type !== "ZRC20" || !currentToken.contract)
         return null;
 
-      console.log(
-        "Looking for native asset with contract:",
-        currentToken.contract
-      );
-      console.log(
-        "Available tokens:",
-        token.tokens.map((t) => ({
-          symbol: t.symbol,
-          zrc20: t.zrc20,
-          contract: t.contract,
-          chainName: t.chainName,
-        }))
-      );
-
       // Find the corresponding native asset by matching only the ZRC20 contract
       const nativeAsset = token.tokens.find((t: TokenInfo) => {
         // The native asset has the ZRC20 contract in its zrc20 field
-        const matches = t.zrc20 === currentToken.contract;
-        console.log(
-          "Checking token:",
-          t.symbol,
-          "zrc20:",
-          t.zrc20,
-          "matches:",
-          matches
-        );
-        return matches;
+        return t.zrc20 === currentToken.contract;
       });
 
-      console.log("Found native asset:", nativeAsset);
       return nativeAsset;
     },
     [token.tokens]
@@ -338,27 +277,8 @@ function TokenDetails({
             return sum + Math.abs(amount);
           }, 0);
 
-          // For ZRC20 tokens, find the native asset and check if its chain is EVM
           const nativeAsset =
-            t.coin_type === "ZRC20" ? findNativeAsset(t) : null;
-          const targetChainId = nativeAsset?.chainId;
-          console.log(
-            "Token:",
-            t.symbol,
-            "Type:",
-            t.coin_type,
-            "Contract:",
-            t.contract
-          );
-          console.log(
-            "Native Asset:",
-            nativeAsset?.symbol,
-            "Chain ID:",
-            targetChainId
-          );
-          const isTargetChainEVM = targetChainId
-            ? isChainEVM(targetChainId)
-            : true;
+            t.coin_type === "ZRC20" ? findNativeAsset(t) ?? null : null;
 
           return (
             <div
@@ -370,11 +290,6 @@ function TokenDetails({
                   {formatChainName(t.chainName)}
                 </div>
                 <div className="text-sm text-muted-foreground">{t.symbol}</div>
-                {/* {t.coin_type === "ZRC20" && (
-                  <div className="text-xs text-muted-foreground">
-                    Target Chain: {nativeAsset?.chainName || "Unknown"}
-                  </div>
-                )} */}
               </div>
               <div className="text-right">
                 <div className="font-medium">{t.balance}</div>
@@ -389,36 +304,14 @@ function TokenDetails({
                   </div>
                 )}
                 {t.chainId === "7000" || t.chainId === "7001" ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-2"
-                    onClick={() =>
-                      handleWithdraw(t, primaryWallet, setLoadingStates)
-                    }
-                    disabled={
-                      loadingStates[`${t.symbol}-${t.chainName}`] ||
-                      (t.coin_type === "ZRC20" &&
-                        (!nativeAsset || !isTargetChainEVM)) ||
-                      t.symbol === "ZETA" ||
-                      t.symbol === "WZETA"
-                    }
-                  >
-                    {loadingStates[`${t.symbol}-${t.chainName}`] ? (
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        Withdrawing...
-                      </div>
-                    ) : t.symbol === "ZETA" || t.symbol === "WZETA" ? (
-                      "Withdraw"
-                    ) : t.coin_type === "ZRC20" && !nativeAsset ? (
-                      "Withdraw"
-                    ) : t.coin_type === "ZRC20" && !isTargetChainEVM ? (
-                      "Withdraw"
-                    ) : (
-                      "Withdraw"
-                    )}
-                  </Button>
+                  <WithdrawConfirmationSheet
+                    token={t}
+                    nativeAsset={nativeAsset}
+                    loadingStates={loadingStates}
+                    primaryWallet={primaryWallet}
+                    setLoadingStates={setLoadingStates}
+                    chains={chains}
+                  />
                 ) : (
                   <Button
                     variant="outline"
@@ -438,8 +331,6 @@ function TokenDetails({
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                         Depositing...
                       </div>
-                    ) : t.symbol === "ZETA" || t.symbol === "WZETA" ? (
-                      "Deposit"
                     ) : (
                       "Deposit"
                     )}
@@ -472,11 +363,61 @@ export function BalancesTable({
     new Set()
   );
   const [showZeroBalances, setShowZeroBalances] = React.useState(false);
+  const { prices } = usePriceStore();
 
   const aggregatedData = React.useMemo(
     () => aggregateTokens(initialData),
     [initialData]
   );
+
+  // Calculate total portfolio value in USD and track included/excluded tokens
+  const { totalValue, excludedTokens, assetDistribution } =
+    React.useMemo(() => {
+      const included: string[] = [];
+      const excluded: string[] = [];
+      const distribution: { symbol: string; percentage: number }[] = [];
+      const assetValues: { symbol: string; value: number }[] = [];
+
+      // First pass: calculate all values
+      const total = aggregatedData.reduce((total, token) => {
+        const price = prices.find(
+          (p) => p.ticker === token.tokens[0]?.ticker
+        )?.usdRate;
+        const balance = parseFloat(token.totalBalance);
+
+        if (balance > 0) {
+          if (price) {
+            included.push(token.baseSymbol);
+            const value = price * balance;
+            assetValues.push({
+              symbol: token.baseSymbol,
+              value: value,
+            });
+            return total + value;
+          } else {
+            excluded.push(token.baseSymbol);
+          }
+        }
+        return total;
+      }, 0);
+
+      // Second pass: calculate percentages using the final total
+      distribution.push(
+        ...assetValues.map(({ symbol, value }) => ({
+          symbol,
+          percentage: (value / total) * 100,
+        }))
+      );
+
+      // Sort distribution by percentage in descending order
+      distribution.sort((a, b) => b.percentage - a.percentage);
+
+      return {
+        totalValue: total,
+        excludedTokens: excluded,
+        assetDistribution: distribution,
+      };
+    }, [aggregatedData, prices]);
 
   // Filter out zero balances if showZeroBalances is false
   const filteredData = React.useMemo(() => {
@@ -523,26 +464,71 @@ export function BalancesTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex flex-1 items-center space-x-2">
-          <Input
-            placeholder="Filter tokens..."
-            value={
-              (table.getColumn("baseSymbol")?.getFilterValue() as string) ?? ""
-            }
-            onChange={(event) =>
-              table.getColumn("baseSymbol")?.setFilterValue(event.target.value)
-            }
-            className="h-8 w-[150px] lg:w-[250px]"
-          />
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowZeroBalances(!showZeroBalances)}
-            className="h-8"
-          >
-            {showZeroBalances ? "Hide Zero Balances" : "Show Zero Balances"}
-          </Button>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-wrap items-start gap-4">
+          <div className="flex flex-col p-4 min-w-[300px] border rounded-lg">
+            <div className="text-sm text-muted-foreground">Total Value</div>
+            <div className="text-4xl font-bold mt-1">
+              $
+              {totalValue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </div>
+            <div className="text-sm text-muted-foreground mt-2">
+              {excludedTokens.length > 0 && (
+                <span>
+                  + {excludedTokens.slice(0, 5).join(", ")}
+                  {excludedTokens.length > 5 && "..."}
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-col p-4 min-w-[300px] border rounded-lg">
+            <div className="text-sm text-muted-foreground">Diversification</div>
+            <div className="text-4xl font-bold mt-1">
+              {Math.round(100 - assetDistribution[0]?.percentage || 0)}%
+            </div>
+            <div className="text-sm text-muted-foreground mt-2">
+              {(() => {
+                const diversification = Math.round(
+                  100 - assetDistribution[0]?.percentage || 0
+                );
+                if (diversification >= 90) return "highly diversified";
+                if (diversification >= 70) return "well diversified";
+                if (diversification >= 50) return "moderately diversified";
+                if (diversification >= 30) return "slightly concentrated";
+                if (diversification >= 20) return "concentrated";
+                if (diversification >= 10) return "highly concentrated";
+                return "extremely concentrated";
+              })()}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between">
+          <div className="flex flex-1 items-center space-x-2">
+            <Input
+              placeholder="Filter tokens..."
+              value={
+                (table.getColumn("baseSymbol")?.getFilterValue() as string) ??
+                ""
+              }
+              onChange={(event) =>
+                table
+                  .getColumn("baseSymbol")
+                  ?.setFilterValue(event.target.value)
+              }
+              className="h-8 w-[150px] lg:w-[250px]"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowZeroBalances(!showZeroBalances)}
+              className="h-8"
+            >
+              {showZeroBalances ? "Hide Zero Balances" : "Show Zero Balances"}
+            </Button>
+          </div>
         </div>
       </div>
       <div className="rounded-md border">
