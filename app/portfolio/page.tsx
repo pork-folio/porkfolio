@@ -184,6 +184,8 @@ export default function PortfolioPage() {
         },
       };
 
+      console.log("Rebalance input:", rebalanceInput);
+
       const output = rebalance(rebalanceInput);
       console.log("Rebalance output:", output);
 
