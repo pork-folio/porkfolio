@@ -4,6 +4,7 @@ import strat02 from './data/strategies/strat02.json';
 import strat03 from './data/strategies/strat03.json';
 
 export interface Strategy {
+    id: string
     name: string
     description: string
     sortIndex: number
@@ -25,6 +26,10 @@ export function getStrategies(testnet: boolean = false): Strategy[] {
     )
 }
 
+export function getStrategy(id: string): Strategy | undefined {
+    return allStrategies.find(s => s.id === id)
+}
+
 function parseStrategies(): Strategy[] {
     const raw = [strat01, strat02, strat03]
 
@@ -33,6 +38,7 @@ function parseStrategies(): Strategy[] {
 
 function parseStrategy(kv: any): Strategy {
     const strat = {
+        id: kv.id,
         name: kv.name,
         description: kv.description,
         sortIndex: kv.sort_index,

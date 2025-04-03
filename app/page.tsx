@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/accordion";
 import { useRouter } from "next/navigation";
 
+
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
   const [isLoading, setIsLoading] = useState(true);

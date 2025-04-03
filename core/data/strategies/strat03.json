@@ -1,4 +1,5 @@
 {
+    "id": "meme-master",
     "name": "Meme Master",
     "description": "A portfolio focused on memecoins",
     "sort_index": 2,
@@ -14,11 +15,11 @@
     "percentage_strategy": [
         {
             "percentage": 5000,
-            "asset": "SHIB.ETH"
+            "asset": "SHIB"
         },
         {
             "percentage": 5000,
-            "asset": "PEPE.ETH"
+            "asset": "PEPE"
         }
     ]
 }
