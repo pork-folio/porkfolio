@@ -86,54 +86,82 @@ export async function executeRebalancingSwap(
         ? "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf" // mainnet
         : "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"; // testnet
 
-    const types = ["address", "bytes", "bool"];
-    const values: [string, string, boolean] = [
-      action.to.symbol === "ZETA"
-        ? zetaAddress // Use specific ZETA address
-        : action.to.zrc20!, // target token address (we know it exists due to the check above)
-      primaryWallet.address, // recipient
-      true, // boolean flag
-    ];
+    let tx;
+    if (action.from.chain_id === "7000" || action.from.chain_id === "7001") {
+      // Direct contract interaction for ZetaChain swaps
+      const ZRC20_ABI = [
+        "function approve(address spender, uint256 amount) external returns (bool)",
+        "function allowance(address owner, address spender) external view returns (uint256)",
+      ];
 
-    console.log({
-      amount: action.from.balance,
-      erc20: action.from.contract,
-      gatewayEvm: gatewayAddress,
-      receiver: receiverAddress,
-      types,
-      values,
-      revertOptions: {
-        revertAddress: ethers.ZeroAddress,
-        callOnRevert: false,
-        onRevertGasLimit: 0,
-        revertMessage: "",
-        abortAddress: ethers.ZeroAddress,
-      },
-      txOptions: {
-        gasLimit: BigInt(500000), // High gas limit for complex operations
-        gasPrice: ethers.parseUnits("50", "gwei"), // High gas price
-      },
-    });
+      const Swap_ABI = [
+        "function swap(address zrc20, uint256 amount, address target, bytes memory recipient, bool withdraw) external",
+      ];
 
-    // Execute deposit and call
-    const tx = await client.evmDepositAndCall({
-      amount: action.from.balance,
-      erc20: action.from.contract,
-      gatewayEvm: gatewayAddress,
-      receiver: receiverAddress,
-      types,
-      values,
-      revertOptions: {
-        revertAddress: ethers.ZeroAddress,
-        callOnRevert: false,
-        onRevertGasLimit: 0,
-        revertMessage: "",
-      },
-      txOptions: {
-        gasLimit: BigInt(500000), // High gas limit for complex operations
-        gasPrice: ethers.parseUnits("50", "gwei"), // High gas price
-      },
-    });
+      const zrc20Contract = new ethers.Contract(
+        action.from.contract!,
+        ZRC20_ABI,
+        signer
+      );
+      const swapContract = new ethers.Contract(
+        receiverAddress,
+        Swap_ABI,
+        signer
+      );
+
+      const amount = ethers.parseUnits(
+        action.from.balance,
+        action.from.decimals
+      );
+
+      // Check and approve if needed
+      const allowance = await zrc20Contract.allowance(
+        primaryWallet.address,
+        receiverAddress
+      );
+      if (allowance < amount) {
+        const approval = await zrc20Contract.approve(receiverAddress, amount);
+        await approval.wait();
+      }
+
+      // Execute swap
+      tx = await swapContract.swap(
+        action.from.contract,
+        amount,
+        action.to.symbol === "ZETA" ? zetaAddress : action.to.zrc20!,
+        ethers.toUtf8Bytes(primaryWallet.address),
+        false
+      );
+    } else {
+      // Use evmDepositAndCall for other chains
+      const types = ["address", "bytes", "bool"];
+      const values: [string, string, boolean] = [
+        action.to.symbol === "ZETA"
+          ? zetaAddress // Use specific ZETA address
+          : action.to.zrc20!, // target token address (we know it exists due to the check above)
+        primaryWallet.address, // recipient
+        true, // boolean flag
+      ];
+
+      tx = await client.evmDepositAndCall({
+        amount: action.from.balance,
+        erc20: action.from.contract,
+        gatewayEvm: receiverAddress,
+        receiver: receiverAddress,
+        types,
+        values,
+        revertOptions: {
+          revertAddress: ethers.ZeroAddress,
+          callOnRevert: false,
+          onRevertGasLimit: 0,
+          revertMessage: "",
+        },
+        txOptions: {
+          gasLimit: BigInt(500000), // High gas limit for complex operations
+          gasPrice: ethers.parseUnits("50", "gwei"), // High gas price
+        },
+      });
+    }
 
     // Add transaction to store
     useTransactionStore.getState().addTransaction({
