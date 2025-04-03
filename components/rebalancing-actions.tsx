@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IconRefresh } from "@tabler/icons-react";
 import { useNetwork } from "@/components/providers";
+import { Progress } from "@/components/ui/progress";
 
 // Add keyframes for rotation animation
 const refreshAnimation = `
@@ -72,6 +73,13 @@ export function RebalancingActions({
     return matchingTransaction?.status;
   };
 
+  const calculateProgress = () => {
+    const completedActions = actions.filter(
+      (action) => findTransactionStatus(action) === "completed"
+    ).length;
+    return (completedActions / actions.length) * 100;
+  };
+
   const refreshAllStatuses = async () => {
     setIsRefreshing(true);
     const startTime = Date.now();
@@ -121,9 +129,18 @@ export function RebalancingActions({
     }
   };
 
+  const progress = calculateProgress();
+
   return (
     <div>
-      <div className="flex justify-end mb-4">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex-1 mr-4">
+          <div className="flex items-center gap-2 mb-2">
+            <h3 className="text-sm font-medium">Overall Progress</h3>
+            <Badge variant="outline">{Math.round(progress)}%</Badge>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
         <Button
           variant="outline"
           size="sm"
