@@ -258,19 +258,19 @@ export default function RebalancingPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {operations.map((operation) => {
                       const progress = calculateProgress(operation);
                       return (
                         <div
                           key={operation.id}
-                          className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors max-w-2xl"
+                          className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors"
                           onClick={() =>
                             router.push(`/rebalancing/${operation.id}`)
                           }
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1">
+                          <div className="flex flex-col gap-2">
+                            <div>
                               <h3 className="font-semibold">
                                 {operation.strategy.name}
                               </h3>
@@ -280,16 +280,16 @@ export default function RebalancingPage() {
                                   addSuffix: true,
                                 })}
                               </p>
-                              <div className="mt-2 flex items-center gap-2">
-                                <div className="w-32">
-                                  <Progress value={progress} className="h-2" />
-                                </div>
-                                <Badge variant="outline">
-                                  {Math.round(progress)}%
-                                </Badge>
-                              </div>
                             </div>
                             <div className="flex items-center gap-2">
+                              <div className="w-32">
+                                <Progress value={progress} className="h-2" />
+                              </div>
+                              <Badge variant="outline">
+                                {Math.round(progress)}%
+                              </Badge>
+                            </div>
+                            <div className="flex justify-end">
                               <Button
                                 variant="ghost"
                                 size="icon"
