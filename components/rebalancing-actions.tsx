@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { SwapAction, executeRebalancingSwap } from "@/lib/handlers/rebalancing";
+import { useTransactionStore } from "@/store/transactions";
+import { Badge } from "@/components/ui/badge";
 
 interface RebalancingActionsProps {
   actions: SwapAction[];
@@ -17,6 +19,7 @@ export function RebalancingActions({
     {}
   );
   const { primaryWallet } = useDynamicContext();
+  const transactions = useTransactionStore((state) => state.transactions);
 
   const handleSwap = async (action: SwapAction, index: number) => {
     if (readOnly) return;
@@ -39,12 +42,23 @@ export function RebalancingActions({
     }
   };
 
+  const findTransactionStatus = (action: SwapAction) => {
+    const matchingTransaction = transactions.find(
+      (tx) =>
+        tx.rebalancingGroupId === rebalancingId &&
+        tx.targetToken?.symbol === action.to.symbol &&
+        tx.amount === action.fromTokenValue.toString()
+    );
+    return matchingTransaction?.status;
+  };
+
   return (
     <div>
       <div className="space-y-4">
         {actions.map((action, index) => {
           const actionKey = `${action.from.symbol}-${action.to.symbol}`;
           const isLoading = loadingStates[actionKey];
+          const status = findTransactionStatus(action);
 
           return (
             <div
@@ -58,10 +72,25 @@ export function RebalancingActions({
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="font-semibold">
-                    Swap {action.fromTokenValue.toFixed(6)} {action.from.symbol}{" "}
-                    for {action.to.symbol}
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold">
+                      Swap {action.fromTokenValue.toFixed(6)}{" "}
+                      {action.from.symbol} for {action.to.symbol}
+                    </h3>
+                    {status && (
+                      <Badge
+                        variant={
+                          status === "completed"
+                            ? "default"
+                            : status === "pending" || status === "Initiated"
+                            ? "secondary"
+                            : "destructive"
+                        }
+                      >
+                        {status.charAt(0).toUpperCase() + status.slice(1)}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     From: {action.fromTokenValue.toFixed(6)}{" "}
                     {action.from.symbol} on {action.from.chain_name} ($
