@@ -5,7 +5,7 @@ describe("rebalance", () => {
     it("should rebalance", async () => {
         // ARRANGE
         // Download input from Github
-        const url = 'https://gist.githubusercontent.com/fadeev/dc43b7d3b3aebf2f9197f9e1a2dab9d8/raw/f0832bdcfc0a21b0833f4d695ba7ea504cffa3de/file.json'
+        const url = 'https://gist.githubusercontent.com/swift1337/d11abdc6b00eb5213bbe92be3e1b5e88/raw/c43cd0e47c3ef18d62d1daa6d9c11ec1351c332a/rebalance.json'
         const response = await fetch(url);
         const portfolio = await response.json();
         const rebalanceInput = portfolio as RebalanceInput;
@@ -18,5 +18,7 @@ describe("rebalance", () => {
         expect(result.valid).toBe(true);
         expect(result.actions.length).toBeGreaterThan(0);
         expect(result.logs.length).toBeGreaterThan(0);
+
+        console.log("Result logs", result.logs);
     })
 })

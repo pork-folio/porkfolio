@@ -53,10 +53,8 @@ export interface RebalanceAction {
  * @throws Validation error if the input is invalid
  */
 export function rebalance(input: RebalanceInput): RebalanceOutput {
-    let logs: string[] = [];
-
     // 1. Combine (asset, price, balance)
-    const inputItems = buildInputItems(
+    const { inputItems, logs } = buildInputItems(
         input.supportedAssets,
         input.prices,
         input.portfolio,

@@ -46,11 +46,20 @@ export class DesiredUsdAllocation {
     }
 }
 
+/**
+ * Combines input intro triplets of (asset, price, balance).
+ * Filters out unsupported assets and empty balances.
+ * @param supportedAssets Supported assets
+ * @param prices Prices
+ * @param balances Balances
+ * @returns Input items and logs
+ */
 export function buildInputItems(
     supportedAssets: Asset[],
     prices: Price[],
     balances: BalanceData[],
-): InputItem[] {
+): { inputItems: InputItem[], logs: string[] } {
+    let logs: string[] = [];
     let inputItems: InputItem[] = [];
 
     // 1. Match supported assets to prices
@@ -76,7 +85,8 @@ export function buildInputItems(
         );
 
         if (!assetPrice) {
-            throw Error(`Asset not found for balance ${balance.id}`);
+            logs.push(`Asset not found for balance ${balance.id}. Skipped`);
+            continue;
         }
 
         const [asset, price] = assetPrice;
@@ -84,10 +94,13 @@ export function buildInputItems(
         inputItems.push(new InputItem(balance, asset, price));
     }
 
-    // now let's sort by total user's USD value DESC
+    // filter out empty balances
+    inputItems = inputItems.filter(item => item.usdPrice() > 0);
+
+    // sort by total user's $ DESC
     inputItems.sort((a, b) => b.usdPrice() - a.usdPrice());
 
-    return inputItems
+    return { inputItems, logs }
 }
 
 // Calculate input allocation to USD value

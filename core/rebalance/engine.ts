@@ -19,8 +19,6 @@ export function determineRebalanceActions(got: InputItem[], want: DesiredUsdAllo
     const actions: RebalanceAction[] = [];
 
     // 1. Filter out assets with zero value
-    got = got.filter(item => item.usdPrice() > 0);
-
     logs.push(`Portfolio assets: ${got.map(item => item.asset.symbol).join(", ")}`);
 
     // 2. Group "canonical" => input items
