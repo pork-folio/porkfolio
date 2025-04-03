@@ -6,11 +6,27 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { useRebalancingStore } from "@/store/rebalancing";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IconArrowLeft } from "@tabler/icons-react";
+import { IconArrowLeft, IconRefresh } from "@tabler/icons-react";
 import { RebalancingActions } from "@/components/rebalancing-actions";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
 import { use } from "react";
+import { useTransactionStore } from "@/store/transactions";
+import { Progress } from "@/components/ui/progress";
+import { useState } from "react";
+import { useNetwork } from "@/components/providers";
+
+// Add keyframes for rotation animation
+const refreshAnimation = `
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+`;
 
 export default function RebalancingOperationPage({
   params,
@@ -22,6 +38,12 @@ export default function RebalancingOperationPage({
   const operation = useRebalancingStore((state) =>
     state.operations.find((op) => op.id === id)
   );
+  const transactions = useTransactionStore((state) => state.transactions);
+  const updateTransactionStatus = useTransactionStore(
+    (state) => state.updateTransactionStatus
+  );
+  const { isTestnet } = useNetwork();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   if (!operation) {
     return (
@@ -54,6 +76,74 @@ export default function RebalancingOperationPage({
       </SidebarProvider>
     );
   }
+
+  const findTransactionStatus = (action: any) => {
+    const matchingTransaction = transactions.find(
+      (tx) =>
+        tx.rebalancingGroupId === operation.id &&
+        tx.targetToken?.symbol === action.to.symbol &&
+        tx.amount === action.fromTokenValue.toString()
+    );
+    return matchingTransaction?.status;
+  };
+
+  const calculateProgress = () => {
+    const completedActions = operation.actions.filter(
+      (action) => findTransactionStatus(action) === "completed"
+    ).length;
+    return (completedActions / operation.actions.length) * 100;
+  };
+
+  const refreshAllStatuses = async () => {
+    setIsRefreshing(true);
+    const startTime = Date.now();
+
+    try {
+      const rebalancingTransactions = transactions.filter(
+        (tx) => tx.rebalancingGroupId === operation.id
+      );
+
+      await Promise.all(
+        rebalancingTransactions.map(async (tx) => {
+          try {
+            const apiUrl = isTestnet
+              ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
+              : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
+
+            const response = await fetch(apiUrl);
+
+            if (response.status === 404) {
+              updateTransactionStatus(tx.hash, "Initiated");
+            } else if (response.ok) {
+              const data = await response.json();
+              const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+              if (cctxStatus === "OutboundMined") {
+                updateTransactionStatus(tx.hash, "completed");
+              } else if (cctxStatus === "Aborted") {
+                updateTransactionStatus(tx.hash, "failed");
+              }
+            }
+          } catch (error) {
+            console.error(
+              `Error checking status for transaction ${tx.hash}:`,
+              error
+            );
+          }
+        })
+      );
+    } catch (error) {
+      console.error("Error refreshing statuses:", error);
+    } finally {
+      // Ensure the animation runs for at least 1 second
+      const elapsedTime = Date.now() - startTime;
+      if (elapsedTime < 1000) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 - elapsedTime));
+      }
+      setIsRefreshing(false);
+    }
+  };
+
+  const progress = calculateProgress();
 
   return (
     <SidebarProvider>
@@ -102,6 +192,33 @@ export default function RebalancingOperationPage({
               </div>
               <div className="px-4 lg:px-6">
                 <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 mr-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h2 className="text-xl font-semibold">
+                          Overall Progress
+                        </h2>
+                        <Badge variant="outline">{Math.round(progress)}%</Badge>
+                      </div>
+                      <Progress value={progress} className="h-2" />
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={refreshAllStatuses}
+                      disabled={isRefreshing}
+                    >
+                      <style>{refreshAnimation}</style>
+                      <IconRefresh
+                        className={`mr-2 h-4 w-4 ${
+                          isRefreshing
+                            ? "animate-[spin_1s_linear_infinite]"
+                            : ""
+                        }`}
+                      />
+                      Refresh Statuses
+                    </Button>
+                  </div>
                   <h2 className="text-xl font-semibold">Actions</h2>
                   <div className="max-w-2xl">
                     <RebalancingActions
