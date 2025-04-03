@@ -2,6 +2,9 @@
 import strat01 from './data/strategies/strat01.json';
 import strat02 from './data/strategies/strat02.json';
 import strat03 from './data/strategies/strat03.json';
+import strat04 from './data/strategies/strat04.json';
+import strat05 from './data/strategies/strat05.json';
+import strat06 from './data/strategies/strat06.json';
 
 export interface Strategy {
     id: string
@@ -31,7 +34,7 @@ export function getStrategy(id: string): Strategy | undefined {
 }
 
 function parseStrategies(): Strategy[] {
-    const raw = [strat01, strat02, strat03]
+    const raw = [strat01, strat02, strat03, strat04, strat05, strat06]
 
     return raw.map(parseStrategy).sort((a, b) => a.sortIndex - b.sortIndex)
 }

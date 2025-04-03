@@ -1,0 +1,28 @@
+{
+    "id": "zeta-tester",
+    "name": "Testnet Degen",
+    "description": "HOW MANY FAUCETS CAN YOU CLAIM?",
+    "sort_index": 6,
+    "tags": [
+        "zeta",
+        "edge"
+    ],
+    "env": [
+        "testnet"
+    ],
+    "type": "percentage_strategy",
+    "percentage_strategy": [
+        {
+            "percentage": 4000,
+            "asset": "SUI"
+        },
+        {
+            "percentage": 3000,
+            "asset": "TON"
+        },
+        {
+            "percentage": 3000,
+            "asset": "SOL"
+        }
+    ]
+}

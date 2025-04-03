@@ -1,12 +1,10 @@
 {
-    "id": "low-risk",
-    "name": "Low Risk",
-    "description": "Stable coin with minor BTC percentage",
-    "sort_index": 1,
+    "id": "btc-maxi",
+    "name": "BTC Maxi",
+    "description": "A Bitcoin maximalist portfolio with minimal Ethereum exposure",
+    "sort_index": 2,
     "tags": [
-        "stable",
-        "conservative",
-        "low-risk"
+        "conservative"
     ],
     "env": [
         "testnet",
@@ -15,16 +13,12 @@
     "type": "percentage_strategy",
     "percentage_strategy": [
         {
-            "percentage": 5000,
-            "asset": "USDC"
-        },
-        {
-            "percentage": 4000,
-            "asset": "USDT"
+            "percentage": 9000,
+            "asset": "BTC"
         },
         {
             "percentage": 1000,
-            "asset": "BTC"
+            "asset": "ETH"
         }
     ]
 }

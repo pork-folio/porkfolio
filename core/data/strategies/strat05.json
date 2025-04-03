@@ -1,0 +1,29 @@
+{
+    "id": "yolo-index",
+    "name": "YOLO Index",
+    "description": "An extremely high-risk portfolio for those who want maximum meme exposure",
+    "sort_index": 5,
+    "tags": [
+        "meme",
+        "yolo",
+        "high-risk"
+    ],
+    "env": [
+        "mainnet"
+    ],
+    "type": "percentage_strategy",
+    "percentage_strategy": [
+        {
+            "percentage": 4000,
+            "asset": "PEPE"
+        },
+        {
+            "percentage": 4000,
+            "asset": "DOGE"
+        },
+        {
+            "percentage": 2000,
+            "asset": "ETH"
+        }
+    ]
+} 
