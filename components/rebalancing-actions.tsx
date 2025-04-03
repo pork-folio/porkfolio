@@ -4,15 +4,21 @@ import { SwapAction, executeRebalancingSwap } from "@/lib/handlers/rebalancing";
 
 interface RebalancingActionsProps {
   actions: SwapAction[];
+  readOnly?: boolean;
 }
 
-export function RebalancingActions({ actions }: RebalancingActionsProps) {
+export function RebalancingActions({
+  actions,
+  readOnly = false,
+}: RebalancingActionsProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
     {}
   );
   const { primaryWallet } = useDynamicContext();
 
   const handleSwap = async (action: SwapAction) => {
+    if (readOnly) return;
+
     try {
       const actionKey = `${action.from.symbol}-${action.to.symbol}`;
       setLoadingStates((prev) => ({ ...prev, [actionKey]: true }));
@@ -41,10 +47,10 @@ export function RebalancingActions({ actions }: RebalancingActionsProps) {
           return (
             <div
               key={index}
-              className={`rounded-lg border p-4 cursor-pointer transition-colors ${
-                isLoading ? "opacity-50" : "hover:bg-gray-50"
-              }`}
-              onClick={() => !isLoading && handleSwap(action)}
+              className={`rounded-lg border p-4 ${
+                readOnly ? "" : "cursor-pointer hover:bg-gray-50"
+              } transition-colors ${isLoading ? "opacity-50" : ""}`}
+              onClick={() => !isLoading && !readOnly && handleSwap(action)}
             >
               <div className="flex items-center justify-between">
                 <div>
