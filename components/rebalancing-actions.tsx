@@ -53,11 +53,12 @@ export function RebalancingActions({ actions }: RebalancingActionsProps) {
                     {action.to.symbol}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    From: {action.from.balance} {action.from.symbol} ($
+                    From: {action.from.balance} {action.from.symbol} on{" "}
+                    {action.from.chain_name} ($
                     {action.fromUsdValue.toFixed(2)})
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    To: {action.to.symbol} ($
+                    To: {action.to.symbol} on ZetaChain ($
                     {(action.fromUsdValue / action.toPrice.usdRate).toFixed(6)})
                   </p>
                 </div>
