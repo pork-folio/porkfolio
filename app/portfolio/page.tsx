@@ -32,7 +32,29 @@ export default function PortfolioPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
-  const [rebalanceOutput, setRebalanceOutput] = useState<any>(null);
+  const [rebalanceOutput, setRebalanceOutput] = useState<
+    | {
+        valid: boolean;
+        actions: {
+          type: string;
+          from: {
+            symbol: string;
+            balance: string;
+            chain_name: string;
+          };
+          fromUsdValue: number;
+          fromTokenValue: number;
+          to: {
+            symbol: string;
+            name: string;
+          };
+          toPrice: {
+            usdRate: number;
+          };
+        }[];
+      }
+    | undefined
+  >(undefined);
   const { isTestnet } = useNetwork();
 
   // Add effect to check pending transactions on load

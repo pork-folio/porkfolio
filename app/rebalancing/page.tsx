@@ -7,7 +7,7 @@ import { useRebalancingStore, RebalancingOperation } from "@/store/rebalancing";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IconScale, IconEye, IconTrash } from "@tabler/icons-react";
+import { IconScale, IconTrash } from "@tabler/icons-react";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
 import { RebalancingDetailsDialog } from "@/components/rebalancing-details-dialog";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
@@ -19,6 +19,27 @@ import { useState, useEffect } from "react";
 import { rebalance } from "@/core/rebalance/rebalance";
 import { Strategy } from "@/core";
 import { fetchBalances } from "@/lib/handlers/balances";
+
+type RebalanceDialogOutput = {
+  valid: boolean;
+  actions: {
+    type: string;
+    from: {
+      symbol: string;
+      balance: string;
+      chain_name: string;
+    };
+    fromUsdValue: number;
+    fromTokenValue: number;
+    to: {
+      symbol: string;
+      name: string;
+    };
+    toPrice: {
+      usdRate: number;
+    };
+  }[];
+};
 
 export default function RebalancingPage() {
   const operations = useRebalancingStore((state) => state.operations);
@@ -33,7 +54,9 @@ export default function RebalancingPage() {
   const { isTestnet } = useNetwork();
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
-  const [rebalanceOutput, setRebalanceOutput] = useState<any>(null);
+  const [rebalanceOutput, setRebalanceOutput] = useState<
+    RebalanceDialogOutput | undefined
+  >(undefined);
   const [selectedOperation, setSelectedOperation] =
     useState<RebalancingOperation | null>(null);
 
@@ -114,7 +137,29 @@ export default function RebalancingPage() {
         throw new Error("Rebalance calculation failed");
       }
 
-      setRebalanceOutput(output);
+      // Transform the core output to match the dialog's expected shape
+      const dialogOutput: RebalanceDialogOutput = {
+        valid: output.valid,
+        actions: output.actions.map((action) => ({
+          type: action.type,
+          from: {
+            symbol: action.from.symbol,
+            balance: action.from.balance,
+            chain_name: action.from.chain_name,
+          },
+          fromUsdValue: action.fromUsdValue,
+          fromTokenValue: action.fromTokenValue,
+          to: {
+            symbol: action.to.symbol,
+            name: action.to.name,
+          },
+          toPrice: {
+            usdRate: action.toPrice.usdRate,
+          },
+        })),
+      };
+
+      setRebalanceOutput(dialogOutput);
     } catch (error) {
       console.error("Error during rebalancing:", error);
       // You might want to show an error toast here

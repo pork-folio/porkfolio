@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import {
-  IconChartBar,
-  IconFolder,
   IconHistory,
   IconWallet,
   IconScale,
@@ -23,31 +21,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useRebalancingStore } from "@/store/rebalancing";
-
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Portfolio",
-      url: "/portfolio",
-      icon: IconFolder,
-    },
-    {
-      title: "Strategies",
-      url: "/strategies",
-      icon: IconChartBar,
-    },
-    {
-      title: "Transactions",
-      url: "/transactions",
-      icon: IconHistory,
-    },
-  ],
-};
 
 export function AppSidebar({
   variant,
