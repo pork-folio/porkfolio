@@ -1,12 +1,18 @@
 "use client";
 
 import * as React from "react";
-import { IconChartBar, IconFolder, IconHistory } from "@tabler/icons-react";
+import {
+  IconChartBar,
+  IconFolder,
+  IconHistory,
+  IconWallet,
+  IconScale,
+  IconSettings,
+} from "@tabler/icons-react";
 import Link from "next/link";
 import Image from "next/image";
 
 import { NavMain } from "@/components/nav-main";
-import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
@@ -16,6 +22,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useRebalancingStore } from "@/store/rebalancing";
 
 const data = {
   user: {
@@ -42,9 +49,34 @@ const data = {
   ],
 };
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  variant,
+}: {
+  variant: "inset" | "sidebar" | "floating";
+}) {
+  const operations = useRebalancingStore((state) => state.operations);
+
+  const navItems = [
+    {
+      title: "Portfolio",
+      url: "/portfolio",
+      icon: IconWallet,
+    },
+    {
+      title: "Rebalancing",
+      url: "/rebalancing",
+      icon: IconScale,
+      badge: operations.length > 0 ? operations.length : undefined,
+    },
+    {
+      title: "Transactions",
+      url: "/transactions",
+      icon: IconHistory,
+    },
+  ];
+
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar variant={variant}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -69,10 +101,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/settings" className="flex items-center gap-2">
+                <IconSettings className="h-4 w-4" />
+                Settings
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
   );
