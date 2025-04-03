@@ -13,27 +13,15 @@ export type Asset = {
     canonical: string;
 }
 
-const zetaCoin: Asset = {
-    zrc20: "",
-    asset: "",
-    chainId: "7000",
-    decimals: 18,
-    name: "ZetaChain ZETA",
-    symbol: "ZETA",
-    coinType: "Gas",
-    pythPriceId: "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
-    canonical: "ZETA",
-}
-
 export function supportedAssets(testnet: boolean = false): Asset[] {
     // zetacored query fungible list-foreign-coins --output json | jq '.foreignCoins' | pbcopy
     // pyth price id can be found here: https://www.pyth.network/developers/price-feed-ids
     // Note: it doesn't include [ULTI, NPC] as they have no Pyth oracle
+    // 
+    // Also, this list includes zeta gas as well as wZeta
     const rawAssets = testnet ? assetsTestnet : assetsMainnet;
 
     let assets = rawAssets.map(parseAsset);
-
-    assets.push(zetaCoin)
 
     return assets;
 }

@@ -109,10 +109,13 @@ describe("buildInputItems", () => {
 
     it("valid", () => {
         // ACT
-        const result = buildInputItems(supportedAssets, prices, tokenBalances);
+        const { inputItems: result, logs } = buildInputItems(supportedAssets, prices, tokenBalances);
 
         // ASSERT
-        expect(result).toHaveLength(3);
+        expect(logs).toHaveLength(0);
+
+        // 2 instead of 3 because ETH.ARBSEP has no balance
+        expect(result).toHaveLength(2);
 
         // Check first element is BTC (it has the highest USD value)
         expect(result[0].asset.symbol).toBe("BTC.BTC");
@@ -127,14 +130,6 @@ describe("buildInputItems", () => {
         expect(result[1].balance.balance).toBe("1500");
         expect(result[1].price.usdRate).toBe(0.292);
         expect(result[1].id).toBe("7000:ZETA");
-
-        // Check third element is ARBSEP
-        expect(result[2].asset.symbol).toBe("ETH.ARBSEP");
-        expect(result[2].asset.chainId).toBe("421614");
-        expect(result[2].balance.balance).toBe("0");
-        expect(result[2].price.usdRate).toBe(1850);
-        expect(result[2].id).toBe("421614:ETH");
-
     });
 
     it("should throw error when asset not found for balance", () => {
@@ -152,10 +147,11 @@ describe("buildInputItems", () => {
         };
 
         // ACT
-        const act = () => { buildInputItems(supportedAssets, prices, [invalidBalance]) }
+        const { inputItems, logs } = buildInputItems(supportedAssets, prices, [invalidBalance]);
 
         // ASSERT
-        expect(act).toThrow("Asset not found for balance");
+        expect(inputItems).toHaveLength(0);
+        expect(logs).toEqual(["Asset not found for balance 9999__INVALID. Skipped"])
     });
 });
 

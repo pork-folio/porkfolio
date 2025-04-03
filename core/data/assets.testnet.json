@@ -1,5 +1,71 @@
 [
     {
+        "zrc20_contract_address": "",
+        "asset": "",
+        "foreign_chain_id": "7001",
+        "decimals": 18,
+        "name": "ZetaChain ZETA",
+        "symbol": "ZETA",
+        "coin_type": "Gas",
+        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
+        "canonical": "ZETA"
+    },
+    {
+        "zrc20_contract_address": "",
+        "asset": "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf",
+        "foreign_chain_id": "7001",
+        "decimals": 18,
+        "name": "WZETA",
+        "symbol": "WZETA",
+        "coin_type": "ERC20",
+        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
+        "canonical": "WZETA"
+    },
+    {
+        "zrc20_contract_address": "",
+        "asset": "0x0000c9ec4042283e8139c74f4c64bcd1e0b9b54f",
+        "foreign_chain_id": "97",
+        "decimals": 18,
+        "name": "WZETA",
+        "symbol": "WZETA",
+        "coin_type": "ERC20",
+        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
+        "canonical": "WZETA"
+    },
+    {
+        "zrc20_contract_address": "",
+        "asset": "0x0000c304D2934c00Db1d51995b9f6996AffD17c0",
+        "foreign_chain_id": "11155111",
+        "decimals": 18,
+        "name": "WZETA",
+        "symbol": "WZETA",
+        "coin_type": "ERC20",
+        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
+        "canonical": "WZETA"
+    },
+    {
+        "zrc20_contract_address": "",
+        "asset": "0x1432612E60cad487C857E7D38AFf57134916c902",
+        "foreign_chain_id": "80002",
+        "decimals": 18,
+        "name": "WZETA",
+        "symbol": "WZETA",
+        "coin_type": "ERC20",
+        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
+        "canonical": "WZETA"
+    },
+    {
+        "zrc20_contract_address": "",
+        "asset": "0xf4e63991E7475b659bd97Bba85f32a7259239D5d",
+        "foreign_chain_id": "84532",
+        "decimals": 18,
+        "name": "WZETA",
+        "symbol": "WZETA",
+        "coin_type": "ERC20",
+        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
+        "canonical": "WZETA"
+    },
+    {
         "zrc20_contract_address": "0x05BA149A7bd6dC1F937fA9046A9e05C05f3b18b0",
         "asset": "",
         "foreign_chain_id": "11155111",
