@@ -3,12 +3,13 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { useRebalancingStore } from "@/store/rebalancing";
+import { useRebalancingStore, RebalancingOperation } from "@/store/rebalancing";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IconScale } from "@tabler/icons-react";
+import { IconScale, IconEye } from "@tabler/icons-react";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
+import { RebalancingDetailsDialog } from "@/components/rebalancing-details-dialog";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
@@ -32,6 +33,8 @@ export default function RebalancingPage() {
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
   const [rebalanceOutput, setRebalanceOutput] = useState<any>(null);
+  const [selectedOperation, setSelectedOperation] =
+    useState<RebalancingOperation | null>(null);
 
   const strategies = core.getStrategies(isTestnet);
 
@@ -156,33 +159,29 @@ export default function RebalancingPage() {
                               })}
                             </p>
                           </div>
-                          <Badge
-                            variant={
-                              operation.status === "completed"
-                                ? "default"
-                                : operation.status === "failed"
-                                ? "destructive"
-                                : "secondary"
-                            }
-                          >
-                            {operation.status}
-                          </Badge>
-                        </div>
-                        <div className="mt-4 space-y-2">
-                          {operation.actions.map((action, index) => (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between text-sm"
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              variant={
+                                operation.status === "completed"
+                                  ? "default"
+                                  : operation.status === "failed"
+                                  ? "destructive"
+                                  : "secondary"
+                              }
                             >
-                              <span>
-                                Swap {action.from.balance} {action.from.symbol}{" "}
-                                for {action.to.symbol}
-                              </span>
-                              <span className="text-muted-foreground">
-                                ${action.fromUsdValue.toFixed(2)}
-                              </span>
-                            </div>
-                          ))}
+                              {operation.status}
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedOperation(operation);
+                              }}
+                            >
+                              <IconEye className="mr-2 h-4 w-4" />
+                              View Details
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -201,6 +200,15 @@ export default function RebalancingPage() {
         isRebalancing={isRebalancing}
         rebalanceOutput={rebalanceOutput}
       />
+      {selectedOperation && (
+        <RebalancingDetailsDialog
+          open={!!selectedOperation}
+          onOpenChange={(open) => {
+            if (!open) setSelectedOperation(null);
+          }}
+          operation={selectedOperation}
+        />
+      )}
     </SidebarProvider>
   );
 }
