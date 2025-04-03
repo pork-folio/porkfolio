@@ -17,6 +17,8 @@ import { useNetwork } from "@/components/providers";
 import { BalancesTable } from "@/components/balances-table";
 import { useTransactionStore } from "@/store/transactions";
 import { rebalance } from "@/core/rebalance/rebalance";
+import { RebalanceDialog } from "@/components/rebalance-dialog";
+import { Strategy } from "@/core";
 
 export default function PortfolioPage() {
   const { primaryWallet } = useDynamicContext();
@@ -29,6 +31,7 @@ export default function PortfolioPage() {
   const { prices, setPrices } = usePriceStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRebalancing, setIsRebalancing] = useState(false);
+  const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
   const { isTestnet } = useNetwork();
 
   // Add effect to check pending transactions on load
@@ -164,13 +167,12 @@ export default function PortfolioPage() {
   const strategies = core.getStrategies(isTestnet);
   console.log("Strategies", strategies);
 
-  const handleRebalance = async () => {
+  const handleRebalance = async (strategy: Strategy, allocation: number) => {
     if (!primaryWallet?.address || !balances.length || !prices.length) return;
 
     setIsRebalancing(true);
     try {
       const supportedAssets = core.supportedAssets(isTestnet);
-      const strategy = core.getStrategies(isTestnet)[0]; // Using first strategy for now
 
       console.log({
         portfolio: balances,
@@ -179,26 +181,14 @@ export default function PortfolioPage() {
         strategy,
         allocation: {
           type: "percentage",
-          percentage: 100, // Using 100% of portfolio for rebalancing
+          percentage: allocation,
         },
       });
-      const rebalanceResult = rebalance({
-        portfolio: balances,
-        prices,
-        supportedAssets,
-        strategy,
-        allocation: {
-          type: "percentage",
-          percentage: 100, // Using 100% of portfolio for rebalancing
-        },
-      });
-
-      console.log("Rebalance result:", rebalanceResult);
-      // TODO: Handle rebalance actions
     } catch (error) {
       console.error("Error during rebalancing:", error);
     } finally {
       setIsRebalancing(false);
+      setIsRebalanceDialogOpen(false);
     }
   };
 
@@ -222,20 +212,14 @@ export default function PortfolioPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleRebalance}
+                      onClick={() => setIsRebalanceDialogOpen(true)}
                       disabled={
-                        isRebalancing ||
                         !primaryWallet?.address ||
                         !balances.length ||
                         !prices.length
                       }
                     >
-                      <IconScale
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isRebalancing && "animate-spin"
-                        )}
-                      />
+                      <IconScale className="mr-2 h-4 w-4" />
                       Rebalance
                     </Button>
                     <Button
@@ -295,6 +279,13 @@ export default function PortfolioPage() {
           </div>
         </div>
       </SidebarInset>
+      <RebalanceDialog
+        open={isRebalanceDialogOpen}
+        onOpenChange={setIsRebalanceDialogOpen}
+        strategies={strategies}
+        onRebalance={handleRebalance}
+        isRebalancing={isRebalancing}
+      />
     </SidebarProvider>
   );
 }
