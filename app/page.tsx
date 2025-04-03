@@ -17,6 +17,7 @@ import { useNetwork } from "@/components/providers";
 import { BalancesTable } from "@/components/balances-table";
 import { useTransactionStore } from "@/store/transactions";
 
+
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
   const { balances, setBalances, isLoading, setIsLoading } = useBalanceStore();
