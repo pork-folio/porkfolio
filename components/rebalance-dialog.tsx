@@ -239,7 +239,15 @@ export function RebalanceDialog({
             <div className="space-y-4">
               <h3 className="font-semibold">Rebalancing Actions</h3>
               {rebalanceOutput ? (
-                <RebalancingActions actions={swapActions} />
+                rebalanceOutput.actions.length > 0 ? (
+                  <RebalancingActions actions={swapActions} />
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    With the current strategy and allocation, your portfolio is
+                    already balanced. Try selecting a different strategy or
+                    adjusting the allocation to see rebalancing actions.
+                  </div>
+                )
               ) : (
                 <div className="text-center text-muted-foreground py-8">
                   Select a strategy and allocation to see the actions.
