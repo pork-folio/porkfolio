@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { Strategy } from "@/core";
 
 export interface RebalancingOperation {
@@ -37,24 +38,40 @@ interface RebalancingStore {
   ) => void;
 }
 
-export const useRebalancingStore = create<RebalancingStore>((set) => ({
-  operations: [],
-  addOperation: (operation) =>
-    set((state) => ({
-      operations: [
-        {
-          ...operation,
-          id: crypto.randomUUID(),
-          createdAt: new Date(),
-          status: "pending",
-        },
-        ...state.operations,
-      ],
-    })),
-  updateOperationStatus: (id, status) =>
-    set((state) => ({
-      operations: state.operations.map((op) =>
-        op.id === id ? { ...op, status } : op
-      ),
-    })),
-}));
+export const useRebalancingStore = create<RebalancingStore>()(
+  persist(
+    (set) => ({
+      operations: [],
+      addOperation: (operation) =>
+        set((state) => ({
+          operations: [
+            {
+              ...operation,
+              id: crypto.randomUUID(),
+              createdAt: new Date(),
+              status: "pending" as const,
+            },
+            ...state.operations,
+          ],
+        })),
+      updateOperationStatus: (id, status) =>
+        set((state) => ({
+          operations: state.operations.map((op) =>
+            op.id === id ? { ...op, status } : op
+          ),
+        })),
+    }),
+    {
+      name: "porkfolio-rebalancing-operations",
+      partialize: (state) => ({ operations: state.operations }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Convert string dates back to Date objects
+        state.operations = state.operations.map((op) => ({
+          ...op,
+          createdAt: new Date(op.createdAt),
+        }));
+      },
+    }
+  )
+);
