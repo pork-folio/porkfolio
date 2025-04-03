@@ -8,7 +8,6 @@ import {
   IconSettings,
 } from "@tabler/icons-react";
 import Link from "next/link";
-import Image from "next/image";
 
 import { NavMain } from "@/components/nav-main";
 import {
