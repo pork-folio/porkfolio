@@ -18,6 +18,7 @@ import { useState, useEffect } from "react";
 import { useRebalancingStore } from "@/store/rebalancing";
 import { RebalancingActions } from "@/components/rebalancing-actions";
 import { SwapAction } from "@/lib/handlers/rebalancing";
+import { useRouter } from "next/navigation";
 
 interface RebalanceDialogProps {
   open: boolean;
@@ -74,6 +75,7 @@ export function RebalanceDialog({
     allocation: number;
   } | null>(null);
   const addOperation = useRebalancingStore((state) => state.addOperation);
+  const router = useRouter();
 
   // Reset state when dialog opens
   useEffect(() => {
@@ -120,7 +122,7 @@ export function RebalanceDialog({
 
   const handleSave = () => {
     if (selectedStrategy && rebalanceOutput) {
-      addOperation({
+      const operation = {
         strategy: selectedStrategy,
         allocation: Number(allocation),
         actions: rebalanceOutput.actions.map((action) => ({
@@ -132,8 +134,13 @@ export function RebalanceDialog({
             balance: "0",
           },
         })),
-      });
+      };
+      addOperation(operation);
       onOpenChange(false);
+      // Get the latest operation from the store (it will be the first one since we add to the beginning)
+      const operations = useRebalancingStore.getState().operations;
+      const newOperation = operations[0];
+      router.push(`/rebalancing/${newOperation.id}`);
     }
   };
 

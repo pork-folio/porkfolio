@@ -10,15 +10,17 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import { RebalancingActions } from "@/components/rebalancing-actions";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
+import { use } from "react";
 
 export default function RebalancingOperationPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const router = useRouter();
+  const { id } = use(params);
   const operation = useRebalancingStore((state) =>
-    state.operations.find((op) => op.id === params.id)
+    state.operations.find((op) => op.id === id)
   );
 
   if (!operation) {
@@ -62,13 +64,15 @@ export default function RebalancingOperationPage({
           <div className="@container/main flex flex-1 flex-col gap-2">
             <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
               <div className="px-4 lg:px-6">
-                <div className="flex items-center gap-4">
+                <div className="flex flex-col gap-4">
                   <Button
-                    variant="ghost"
-                    size="icon"
+                    variant="outline"
+                    size="sm"
                     onClick={() => router.push("/rebalancing")}
+                    className="w-fit"
                   >
-                    <IconArrowLeft className="h-4 w-4" />
+                    <IconArrowLeft className="mr-2 h-4 w-4" />
+                    Back to Rebalancing
                   </Button>
                   <div>
                     <h1 className="text-3xl font-bold">
@@ -99,7 +103,9 @@ export default function RebalancingOperationPage({
               <div className="px-4 lg:px-6">
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold">Actions</h2>
-                  <RebalancingActions actions={operation.actions} />
+                  <div className="max-w-2xl">
+                    <RebalancingActions actions={operation.actions} />
+                  </div>
                 </div>
               </div>
             </div>
