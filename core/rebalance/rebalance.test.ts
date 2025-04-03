@@ -1,4 +1,5 @@
 import { rebalance, RebalanceInput } from "@/core/rebalance/rebalance";
+import { printRebalanceActions } from "@/core/rebalance/engine.test";
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -24,4 +25,17 @@ describe("rebalance", () => {
         // ASSERT
         expect(act).toThrow('Asset not found for distribution SHIB');
     });
+
+    it("02rebalance-meme-master", async () => {
+        // ARRANGE
+        const rebalanceInput = loadInput('02rebalance.json');
+
+        // ACT
+        const result = rebalance(rebalanceInput);
+
+        // ASSERT
+        console.log("Logs", result.logs);
+        printRebalanceActions("Actions", result.actions);
+    })
 });
+

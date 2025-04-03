@@ -1,4 +1,4 @@
-import { Asset } from "@/core";
+import { Asset, RebalanceAction } from "@/core";
 import { supportedAssets } from "@/core/asset";
 import { BalanceData } from "@/lib/handlers/balances";
 import { InputItem, DesiredUsdAllocation } from "@/core/rebalance/input";
@@ -75,8 +75,8 @@ describe("determineRebalanceActions", () => {
             new DesiredUsdAllocation(pepeAsset, createPrice(pepeAsset, 0.01), 80),
         ];
 
-        printInputItems("GOT", got);
-        printDesiredUsdAllocations("WANT", want);
+        printInputItems("Got", got);
+        printDesiredUsdAllocations("Want", want);
 
         // ACT
         const result = determineRebalanceActions(got, want);
@@ -87,12 +87,14 @@ describe("determineRebalanceActions", () => {
         expect(result.actions.length).toBeGreaterThan(0);
         expect(result.logs.length).toBeGreaterThan(0);
 
-        console.log("RESULT LOGS", result.logs);
+        console.log("Result logs", result.logs);
+
+        printRebalanceActions("Actions", result.actions);
     });
 });
 
 
-function printInputItems(label: string, items: InputItem[]) {
+export function printInputItems(label: string, items: InputItem[]) {
     const lines = items.map(
         item => `${item.balance.balance} of ${item.asset.symbol} ($${item.usdPrice()})`
     );
@@ -100,10 +102,21 @@ function printInputItems(label: string, items: InputItem[]) {
     console.log(label, lines);
 }
 
-function printDesiredUsdAllocations(label: string, allocations: DesiredUsdAllocation[]) {
+export function printDesiredUsdAllocations(label: string, allocations: DesiredUsdAllocation[]) {
     const lines = allocations.map(
         alloc => `${alloc.tokenValue()} of ${alloc.asset.symbol} ($${alloc.usdValue})`
     );
+
+    console.log(label, lines);
+}
+
+export function printRebalanceActions(label: string, actions: RebalanceAction[]) {
+    const lines = actions.map(a => {
+        const from = `${a.fromTokenValue} ${a.from.ticker} (chain ${a.from.chain_id})`
+        const to = `${a.to.symbol} (zeta)`
+
+        return `${a.type}: ${from} => ${to} ($${a.fromUsdValue})`
+    });
 
     console.log(label, lines);
 }
