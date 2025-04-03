@@ -274,9 +274,9 @@ export function RebalanceDialog({
           </Button>
           <Button
             onClick={handleSave}
-            disabled={!rebalanceOutput || isRebalancing}
+            disabled={!rebalanceOutput?.actions.length || isRebalancing}
           >
-            Save Rebalancing
+            Proceed with Rebalancing
           </Button>
         </DialogFooter>
       </DialogContent>
