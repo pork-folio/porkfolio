@@ -5,13 +5,13 @@ import { SwapAction, executeRebalancingSwap } from "@/lib/handlers/rebalancing";
 interface RebalancingActionsProps {
   actions: SwapAction[];
   readOnly?: boolean;
-  rebalancingId?: string;
+  rebalancingId: string;
 }
 
 export function RebalancingActions({
   actions,
   readOnly = false,
-  rebalancingId = `temp_${Date.now()}`,
+  rebalancingId,
 }: RebalancingActionsProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
     {}

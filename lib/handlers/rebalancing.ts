@@ -193,6 +193,30 @@ export async function executeRebalancingSwap(
     });
 
     await tx.wait();
+    console.log({
+      type: "rebalance",
+      tokenSymbol: action.from.symbol,
+      chainName: action.from.chain_name,
+      amount: action.fromTokenValue.toString(),
+      status: "pending",
+      hash: tx.hash,
+      id: `${rebalancingId}_${actionIndex}`,
+      rebalancingGroupId: rebalancingId,
+      sourceToken: {
+        symbol: action.from.symbol,
+        chainName: action.from.chain_name,
+        contract: action.from.contract,
+        chainId: action.from.chain_id,
+        coin_type: action.from.coin_type,
+      },
+      targetToken: {
+        symbol: action.to.symbol,
+        chainName: "ZetaChain",
+        contract: action.to.zrc20,
+        chainId: action.to.chainId || action.to.chain_id,
+        coin_type: action.to.coinType,
+      },
+    });
     console.log("Swap successful!");
 
     // Refresh balances

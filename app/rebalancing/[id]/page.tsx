@@ -104,7 +104,10 @@ export default function RebalancingOperationPage({
                 <div className="space-y-4">
                   <h2 className="text-xl font-semibold">Actions</h2>
                   <div className="max-w-2xl">
-                    <RebalancingActions actions={operation.actions} />
+                    <RebalancingActions
+                      actions={operation.actions}
+                      rebalancingId={operation.id}
+                    />
                   </div>
                 </div>
               </div>

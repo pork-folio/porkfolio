@@ -248,7 +248,11 @@ export function RebalanceDialog({
               <h3 className="font-semibold text-lg">Actions</h3>
               {rebalanceOutput ? (
                 rebalanceOutput.actions.length > 0 ? (
-                  <RebalancingActions actions={swapActions} readOnly={true} />
+                  <RebalancingActions
+                    actions={swapActions}
+                    readOnly={true}
+                    rebalancingId={crypto.randomUUID()}
+                  />
                 ) : (
                   <div className="text-center text-muted-foreground py-8">
                     With the current strategy and allocation, your portfolio is
