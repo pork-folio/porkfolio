@@ -111,12 +111,12 @@ export function RebalanceDialog({
           {!showActions ? (
             <>
               <div className="grid gap-4 py-4">
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                   {strategies.map((strategy) => (
                     <div
                       key={strategy.id}
                       className={cn(
-                        "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors hover:bg-accent flex-1",
+                        "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors hover:bg-accent flex-1 min-w-[250px]",
                         selectedStrategy?.id === strategy.id &&
                           "border-primary bg-accent"
                       )}
@@ -187,12 +187,21 @@ export function RebalanceDialog({
               </Button>
             </>
           ) : (
-            <Button
-              onClick={handleSave}
-              disabled={!rebalanceOutput || isRebalancing}
-            >
-              Save Rebalancing
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                onClick={() => setShowActions(false)}
+                disabled={isRebalancing}
+              >
+                Back
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={!rebalanceOutput || isRebalancing}
+              >
+                Save Rebalancing
+              </Button>
+            </>
           )}
         </DialogFooter>
       </DialogContent>
