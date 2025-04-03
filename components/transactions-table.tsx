@@ -228,8 +228,36 @@ export function TransactionsTable() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
+  // Group transactions by rebalancingGroupId
+  const groupedTransactions = React.useMemo(() => {
+    const groups = new Map<string, Transaction[]>();
+    const ungrouped: Transaction[] = [];
+
+    transactions.forEach((tx) => {
+      if (tx.rebalancingGroupId) {
+        const group = groups.get(tx.rebalancingGroupId) || [];
+        group.push(tx);
+        groups.set(tx.rebalancingGroupId, group);
+      } else {
+        ungrouped.push(tx);
+      }
+    });
+
+    // Sort groups by timestamp (most recent first)
+    const sortedGroups = Array.from(groups.values()).sort(
+      (a, b) => b[0].timestamp - a[0].timestamp
+    );
+
+    return [...sortedGroups, ...ungrouped];
+  }, [transactions]);
+
+  // Flatten grouped transactions for the table
+  const flattenedTransactions = React.useMemo(() => {
+    return groupedTransactions.flat();
+  }, [groupedTransactions]);
+
   const table = useReactTable({
-    data: transactions,
+    data: flattenedTransactions,
     columns,
     state: {
       sorting,
@@ -258,19 +286,15 @@ export function TransactionsTable() {
             className="h-8 w-[150px] lg:w-[250px]"
           />
         </div>
-        <div className="flex items-center space-x-2">
-          {transactions.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={clearTransactions}
-            >
-              <IconTrash className="mr-2 h-4 w-4" />
-              Clear Transactions
-            </Button>
-          )}
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-auto h-8"
+          onClick={clearTransactions}
+        >
+          <IconTrash className="mr-2 h-4 w-4" />
+          Clear
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -292,25 +316,45 @@ export function TransactionsTable() {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
+              table.getRowModel().rows.map((row, index) => {
+                const transaction = row.original as Transaction;
+                const isFirstInGroup =
+                  index === 0 ||
+                  (transaction.rebalancingGroupId &&
+                    (
+                      table.getRowModel().rows[index - 1]
+                        .original as Transaction
+                    ).rebalancingGroupId !== transaction.rebalancingGroupId);
+
+                return (
+                  <TableRow
+                    key={row.id}
+                    data-state={row.getIsSelected() && "selected"}
+                    className={cn(
+                      transaction.rebalancingGroupId && "bg-muted/50",
+                      isFirstInGroup &&
+                        transaction.rebalancingGroupId &&
+                        "border-t-2 border-muted-foreground"
+                    )}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                );
+              })
             ) : (
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No transactions found.
+                  No transactions.
                 </TableCell>
               </TableRow>
             )}
@@ -318,27 +362,22 @@ export function TransactionsTable() {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} transaction(s)
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <IconChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <IconChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          <IconChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          <IconChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

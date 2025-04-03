@@ -33,7 +33,9 @@ export interface SwapAction {
 
 export async function executeRebalancingSwap(
   action: SwapAction,
-  primaryWallet: Wallet | null
+  primaryWallet: Wallet | null,
+  rebalancingId: string,
+  actionIndex: number
 ) {
   console.log("swap", action);
   try {
@@ -172,6 +174,8 @@ export async function executeRebalancingSwap(
       amount: action.fromTokenValue.toString(),
       status: "pending",
       hash: tx.hash,
+      id: `${rebalancingId}_${actionIndex}`,
+      rebalancingGroupId: rebalancingId,
       sourceToken: {
         symbol: action.from.symbol,
         chainName: action.from.chain_name,

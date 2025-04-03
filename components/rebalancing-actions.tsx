@@ -5,25 +5,27 @@ import { SwapAction, executeRebalancingSwap } from "@/lib/handlers/rebalancing";
 interface RebalancingActionsProps {
   actions: SwapAction[];
   readOnly?: boolean;
+  rebalancingId?: string;
 }
 
 export function RebalancingActions({
   actions,
   readOnly = false,
+  rebalancingId = `temp_${Date.now()}`,
 }: RebalancingActionsProps) {
   const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>(
     {}
   );
   const { primaryWallet } = useDynamicContext();
 
-  const handleSwap = async (action: SwapAction) => {
+  const handleSwap = async (action: SwapAction, index: number) => {
     if (readOnly) return;
 
     try {
       const actionKey = `${action.from.symbol}-${action.to.symbol}`;
       setLoadingStates((prev) => ({ ...prev, [actionKey]: true }));
 
-      await executeRebalancingSwap(action, primaryWallet);
+      await executeRebalancingSwap(action, primaryWallet, rebalancingId, index);
     } catch (error) {
       console.error("Swap failed:", error);
       alert(
@@ -50,7 +52,9 @@ export function RebalancingActions({
               className={`rounded-lg border p-4 ${
                 readOnly ? "" : "cursor-pointer hover:bg-gray-50"
               } transition-colors ${isLoading ? "opacity-50" : ""}`}
-              onClick={() => !isLoading && !readOnly && handleSwap(action)}
+              onClick={() =>
+                !isLoading && !readOnly && handleSwap(action, index)
+              }
             >
               <div className="flex items-center justify-between">
                 <div>

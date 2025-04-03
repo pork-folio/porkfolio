@@ -142,6 +142,7 @@ export async function handleDeposit(
       amount: depositAmount,
       status: "pending",
       hash: tx.hash,
+      id: `deposit_${tokenInfo.symbol}_${Date.now()}`,
       sourceToken: {
         symbol: tokenInfo.symbol,
         chainName: tokenInfo.chainName,
