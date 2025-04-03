@@ -69,8 +69,15 @@ export function RebalancingActions({
             key={index}
             className={`rounded-lg border p-4 ${
               readOnly ? "" : "cursor-pointer hover:bg-gray-50"
-            } transition-colors ${isLoading ? "opacity-50" : ""}`}
-            onClick={() => !isLoading && !readOnly && handleSwap(action, index)}
+            } transition-colors ${isLoading ? "opacity-50" : ""} ${
+              status === "completed" ? "opacity-50 pointer-events-none" : ""
+            }`}
+            onClick={() =>
+              !isLoading &&
+              !readOnly &&
+              status !== "completed" &&
+              handleSwap(action, index)
+            }
           >
             <div className="flex items-center justify-between">
               <div>
