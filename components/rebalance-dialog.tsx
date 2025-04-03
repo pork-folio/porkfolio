@@ -181,6 +181,7 @@ export function RebalanceDialog({
           <div className="grid grid-cols-2 gap-6">
             {/* Left side - Strategy Selection */}
             <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Strategies</h3>
               <div className="flex flex-wrap gap-4">
                 {strategies.map((strategy) => (
                   <div
@@ -237,7 +238,7 @@ export function RebalanceDialog({
 
             {/* Right side - Actions List */}
             <div className="space-y-4">
-              <h3 className="font-semibold">Rebalancing Actions</h3>
+              <h3 className="font-semibold text-lg">Actions</h3>
               {rebalanceOutput ? (
                 rebalanceOutput.actions.length > 0 ? (
                   <RebalancingActions actions={swapActions} />

@@ -32,7 +32,7 @@ export function RebalancingActions({ actions }: RebalancingActionsProps) {
   };
 
   return (
-    <div className="py-4">
+    <div>
       <div className="space-y-4">
         {actions.map((action, index) => {
           const actionKey = `${action.from.symbol}-${action.to.symbol}`;
