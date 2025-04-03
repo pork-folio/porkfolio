@@ -10,12 +10,13 @@ import { fetchBalances } from "@/lib/handlers/balances";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
 import { Button } from "@/components/ui/button";
-import { IconRefresh } from "@tabler/icons-react";
+import { IconRefresh, IconScale } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
 import { useNetwork } from "@/components/providers";
 import { BalancesTable } from "@/components/balances-table";
 import { useTransactionStore } from "@/store/transactions";
+import { rebalance } from "@/core/rebalance/rebalance";
 
 export default function PortfolioPage() {
   const { primaryWallet } = useDynamicContext();
@@ -25,8 +26,9 @@ export default function PortfolioPage() {
     isLoading: isBalancesLoading,
     setIsLoading: setBalancesLoading,
   } = useBalanceStore();
-  const { setPrices } = usePriceStore();
+  const { prices, setPrices } = usePriceStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRebalancing, setIsRebalancing] = useState(false);
   const { isTestnet } = useNetwork();
 
   // Add effect to check pending transactions on load
@@ -162,6 +164,44 @@ export default function PortfolioPage() {
   const strategies = core.getStrategies(isTestnet);
   console.log("Strategies", strategies);
 
+  const handleRebalance = async () => {
+    if (!primaryWallet?.address || !balances.length || !prices.length) return;
+
+    setIsRebalancing(true);
+    try {
+      const supportedAssets = core.supportedAssets(isTestnet);
+      const strategy = core.getStrategies(isTestnet)[0]; // Using first strategy for now
+
+      console.log({
+        portfolio: balances,
+        prices,
+        supportedAssets,
+        strategy,
+        allocation: {
+          type: "percentage",
+          percentage: 100, // Using 100% of portfolio for rebalancing
+        },
+      });
+      const rebalanceResult = rebalance({
+        portfolio: balances,
+        prices,
+        supportedAssets,
+        strategy,
+        allocation: {
+          type: "percentage",
+          percentage: 100, // Using 100% of portfolio for rebalancing
+        },
+      });
+
+      console.log("Rebalance result:", rebalanceResult);
+      // TODO: Handle rebalance actions
+    } catch (error) {
+      console.error("Error during rebalancing:", error);
+    } finally {
+      setIsRebalancing(false);
+    }
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -178,20 +218,41 @@ export default function PortfolioPage() {
                       Manage your portfolio positions here.
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={refreshBalances}
-                    disabled={isRefreshing || !primaryWallet?.address}
-                  >
-                    <IconRefresh
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        isRefreshing && "animate-spin"
-                      )}
-                    />
-                    Refresh
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRebalance}
+                      disabled={
+                        isRebalancing ||
+                        !primaryWallet?.address ||
+                        !balances.length ||
+                        !prices.length
+                      }
+                    >
+                      <IconScale
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          isRebalancing && "animate-spin"
+                        )}
+                      />
+                      Rebalance
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={refreshBalances}
+                      disabled={isRefreshing || !primaryWallet?.address}
+                    >
+                      <IconRefresh
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          isRefreshing && "animate-spin"
+                        )}
+                      />
+                      Refresh
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="px-4 lg:px-6">
