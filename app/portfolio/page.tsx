@@ -10,12 +10,15 @@ import { fetchBalances } from "@/lib/handlers/balances";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
 import { Button } from "@/components/ui/button";
-import { IconRefresh } from "@tabler/icons-react";
+import { IconRefresh, IconScale } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
 import { useNetwork } from "@/components/providers";
 import { BalancesTable } from "@/components/balances-table";
 import { useTransactionStore } from "@/store/transactions";
+import { rebalance } from "@/core/rebalance/rebalance";
+import { RebalanceDialog } from "@/components/rebalance-dialog";
+import { Strategy } from "@/core";
 
 export default function PortfolioPage() {
   const { primaryWallet } = useDynamicContext();
@@ -25,8 +28,43 @@ export default function PortfolioPage() {
     isLoading: isBalancesLoading,
     setIsLoading: setBalancesLoading,
   } = useBalanceStore();
-  const { setPrices } = usePriceStore();
+  const { prices, setPrices } = usePriceStore();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isRebalancing, setIsRebalancing] = useState(false);
+  const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
+  const [rebalanceOutput, setRebalanceOutput] = useState<
+    | {
+        valid: boolean;
+        actions: {
+          type: string;
+          from: {
+            symbol: string;
+            balance: string;
+            chain_name: string;
+            chain_id: string;
+            coin_type: string;
+            decimals: number;
+            contract?: string;
+            zrc20?: string;
+          };
+          fromUsdValue: number;
+          fromTokenValue: number;
+          to: {
+            symbol: string;
+            name: string;
+            chain_id: string;
+            coin_type: string;
+            decimals: number;
+            contract?: string;
+            zrc20?: string;
+          };
+          toPrice: {
+            usdRate: number;
+          };
+        }[];
+      }
+    | undefined
+  >(undefined);
   const { isTestnet } = useNetwork();
 
   // Add effect to check pending transactions on load
@@ -160,7 +198,73 @@ export default function PortfolioPage() {
   ]);
 
   const strategies = core.getStrategies(isTestnet);
-  console.log("Strategies", strategies);
+
+  const handleRebalance = async (strategy: Strategy, allocation: number) => {
+    if (!primaryWallet?.address || !balances.length || !prices.length) return;
+
+    setIsRebalancing(true);
+    try {
+      const supportedAssets = core.supportedAssets(isTestnet);
+      const rebalanceInput = {
+        portfolio: balances,
+        prices,
+        supportedAssets,
+        strategy,
+        allocation: {
+          type: "percentage" as const,
+          percentage: allocation,
+        },
+      };
+
+      console.log("Rebalance input:", rebalanceInput);
+
+      const output = rebalance(rebalanceInput);
+      console.log("Rebalance output:", output);
+
+      if (!output.valid) {
+        throw new Error("Rebalance calculation failed");
+      }
+
+      // Transform the core output to match the dialog's expected shape
+      const dialogOutput = {
+        valid: output.valid,
+        actions: output.actions.map((action) => ({
+          type: action.type,
+          from: {
+            symbol: action.from.symbol,
+            balance: action.from.balance,
+            chain_name: action.from.chain_name,
+            chain_id: action.from.chain_id,
+            coin_type: action.from.coin_type,
+            decimals: action.from.decimals,
+            contract: action.from.contract,
+            zrc20: action.from.zrc20,
+          },
+          fromUsdValue: action.fromUsdValue,
+          fromTokenValue: action.fromTokenValue,
+          to: {
+            symbol: action.to.symbol,
+            name: action.to.name,
+            chain_id: action.to.chainId,
+            coin_type: action.to.coinType,
+            decimals: action.to.decimals,
+            contract: action.to.asset,
+            zrc20: action.to.zrc20,
+          },
+          toPrice: {
+            usdRate: action.toPrice.usdRate,
+          },
+        })),
+      };
+
+      setRebalanceOutput(dialogOutput);
+    } catch (error) {
+      console.error("Error during rebalancing:", error);
+      // You might want to show an error toast here
+    } finally {
+      setIsRebalancing(false);
+    }
+  };
 
   return (
     <SidebarProvider>
@@ -178,20 +282,35 @@ export default function PortfolioPage() {
                       Manage your portfolio positions here.
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={refreshBalances}
-                    disabled={isRefreshing || !primaryWallet?.address}
-                  >
-                    <IconRefresh
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        isRefreshing && "animate-spin"
-                      )}
-                    />
-                    Refresh
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsRebalanceDialogOpen(true)}
+                      disabled={
+                        !primaryWallet?.address ||
+                        !balances.length ||
+                        !prices.length
+                      }
+                    >
+                      <IconScale className="mr-2 h-4 w-4" />
+                      Rebalance
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={refreshBalances}
+                      disabled={isRefreshing || !primaryWallet?.address}
+                    >
+                      <IconRefresh
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          isRefreshing && "animate-spin"
+                        )}
+                      />
+                      Refresh
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="px-4 lg:px-6">
@@ -234,6 +353,14 @@ export default function PortfolioPage() {
           </div>
         </div>
       </SidebarInset>
+      <RebalanceDialog
+        open={isRebalanceDialogOpen}
+        onOpenChange={setIsRebalanceDialogOpen}
+        strategies={strategies}
+        onRebalance={handleRebalance}
+        isRebalancing={isRebalancing}
+        rebalanceOutput={rebalanceOutput}
+      />
     </SidebarProvider>
   );
 }

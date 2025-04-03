@@ -1,25 +1,27 @@
 {
-    "id": "meme-master",
-    "name": "Meme Master",
-    "description": "A portfolio focused on memecoins",
-    "sort_index": 2,
+    "id": "meme-lord",
+    "name": "Meme Lord",
+    "description": "A high-risk portfolio focused on popular meme coins with USDC safety net",
+    "sort_index": 4,
     "tags": [
-        "meme",
-        "yolo"
+        "meme"
     ],
     "env": [
-        "testnet",
         "mainnet"
     ],
     "type": "percentage_strategy",
     "percentage_strategy": [
         {
-            "percentage": 5000,
+            "percentage": 4000,
+            "asset": "PEPE"
+        },
+        {
+            "percentage": 3000,
             "asset": "SHIB"
         },
         {
-            "percentage": 5000,
-            "asset": "PEPE"
+            "percentage": 3000,
+            "asset": "USDC"
         }
     ]
 }

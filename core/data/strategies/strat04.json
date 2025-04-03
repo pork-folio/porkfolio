@@ -1,21 +1,20 @@
 {
-    "id": "zeta-core",
-    "name": "ZETA Core",
-    "description": "A balanced portfolio centered around ZETA with major L1 tokens",
-    "sort_index": 1,
+    "id": "bear-market-survival",
+    "name": "Bear Market Survival Kit",
+    "description": "A defensive portfolio designed to weather market downturns with stablecoin focus",
+    "sort_index": 6,
     "tags": [
-        "zeta",
-        "hopium"
+        "stablecoin",
+        "ethereum"
     ],
     "env": [
-        "testnet",
         "mainnet"
     ],
     "type": "percentage_strategy",
     "percentage_strategy": [
         {
             "percentage": 5000,
-            "asset": "ZETA"
+            "asset": "USDC"
         },
         {
             "percentage": 2500,
@@ -23,7 +22,7 @@
         },
         {
             "percentage": 2500,
-            "asset": "BTC"
+            "asset": "PEPE"
         }
     ]
 }

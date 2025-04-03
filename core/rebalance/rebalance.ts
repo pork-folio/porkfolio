@@ -25,10 +25,22 @@ export interface RebalanceInput {
 }
 
 export interface RebalanceOutput {
+    // true if the rebalance is valid and has actions to perform
     valid: boolean
+    // true if the rebalance is valid but has no actions to perform 
+    // (no deficits, already balanced)
+    noop: boolean
+
+    // unique identifier for the rebalance
     uuid: string
+
+    // timestamp of the rebalance
     createdAt: Date
+
+    // actions to perform
     actions: RebalanceAction[]
+
+    // logs of the rebalance
     logs: string[]
 }
 

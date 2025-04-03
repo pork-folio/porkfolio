@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type TransactionType = "deposit" | "withdraw";
+export type TransactionType = "deposit" | "withdraw" | "rebalance";
 export type TransactionStatus =
   | "pending"
   | "completed"

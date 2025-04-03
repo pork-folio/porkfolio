@@ -303,7 +303,7 @@ describe("buildDesiredAllocations", () => {
         }
 
         // ASSERT
-        expect(act).toThrow("Assets not found for distribution");
+        expect(act).toThrow("Asset not found for distribution");
     });
 });
 

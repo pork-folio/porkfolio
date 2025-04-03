@@ -15,6 +15,10 @@ export const MIN_USD_THRESHOLD = 1.0;
 // The algo operates with a notion of "canonical" assets.
 // For example, $50 USDC on Base and $50 USDC on Solana are considered as $100 "canonical" USDC.
 export function determineRebalanceActions(got: InputItem[], want: DesiredUsdAllocation[]): RebalanceOutput {
+    // ensure input is sorted by $ DESC
+    got.sort((a, b) => b.usdPrice() - a.usdPrice());
+    want.sort((a, b) => b.usdValue - a.usdValue);
+
     const logs: string[] = [];
     const actions: RebalanceAction[] = [];
 
@@ -42,7 +46,9 @@ export function determineRebalanceActions(got: InputItem[], want: DesiredUsdAllo
     portfolioUsdValues.forEach(ci => {
         ci.inputs.sort((a, b) => b.usdPrice() - a.usdPrice());
 
-        logs.push(`Portfolio's ${ci.canonical} = $${ci.usdValue} (${ci.inputs.map(i => i.id).join(", ")})`);
+        const siblingAssets = ci.inputs.map(i => i.asset.symbol).join(", ");
+
+        logs.push(`Portfolio's ${ci.canonical} = $${ci.usdValue} (${siblingAssets})`);
     });
 
     // 3. Convert `want` to targetUsdValues.
@@ -60,7 +66,18 @@ export function determineRebalanceActions(got: InputItem[], want: DesiredUsdAllo
     // deficit: assets we need to buy
     const [surpluses, deficits] = calculateSurplusWithDeficit(portfolioUsdValues, targetUsdValues);
 
-    // Example:
+    if (deficits.length === 0) {
+        logs.push("No deficits, no actions needed");
+        return {
+            valid: true,
+            noop: true,
+            uuid: crypto.randomUUID(),
+            createdAt: new Date(),
+            actions: [],
+            logs
+        };
+    }
+
     logs.push(`Surplus: ${surpluses.map(([c, v]) => `${c}: $${v}`).join(", ")}`);
     logs.push(`Deficit: ${deficits.map(([c, v]) => `${c}: $${v}`).join(", ")}`);
 
@@ -81,6 +98,7 @@ export function determineRebalanceActions(got: InputItem[], want: DesiredUsdAllo
             const balanceCanonical = balance.asset.canonical;
             const balanceId = balance.id;
 
+            // should not happen
             if (balanceCanonical === canonical) {
                 continue;
             }
@@ -139,6 +157,7 @@ export function determineRebalanceActions(got: InputItem[], want: DesiredUsdAllo
 
     return {
         valid: actions.length > 0,
+        noop: false,
         uuid: crypto.randomUUID(),
         createdAt: new Date(),
         actions,

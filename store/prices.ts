@@ -5,6 +5,8 @@ interface Price {
   id: string;
   publishedAt: Date;
   usdRate: number;
+  canonical: string;
+  chainId: string;
 }
 
 interface PriceStore {
