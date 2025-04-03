@@ -7,7 +7,7 @@ import { useRebalancingStore, RebalancingOperation } from "@/store/rebalancing";
 import { formatDistanceToNow } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { IconScale, IconEye } from "@tabler/icons-react";
+import { IconScale, IconEye, IconTrash } from "@tabler/icons-react";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
 import { RebalancingDetailsDialog } from "@/components/rebalancing-details-dialog";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
@@ -22,6 +22,7 @@ import { fetchBalances } from "@/lib/handlers/balances";
 
 export default function RebalancingPage() {
   const operations = useRebalancingStore((state) => state.operations);
+  const deleteOperation = useRebalancingStore((state) => state.deleteOperation);
   const { primaryWallet } = useDynamicContext();
   const {
     balances,
@@ -146,7 +147,11 @@ export default function RebalancingPage() {
                 ) : (
                   <div className="space-y-4">
                     {operations.map((operation) => (
-                      <div key={operation.id} className="rounded-lg border p-4">
+                      <div
+                        key={operation.id}
+                        className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                        onClick={() => setSelectedOperation(operation)}
+                      >
                         <div className="flex items-center justify-between">
                           <div>
                             <h3 className="font-semibold">
@@ -173,13 +178,14 @@ export default function RebalancingPage() {
                             </Badge>
                             <Button
                               variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedOperation(operation);
+                              size="icon"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteOperation(operation.id);
                               }}
+                              className="h-8 w-8"
                             >
-                              <IconEye className="mr-2 h-4 w-4" />
-                              View Details
+                              <IconTrash className="h-4 w-4" />
                             </Button>
                           </div>
                         </div>

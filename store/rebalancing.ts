@@ -36,6 +36,7 @@ interface RebalancingStore {
     id: string,
     status: RebalancingOperation["status"]
   ) => void;
+  deleteOperation: (id: string) => void;
 }
 
 export const useRebalancingStore = create<RebalancingStore>()(
@@ -59,6 +60,10 @@ export const useRebalancingStore = create<RebalancingStore>()(
           operations: state.operations.map((op) =>
             op.id === id ? { ...op, status } : op
           ),
+        })),
+      deleteOperation: (id) =>
+        set((state) => ({
+          operations: state.operations.filter((op) => op.id !== id),
         })),
     }),
     {
