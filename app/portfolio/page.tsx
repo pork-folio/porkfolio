@@ -173,23 +173,37 @@ export default function PortfolioPage() {
     setIsRebalancing(true);
     try {
       const supportedAssets = core.supportedAssets(isTestnet);
-
-      console.log({
+      const rebalanceInput = {
         portfolio: balances,
         prices,
         supportedAssets,
         strategy,
         allocation: {
-          type: "percentage",
+          type: "percentage" as const,
           percentage: allocation,
         },
+      };
+
+      const rebalanceOutput = rebalance(rebalanceInput);
+      console.log("Rebalance output:", rebalanceOutput);
+
+      if (!rebalanceOutput.valid) {
+        throw new Error("Rebalance calculation failed");
+      }
+
+      // TODO: Execute the rebalance actions
+      // For now, we'll just log them
+      rebalanceOutput.actions.forEach((action) => {
+        console.log("Rebalance action:", action);
       });
+
+      // Close the dialog after successful rebalance calculation
+      setIsRebalanceDialogOpen(false);
     } catch (error) {
       console.error("Error during rebalancing:", error);
+      // You might want to show an error toast here
     } finally {
       setIsRebalancing(false);
-      // Only close the dialog after rebalancing is complete
-      // setIsRebalanceDialogOpen(false);
     }
   };
 
