@@ -169,7 +169,7 @@ export function RebalanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[1000px] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[1200px] h-[800px] flex flex-col">
         <DialogHeader>
           <DialogTitle>Rebalance Portfolio</DialogTitle>
           <DialogDescription>
