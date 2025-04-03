@@ -4,6 +4,7 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { DynamicConnectButton } from "@/components/dynamic-connect-button";
+import { PortfolioVideo } from "@/components/portfolio-video";
 import {
   Accordion,
   AccordionContent,
@@ -41,12 +42,13 @@ export default function Page() {
       ) : (
         <div className="flex-1 flex flex-col items-center">
           <div className="w-full max-w-md flex flex-col items-center text-center space-y-6">
-            <div className="py-6 mt-8">
-              <h1 className="text-4xl font-bold tracking-tight">Porkfolio</h1>
+            <PortfolioVideo src="/porkfolio-looped.mp4" className="w-3/4 max-w-xs mt-6 mb-2" />
+            <div className="py-2 mt-4">
+              <h1 className="text-4xl font-bold tracking-tight">
+                <span className="text-color-pork">Pork</span>folio 🐽
+              </h1>
             </div>
-            <p className="text-muted-foreground text-lg">
-              Connect your wallet to manage your portfolio
-            </p>
+            <p className="text-muted-foreground text-lg">Connect wallet to manage your portfolio</p>
             <DynamicConnectButton />
             <div className="w-full">
               <Accordion type="single" collapsible className="w-full">
@@ -56,8 +58,7 @@ export default function Page() {
                   </AccordionTrigger>
                   <AccordionContent className="text-left">
                     Porkfolio is a portfolio management platform for ZetaChain
-                    that helps you track and manage your assets across different
-                    chains.
+                    that helps you track and manage your assets across different chains.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="item-2" className="border-none">
