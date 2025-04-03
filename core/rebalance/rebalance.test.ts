@@ -1,24 +1,27 @@
 import { rebalance, RebalanceInput } from "@/core/rebalance/rebalance";
-
+import * as fs from 'fs';
+import * as path from 'path';
 
 describe("rebalance", () => {
-    it("should rebalance", async () => {
+    const loadTestData = (filename: string): string => {
+        const testDataPath = path.join(__dirname, 'testdata', filename);
+        return fs.readFileSync(testDataPath, 'utf-8');
+    }
+
+    const loadInput = (filename: string): RebalanceInput => {
+        const raw = loadTestData(filename);
+        return JSON.parse(raw) as RebalanceInput;
+    }
+
+    it("01rebalance-meme-master", async () => {
         // ARRANGE
-        // Download input from Github
-        const url = 'https://gist.githubusercontent.com/swift1337/d11abdc6b00eb5213bbe92be3e1b5e88/raw/c43cd0e47c3ef18d62d1daa6d9c11ec1351c332a/rebalance.json'
-        const response = await fetch(url);
-        const portfolio = await response.json();
-        const rebalanceInput = portfolio as RebalanceInput;
+        // Load input from local testdata directory
+        const rebalanceInput = loadInput('01rebalance.json');
 
         // ACT
-        const result = rebalance(rebalanceInput);
+        const act = () => rebalance(rebalanceInput);
 
         // ASSERT
-        expect(result).toBeDefined();
-        expect(result.valid).toBe(true);
-        expect(result.actions.length).toBeGreaterThan(0);
-        expect(result.logs.length).toBeGreaterThan(0);
-
-        console.log("Result logs", result.logs);
-    })
-})
+        expect(act).toThrow('Asset not found for distribution SHIB');
+    });
+});

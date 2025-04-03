@@ -165,7 +165,6 @@ export default function PortfolioPage() {
   ]);
 
   const strategies = core.getStrategies(isTestnet);
-  console.log("Strategies", strategies);
 
   const handleRebalance = async (strategy: Strategy, allocation: number) => {
     if (!primaryWallet?.address || !balances.length || !prices.length) return;
@@ -184,6 +183,7 @@ export default function PortfolioPage() {
         },
       };
 
+      console.log("Rebalance input:", rebalanceInput);
       const rebalanceOutput = rebalance(rebalanceInput);
       console.log("Rebalance output:", rebalanceOutput);
 

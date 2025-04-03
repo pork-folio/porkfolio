@@ -171,7 +171,7 @@ export function buildDesiredAllocations(
 
         const assets = canonicalAssets.get(canonical)
         if (!assets) {
-            throw Error(`Assets not found for distribution ${canonical}`);
+            throw Error(`Asset not found for distribution ${canonical}`);
         }
 
         const prices = canonicalPrices.get(canonical)
