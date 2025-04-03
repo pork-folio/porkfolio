@@ -1,5 +1,16 @@
 [
     {
+        "zrc20_contract_address": "",
+        "asset": "",
+        "foreign_chain_id": "7000",
+        "decimals": 18,
+        "name": "ZetaChain ZETA",
+        "symbol": "ZETA",
+        "coin_type": "Gas",
+        "pyth_price_id": "0xb70656181007f487e392bf0d92e55358e9f0da5da6531c7c4ce7828aa11277fe",
+        "canonical": "ZETA"
+    },
+    {
         "zrc20_contract_address": "0x0327f0660525b15Cdb8f1f5FBF0dD7Cd5Ba182aD",
         "asset": "0xaf88d065e77c8cC2239327C5EDb3A432268e5831",
         "foreign_chain_id": "42161",
