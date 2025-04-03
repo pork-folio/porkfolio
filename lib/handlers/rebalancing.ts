@@ -27,6 +27,7 @@ export interface SwapAction {
   from: TokenInfo;
   to: TokenInfo & { coinType: string };
   fromUsdValue: number;
+  fromTokenValue: number;
   toPrice: PriceInfo;
 }
 
@@ -110,7 +111,7 @@ export async function executeRebalancingSwap(
       );
 
       const amount = ethers.parseUnits(
-        action.from.balance,
+        action.fromTokenValue.toString(),
         action.from.decimals
       );
 
@@ -140,13 +141,13 @@ export async function executeRebalancingSwap(
           ? zetaAddress // Use specific ZETA address
           : action.to.zrc20!, // target token address (we know it exists due to the check above)
         primaryWallet.address, // recipient
-        true, // boolean flag
+        false, // boolean flag
       ];
 
       tx = await client.evmDepositAndCall({
-        amount: action.from.balance,
+        amount: action.fromTokenValue.toString(),
         erc20: action.from.contract,
-        gatewayEvm: receiverAddress,
+        gatewayEvm: gatewayAddress,
         receiver: receiverAddress,
         types,
         values,
@@ -165,10 +166,10 @@ export async function executeRebalancingSwap(
 
     // Add transaction to store
     useTransactionStore.getState().addTransaction({
-      type: "deposit", // Using deposit type since it's similar to a deposit operation
+      type: "rebalance",
       tokenSymbol: action.from.symbol,
       chainName: action.from.chain_name,
-      amount: action.from.balance,
+      amount: action.fromTokenValue.toString(),
       status: "pending",
       hash: tx.hash,
       sourceToken: {

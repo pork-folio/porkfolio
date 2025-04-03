@@ -49,12 +49,12 @@ export function RebalancingActions({ actions }: RebalancingActionsProps) {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="font-semibold">
-                    Swap {action.from.balance} {action.from.symbol} for{" "}
-                    {action.to.symbol}
+                    Swap {action.fromTokenValue.toFixed(6)} {action.from.symbol}{" "}
+                    for {action.to.symbol}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    From: {action.from.balance} {action.from.symbol} on{" "}
-                    {action.from.chain_name} ($
+                    From: {action.fromTokenValue.toFixed(6)}{" "}
+                    {action.from.symbol} on {action.from.chain_name} ($
                     {action.fromUsdValue.toFixed(2)})
                   </p>
                   <p className="text-sm text-muted-foreground">
