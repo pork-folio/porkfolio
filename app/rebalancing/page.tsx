@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import { rebalance } from "@/core/rebalance/rebalance";
 import { Strategy } from "@/core";
 import { fetchBalances } from "@/lib/handlers/balances";
+import { useRouter } from "next/navigation";
 
 type RebalanceDialogOutput = {
   valid: boolean;
@@ -55,6 +56,7 @@ type RebalanceDialogOutput = {
 };
 
 export default function RebalancingPage() {
+  const router = useRouter();
   const operations = useRebalancingStore((state) => state.operations);
   const deleteOperation = useRebalancingStore((state) => state.deleteOperation);
   const addOperation = useRebalancingStore((state) => state.addOperation);
@@ -71,8 +73,6 @@ export default function RebalancingPage() {
   const [rebalanceOutput, setRebalanceOutput] = useState<
     RebalanceDialogOutput | undefined
   >(undefined);
-  const [selectedOperation, setSelectedOperation] =
-    useState<RebalancingOperation | null>(null);
 
   const strategies = core.getStrategies(isTestnet);
 
@@ -247,7 +247,9 @@ export default function RebalancingPage() {
                       <div
                         key={operation.id}
                         className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-                        onClick={() => setSelectedOperation(operation)}
+                        onClick={() =>
+                          router.push(`/rebalancing/${operation.id}`)
+                        }
                       >
                         <div className="flex items-center justify-between">
                           <div>
@@ -303,15 +305,6 @@ export default function RebalancingPage() {
         isRebalancing={isRebalancing}
         rebalanceOutput={rebalanceOutput}
       />
-      {selectedOperation && (
-        <RebalancingDetailsDialog
-          open={!!selectedOperation}
-          onOpenChange={(open) => {
-            if (!open) setSelectedOperation(null);
-          }}
-          operation={selectedOperation}
-        />
-      )}
     </SidebarProvider>
   );
 }
