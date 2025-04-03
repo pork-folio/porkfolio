@@ -32,6 +32,7 @@ export default function PortfolioPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
+  const [rebalanceOutput, setRebalanceOutput] = useState<any>(null);
   const { isTestnet } = useNetwork();
 
   // Add effect to check pending transactions on load
@@ -184,21 +185,14 @@ export default function PortfolioPage() {
         },
       };
 
-      const rebalanceOutput = rebalance(rebalanceInput);
-      console.log("Rebalance output:", rebalanceOutput);
+      const output = rebalance(rebalanceInput);
+      console.log("Rebalance output:", output);
 
-      if (!rebalanceOutput.valid) {
+      if (!output.valid) {
         throw new Error("Rebalance calculation failed");
       }
 
-      // TODO: Execute the rebalance actions
-      // For now, we'll just log them
-      rebalanceOutput.actions.forEach((action) => {
-        console.log("Rebalance action:", action);
-      });
-
-      // Close the dialog after successful rebalance calculation
-      setIsRebalanceDialogOpen(false);
+      setRebalanceOutput(output);
     } catch (error) {
       console.error("Error during rebalancing:", error);
       // You might want to show an error toast here
@@ -300,6 +294,7 @@ export default function PortfolioPage() {
         strategies={strategies}
         onRebalance={handleRebalance}
         isRebalancing={isRebalancing}
+        rebalanceOutput={rebalanceOutput}
       />
     </SidebarProvider>
   );

@@ -22,6 +22,26 @@ interface RebalanceDialogProps {
   strategies: Strategy[];
   onRebalance: (strategy: Strategy, allocation: number) => void;
   isRebalancing: boolean;
+  rebalanceOutput?: {
+    valid: boolean;
+    actions: {
+      type: string;
+      from: {
+        symbol: string;
+        balance: string;
+        chain_name: string;
+      };
+      fromUsdValue: number;
+      fromTokenValue: number;
+      to: {
+        symbol: string;
+        name: string;
+      };
+      toPrice: {
+        usdRate: number;
+      };
+    }[];
+  };
 }
 
 export function RebalanceDialog({
@@ -30,6 +50,7 @@ export function RebalanceDialog({
   strategies,
   onRebalance,
   isRebalancing,
+  rebalanceOutput,
 }: RebalanceDialogProps) {
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(
     null
@@ -147,23 +168,34 @@ export function RebalanceDialog({
         ) : (
           <div className="py-4">
             <div className="space-y-4">
-              <div className="rounded-lg border p-4">
-                <h3 className="font-semibold mb-2">Rebalance Actions</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                    <span>Calculating current portfolio allocation...</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                    <span>Determining required trades...</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                    <span>Preparing order execution...</span>
+              {rebalanceOutput?.actions.map((action, index) => (
+                <div key={index} className="rounded-lg border p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold">
+                        Swap {action.from.symbol} for {action.to.symbol}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        From: {action.from.balance} {action.from.symbol} ($
+                        {action.fromUsdValue.toFixed(2)})
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        To: {action.to.symbol} ($
+                        {(action.fromUsdValue / action.toPrice.usdRate).toFixed(
+                          6
+                        )}
+                        )
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-medium">
+                        ${action.fromUsdValue.toFixed(2)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">USD Value</p>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ))}
             </div>
             <DialogFooter className="mt-4">
               <Button
