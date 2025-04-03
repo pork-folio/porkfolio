@@ -69,30 +69,52 @@ export function RebalanceDialog({
     null
   );
   const [allocation, setAllocation] = useState("2");
-  const [showActions, setShowActions] = useState(false);
+  const [lastCalculation, setLastCalculation] = useState<{
+    strategyId: string;
+    allocation: number;
+  } | null>(null);
   const addOperation = useRebalancingStore((state) => state.addOperation);
 
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setShowActions(false);
       setSelectedStrategy(null);
       setAllocation("2");
+      setLastCalculation(null);
     }
   }, [open]);
+
+  // Auto-calculate rebalancing when strategy or allocation changes
+  useEffect(() => {
+    if (selectedStrategy && !isRebalancing) {
+      const currentCalculation = {
+        strategyId: selectedStrategy.id,
+        allocation: Number(allocation),
+      };
+
+      // Only recalculate if the strategy or allocation has actually changed
+      if (
+        !lastCalculation ||
+        lastCalculation.strategyId !== currentCalculation.strategyId ||
+        lastCalculation.allocation !== currentCalculation.allocation
+      ) {
+        setLastCalculation(currentCalculation);
+        onRebalance(selectedStrategy, Number(allocation));
+      }
+    }
+  }, [
+    selectedStrategy,
+    allocation,
+    isRebalancing,
+    onRebalance,
+    lastCalculation,
+  ]);
 
   const handleAllocationChange = (value: string | number[]) => {
     if (typeof value === "string") {
       setAllocation(value);
     } else {
       setAllocation(value[0].toString());
-    }
-  };
-
-  const handleRebalanceClick = () => {
-    if (selectedStrategy) {
-      setShowActions(true);
-      onRebalance(selectedStrategy, Number(allocation));
     }
   };
 
@@ -211,13 +233,6 @@ export function RebalanceDialog({
                   </div>
                 </div>
               </div>
-              <Button
-                onClick={handleRebalanceClick}
-                disabled={!selectedStrategy || isRebalancing}
-                className="w-full"
-              >
-                {isRebalancing ? "Rebalancing..." : "Calculate Rebalancing"}
-              </Button>
             </div>
 
             {/* Right side - Actions List */}
@@ -227,8 +242,7 @@ export function RebalanceDialog({
                 <RebalancingActions actions={swapActions} />
               ) : (
                 <div className="text-center text-muted-foreground py-8">
-                  Select a strategy and allocation, then click "Calculate
-                  Rebalancing" to see the actions.
+                  Select a strategy and allocation to see the actions.
                 </div>
               )}
             </div>
