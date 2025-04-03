@@ -23,6 +23,7 @@ import { useTransactionStore, Transaction } from "@/store/transactions";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNetwork } from "@/components/providers";
+import { useRebalancingStore } from "@/store/rebalancing";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -100,6 +101,20 @@ const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "amount",
     header: "Amount",
+  },
+  {
+    accessorKey: "rebalancingGroupId",
+    header: "Rebalancing",
+    cell: ({ row }) => {
+      const rebalancingGroupId = row.getValue("rebalancingGroupId") as string;
+      const operations = useRebalancingStore((state) => state.operations);
+      const operation = operations.find((op) => op.id === rebalancingGroupId);
+      return operation ? (
+        <Badge variant="outline">{operation.strategy.name}</Badge>
+      ) : (
+        "-"
+      );
+    },
   },
   {
     accessorKey: "status",
@@ -228,49 +243,21 @@ export function TransactionsTable() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
-  // Group transactions by rebalancingGroupId
-  const groupedTransactions = React.useMemo(() => {
-    const groups = new Map<string, Transaction[]>();
-    const ungrouped: Transaction[] = [];
-
-    transactions.forEach((tx) => {
-      if (tx.rebalancingGroupId) {
-        const group = groups.get(tx.rebalancingGroupId) || [];
-        group.push(tx);
-        groups.set(tx.rebalancingGroupId, group);
-      } else {
-        ungrouped.push(tx);
-      }
-    });
-
-    // Sort groups by timestamp (most recent first)
-    const sortedGroups = Array.from(groups.values()).sort(
-      (a, b) => b[0].timestamp - a[0].timestamp
-    );
-
-    return [...sortedGroups, ...ungrouped];
-  }, [transactions]);
-
-  // Flatten grouped transactions for the table
-  const flattenedTransactions = React.useMemo(() => {
-    return groupedTransactions.flat();
-  }, [groupedTransactions]);
-
   const table = useReactTable({
-    data: flattenedTransactions,
+    data: transactions,
     columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
     },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
@@ -316,38 +303,21 @@ export function TransactionsTable() {
           </TableHeader>
           <TableBody>
             {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row, index) => {
-                const transaction = row.original as Transaction;
-                const isFirstInGroup =
-                  index === 0 ||
-                  (transaction.rebalancingGroupId &&
-                    (
-                      table.getRowModel().rows[index - 1]
-                        .original as Transaction
-                    ).rebalancingGroupId !== transaction.rebalancingGroupId);
-
-                return (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && "selected"}
-                    className={cn(
-                      transaction.rebalancingGroupId && "bg-muted/50",
-                      isFirstInGroup &&
-                        transaction.rebalancingGroupId &&
-                        "border-t-2 border-muted-foreground"
-                    )}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                );
-              })
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
             ) : (
               <TableRow>
                 <TableCell
