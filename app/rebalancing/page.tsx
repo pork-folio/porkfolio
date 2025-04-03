@@ -28,12 +28,25 @@ type RebalanceDialogOutput = {
       symbol: string;
       balance: string;
       chain_name: string;
+      chain_id: string;
+      coin_type: string;
+      decimals: number;
+      contract?: string;
+      zrc20?: string;
     };
     fromUsdValue: number;
     fromTokenValue: number;
     to: {
       symbol: string;
       name: string;
+      chain_id: string;
+      coin_type: string;
+      coinType: string;
+      decimals: number;
+      contract?: string;
+      zrc20?: string;
+      chain_name: string;
+      balance: string;
     };
     toPrice: {
       usdRate: number;
@@ -44,6 +57,7 @@ type RebalanceDialogOutput = {
 export default function RebalancingPage() {
   const operations = useRebalancingStore((state) => state.operations);
   const deleteOperation = useRebalancingStore((state) => state.deleteOperation);
+  const addOperation = useRebalancingStore((state) => state.addOperation);
   const { primaryWallet } = useDynamicContext();
   const {
     balances,
@@ -146,12 +160,25 @@ export default function RebalancingPage() {
             symbol: action.from.symbol,
             balance: action.from.balance,
             chain_name: action.from.chain_name,
+            chain_id: action.from.chain_id,
+            coin_type: action.from.coin_type,
+            decimals: action.from.decimals,
+            contract: action.from.contract,
+            zrc20: action.from.zrc20,
           },
           fromUsdValue: action.fromUsdValue,
           fromTokenValue: action.fromTokenValue,
           to: {
             symbol: action.to.symbol,
             name: action.to.name,
+            chain_id: action.to.chainId,
+            coin_type: action.to.coinType,
+            coinType: action.to.coinType,
+            decimals: action.to.decimals,
+            contract: action.to.asset,
+            zrc20: action.to.zrc20,
+            chain_name: "ZetaChain",
+            balance: "0",
           },
           toPrice: {
             usdRate: action.toPrice.usdRate,
@@ -160,6 +187,13 @@ export default function RebalancingPage() {
       };
 
       setRebalanceOutput(dialogOutput);
+
+      // Add operation to store with the transformed actions
+      addOperation({
+        strategy,
+        allocation,
+        actions: dialogOutput.actions,
+      });
     } catch (error) {
       console.error("Error during rebalancing:", error);
       // You might want to show an error toast here

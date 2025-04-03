@@ -41,12 +41,22 @@ export default function PortfolioPage() {
             symbol: string;
             balance: string;
             chain_name: string;
+            chain_id: string;
+            coin_type: string;
+            decimals: number;
+            contract?: string;
+            zrc20?: string;
           };
           fromUsdValue: number;
           fromTokenValue: number;
           to: {
             symbol: string;
             name: string;
+            chain_id: string;
+            coin_type: string;
+            decimals: number;
+            contract?: string;
+            zrc20?: string;
           };
           toPrice: {
             usdRate: number;
@@ -215,7 +225,39 @@ export default function PortfolioPage() {
         throw new Error("Rebalance calculation failed");
       }
 
-      setRebalanceOutput(output);
+      // Transform the core output to match the dialog's expected shape
+      const dialogOutput = {
+        valid: output.valid,
+        actions: output.actions.map((action) => ({
+          type: action.type,
+          from: {
+            symbol: action.from.symbol,
+            balance: action.from.balance,
+            chain_name: action.from.chain_name,
+            chain_id: action.from.chain_id,
+            coin_type: action.from.coin_type,
+            decimals: action.from.decimals,
+            contract: action.from.contract,
+            zrc20: action.from.zrc20,
+          },
+          fromUsdValue: action.fromUsdValue,
+          fromTokenValue: action.fromTokenValue,
+          to: {
+            symbol: action.to.symbol,
+            name: action.to.name,
+            chain_id: action.to.chainId,
+            coin_type: action.to.coinType,
+            decimals: action.to.decimals,
+            contract: action.to.asset,
+            zrc20: action.to.zrc20,
+          },
+          toPrice: {
+            usdRate: action.toPrice.usdRate,
+          },
+        })),
+      };
+
+      setRebalanceOutput(dialogOutput);
     } catch (error) {
       console.error("Error during rebalancing:", error);
       // You might want to show an error toast here

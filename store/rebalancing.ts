@@ -13,12 +13,25 @@ export interface RebalancingOperation {
       symbol: string;
       balance: string;
       chain_name: string;
+      chain_id: string;
+      coin_type: string;
+      decimals: number;
+      contract?: string;
+      zrc20?: string;
     };
     fromUsdValue: number;
     fromTokenValue: number;
     to: {
       symbol: string;
       name: string;
+      chain_id: string;
+      coin_type: string;
+      coinType: string;
+      decimals: number;
+      contract?: string;
+      zrc20?: string;
+      chain_name: string;
+      balance: string;
     };
     toPrice: {
       usdRate: number;

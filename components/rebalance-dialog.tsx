@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { useRebalancingStore } from "@/store/rebalancing";
 import { RebalancingActions } from "@/components/rebalancing-actions";
+import { SwapAction } from "@/lib/handlers/rebalancing";
 
 interface RebalanceDialogProps {
   open: boolean;
@@ -32,12 +33,22 @@ interface RebalanceDialogProps {
         symbol: string;
         balance: string;
         chain_name: string;
+        chain_id: string;
+        coin_type: string;
+        decimals: number;
+        contract?: string;
+        zrc20?: string;
       };
       fromUsdValue: number;
       fromTokenValue: number;
       to: {
         symbol: string;
         name: string;
+        chain_id: string;
+        coin_type: string;
+        decimals: number;
+        contract?: string;
+        zrc20?: string;
       };
       toPrice: {
         usdRate: number;
@@ -90,11 +101,49 @@ export function RebalanceDialog({
       addOperation({
         strategy: selectedStrategy,
         allocation: Number(allocation),
-        actions: rebalanceOutput.actions,
+        actions: rebalanceOutput.actions.map((action) => ({
+          ...action,
+          to: {
+            ...action.to,
+            coinType: action.to.coin_type,
+            chain_name: "ZetaChain",
+            balance: "0",
+          },
+        })),
       });
       onOpenChange(false);
     }
   };
+
+  // Transform rebalanceOutput actions into SwapAction type
+  const swapActions: SwapAction[] =
+    rebalanceOutput?.actions.map((action) => ({
+      from: {
+        symbol: action.from.symbol,
+        balance: action.from.balance,
+        chain_name: action.from.chain_name,
+        chain_id: action.from.chain_id,
+        coin_type: action.from.coin_type,
+        decimals: action.from.decimals,
+        contract: action.from.contract,
+        zrc20: action.from.zrc20,
+      },
+      to: {
+        symbol: action.to.symbol,
+        name: action.to.name,
+        chain_id: action.to.chain_id,
+        coin_type: action.to.coin_type,
+        coinType: action.to.coin_type,
+        decimals: action.to.decimals,
+        contract: action.to.contract,
+        zrc20: action.to.zrc20,
+        chain_name: "ZetaChain", // Since all target tokens are on ZetaChain
+        balance: "0", // Not needed for target token
+      },
+      fromUsdValue: action.fromUsdValue,
+      fromTokenValue: action.fromTokenValue,
+      toPrice: action.toPrice,
+    })) || [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -166,7 +215,7 @@ export function RebalanceDialog({
               </div>
             </>
           ) : (
-            <RebalancingActions actions={rebalanceOutput?.actions || []} />
+            <RebalancingActions actions={swapActions} />
           )}
         </div>
         <DialogFooter className="mt-4">
