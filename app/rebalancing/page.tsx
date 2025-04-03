@@ -20,6 +20,8 @@ import { rebalance } from "@/core/rebalance/rebalance";
 import { Strategy } from "@/core";
 import { fetchBalances } from "@/lib/handlers/balances";
 import { useRouter } from "next/navigation";
+import { Progress } from "@/components/ui/progress";
+import { useTransactionStore } from "@/store/transactions";
 
 type RebalanceDialogOutput = {
   valid: boolean;
@@ -73,6 +75,7 @@ export default function RebalancingPage() {
   const [rebalanceOutput, setRebalanceOutput] = useState<
     RebalanceDialogOutput | undefined
   >(undefined);
+  const transactions = useTransactionStore((state) => state.transactions);
 
   const strategies = core.getStrategies(isTestnet);
 
@@ -202,6 +205,19 @@ export default function RebalancingPage() {
     }
   };
 
+  const calculateProgress = (operation: RebalancingOperation) => {
+    const completedActions = operation.actions.filter((action) => {
+      const matchingTransaction = transactions.find(
+        (tx) =>
+          tx.rebalancingGroupId === operation.id &&
+          tx.targetToken?.symbol === action.to.symbol &&
+          tx.amount === action.fromTokenValue.toString()
+      );
+      return matchingTransaction?.status === "completed";
+    }).length;
+    return (completedActions / operation.actions.length) * 100;
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -243,53 +259,53 @@ export default function RebalancingPage() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {operations.map((operation) => (
-                      <div
-                        key={operation.id}
-                        className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-                        onClick={() =>
-                          router.push(`/rebalancing/${operation.id}`)
-                        }
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold">
-                              {operation.strategy.name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {operation.allocation}% allocation •{" "}
-                              {formatDistanceToNow(operation.createdAt, {
-                                addSuffix: true,
-                              })}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={
-                                operation.status === "completed"
-                                  ? "default"
-                                  : operation.status === "failed"
-                                  ? "destructive"
-                                  : "secondary"
-                              }
-                            >
-                              {operation.status}
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteOperation(operation.id);
-                              }}
-                              className="h-8 w-8"
-                            >
-                              <IconTrash className="h-4 w-4" />
-                            </Button>
+                    {operations.map((operation) => {
+                      const progress = calculateProgress(operation);
+                      return (
+                        <div
+                          key={operation.id}
+                          className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors max-w-2xl"
+                          onClick={() =>
+                            router.push(`/rebalancing/${operation.id}`)
+                          }
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1">
+                              <h3 className="font-semibold">
+                                {operation.strategy.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {operation.allocation}% allocation •{" "}
+                                {formatDistanceToNow(operation.createdAt, {
+                                  addSuffix: true,
+                                })}
+                              </p>
+                              <div className="mt-2 flex items-center gap-2">
+                                <div className="w-32">
+                                  <Progress value={progress} className="h-2" />
+                                </div>
+                                <Badge variant="outline">
+                                  {Math.round(progress)}%
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteOperation(operation.id);
+                                }}
+                                className="h-8 w-8"
+                              >
+                                <IconTrash className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
