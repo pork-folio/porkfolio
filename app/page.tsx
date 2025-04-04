@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/accordion";
 import { useRouter } from "next/navigation";
 import { TwitterLink } from "@/components/ui/twitter-link";
-
+import Image from "next/image";
 
 export default function Page() {
   const { primaryWallet } = useDynamicContext();
@@ -98,6 +98,15 @@ export default function Page() {
               </Accordion>
             </div>
             <TwitterLink handle="PorkfolioApp" />
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mb-2">
+              <span>powered by</span>
+              <a href="https://zetachain.com" target="_blank" rel="noopener noreferrer">
+                <Image src="/zeta-horizontal.png" alt="ZetaChain"
+                  width={100} height={24} 
+                  className="dark:invert hover:opacity-80 transition-opacity"
+                />
+              </a>
+            </div>
           </div>
         </div>
       )}
