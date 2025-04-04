@@ -487,7 +487,7 @@ function OinkCard() {
     <div className="min-w-[300px] flex-1 flex flex-col p-4 border rounded-lg">
       <div>
         <div className="text-sm text-muted-foreground">OINK Token</div>
-        <div className="text-4xl font-bold mt-1">
+        <div className="text-4xl font-bold mt-1 mb-4">
           {isRevealed ? formattedBalance : "0.00"}
         </div>
       </div>
