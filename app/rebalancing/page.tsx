@@ -264,7 +264,7 @@ export default function RebalancingPage() {
                       return (
                         <div
                           key={operation.id}
-                          className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors"
+                          className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors group"
                           onClick={() =>
                             router.push(`/rebalancing/${operation.id}`)
                           }
@@ -282,9 +282,10 @@ export default function RebalancingPage() {
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
-                              <div className="w-32">
-                                <Progress value={progress} className="h-2" />
-                              </div>
+                              <Progress
+                                value={progress}
+                                className="h-2 flex-1"
+                              />
                               <Badge variant="outline">
                                 {Math.round(progress)}%
                               </Badge>
@@ -297,7 +298,7 @@ export default function RebalancingPage() {
                                   e.stopPropagation();
                                   deleteOperation(operation.id);
                                 }}
-                                className="h-8 w-8"
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 <IconTrash className="h-4 w-4" />
                               </Button>
