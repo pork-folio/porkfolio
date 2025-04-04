@@ -47,6 +47,7 @@ import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sh
 import { formatChainName } from "@/lib/utils";
 import { OinkBalance } from "@/components/oink-balance";
 import Image from "next/image";
+import { CryptoIcon } from "@/components/ui/crypto-icon";
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -198,6 +199,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
       ).length;
       return (
         <div className="flex flex-col">
+          <CryptoIcon symbol={token.baseSymbol} size={24} />
           <div className="font-medium">{token.baseSymbol}</div>
           <div className="text-sm text-muted-foreground">
             {`${nonZeroTokens} ${nonZeroTokens > 1 ? "chains" : "chain"}`}
