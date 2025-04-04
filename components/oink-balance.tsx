@@ -13,7 +13,7 @@ const ERC20_ABI = [
   "function decimals() view returns (uint8)",
 ];
 
-export function OinkBalance() {
+export function OinkBalance({ className }: { className?: string }) {
   const { primaryWallet } = useDynamicContext();
   const [balance, setBalance] = useState<string>("0");
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,9 @@ export function OinkBalance() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 animate-pulse">
+      <div
+        className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-muted/50 animate-pulse ${className}`}
+      >
         <PiggyBank className="h-5 w-5 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">
           Loading balance...
@@ -59,14 +61,14 @@ export function OinkBalance() {
   }
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 hover:bg-muted/70 transition-colors">
-      <PiggyBank className="h-5 w-5 text-primary" />
-      <div className="flex items-center gap-1 text-sm">
-        <span className="text-muted-foreground">You own</span>
-        <span className="font-semibold text-primary">
-          {parseFloat(balance).toFixed(2)}
-        </span>
-        <span className="text-muted-foreground">OINK</span>
+    <div
+      className={`flex items-center justify-center gap-2 px-4 py-4 rounded-lg bg-gradient-to-r from-[rgb(183,105,124)] via-[rgb(153,75,94)] to-[rgb(123,45,64)] hover:from-[rgb(163,85,104)] hover:via-[rgb(133,55,74)] hover:to-[rgb(103,25,44)] text-white transition-all duration-300 ${className}`}
+    >
+      <PiggyBank className="h-6 w-6" />
+      <div className="flex items-center gap-1 text-base">
+        <span>You own</span>
+        <span className="font-semibold">{parseFloat(balance).toFixed(2)}</span>
+        <span>OINK</span>
       </div>
     </div>
   );
