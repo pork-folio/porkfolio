@@ -200,7 +200,7 @@ export default function RebalancingOperationPage({
                     </h1>
                     <div className="flex items-center gap-2 mt-2">
                       <p className="text-muted-foreground">
-                        {operation.allocation}% allocation •{" "}
+                        {operation.allocation.percentage}% allocation •{" "}
                         {formatDistanceToNow(operation.createdAt, {
                           addSuffix: true,
                         })}

@@ -28,7 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { Info, HelpCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -745,13 +745,13 @@ export function BalancesTable({
               <div className="absolute inset-x-0 bottom-0 h-48 backdrop-blur-md mask-fade-up">
                 <div className="absolute bottom-4 left-4 right-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 flex-1">
                       <Button
                         variant="default"
                         size="lg"
                         onClick={onRebalance}
                         disabled={isRebalancing}
-                        className="transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
+                        className="flex-1 transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
                       >
                         {isRebalancing ? (
                           <div className="flex items-center gap-2">
@@ -762,6 +762,27 @@ export function BalancesTable({
                           "Rebalance Portfolio"
                         )}
                       </Button>
+                      <TooltipProvider>
+                        <ShadcnTooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="default"
+                              size="lg"
+                              className="h-10 w-10"
+                            >
+                              <HelpCircle className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-[200px]">
+                              Rebalancing helps maintain your desired asset
+                              allocation by automatically adjusting your
+                              portfolio weights. Every time you rebalance, you
+                              earn OINK tokens as a reward.
+                            </p>
+                          </TooltipContent>
+                        </ShadcnTooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </div>
