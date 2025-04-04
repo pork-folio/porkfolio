@@ -200,7 +200,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
         <div className="flex flex-col">
           <div className="font-medium">{token.baseSymbol}</div>
           <div className="text-sm text-muted-foreground">
-            {nonZeroTokens} tokens
+            {`${nonZeroTokens} ${nonZeroTokens > 1 ? "chains" : "chain"}`}
           </div>
         </div>
       );
