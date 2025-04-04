@@ -171,12 +171,24 @@ const columns: ColumnDef<Transaction>[] = [
   },
 ];
 
+const TRANSACTION_STATUS_BASE_URL = {
+  mainnet:
+    "https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData",
+  testnet:
+    "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData",
+};
+
+const ZETA_RPC_URL = {
+  mainnet: "https://zetachain-evm.blockpi.network/v1/rpc/public",
+  testnet: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
+};
+
 function StatusCell({
   row,
 }: {
   row: {
     getValue: (key: keyof Transaction) => Transaction[keyof Transaction];
-    original: { hash: string };
+    original: Transaction;
   };
 }) {
   const status = row.getValue("status") as Transaction["status"];
@@ -189,21 +201,63 @@ function StatusCell({
     setIsRefreshing(true);
     const startTime = Date.now();
     try {
-      const apiUrl = isTestnet
-        ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
-        : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+      const sourceToken = row.original.sourceToken;
+      const targetToken = row.original.targetToken;
 
-      const response = await fetch(apiUrl);
+      // Check if both source and target chains are ZetaChain
+      const isZetaChainTransaction =
+        sourceToken &&
+        targetToken &&
+        sourceToken.chainName.toLowerCase().includes("zeta") &&
+        targetToken.chainName.toLowerCase().includes("zeta");
 
-      if (response.status === 404) {
-        updateStatus(hash, "Initiated");
-      } else if (response.ok) {
-        const data = await response.json();
-        const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
-        if (cctxStatus === "OutboundMined") {
-          updateStatus(hash, "completed");
-        } else if (cctxStatus === "Aborted") {
-          updateStatus(hash, "failed");
+      if (isZetaChainTransaction) {
+        // For ZetaChain transactions, check status via RPC
+        const rpcUrl = ZETA_RPC_URL[isTestnet ? "testnet" : "mainnet"];
+        const response = await fetch(rpcUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "eth_getTransactionReceipt",
+            params: [hash],
+            id: 1,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const receipt = data.result;
+          if (receipt) {
+            // Check if transaction was successful
+            if (receipt.status === "0x1") {
+              updateStatus(hash, "completed");
+            } else {
+              updateStatus(hash, "failed");
+            }
+          } else {
+            // Transaction not found or still pending
+            updateStatus(hash, "Initiated");
+          }
+        }
+      } else {
+        const apiUrl = `${
+          TRANSACTION_STATUS_BASE_URL[isTestnet ? "testnet" : "mainnet"]
+        }/${hash}`;
+        const response = await fetch(apiUrl);
+
+        if (response.status === 404) {
+          updateStatus(hash, "Initiated");
+        } else if (response.ok) {
+          const data = await response.json();
+          const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+          if (cctxStatus === "OutboundMined") {
+            updateStatus(hash, "completed");
+          } else if (cctxStatus === "Aborted") {
+            updateStatus(hash, "failed");
+          }
         }
       }
     } catch (error) {
@@ -261,9 +315,9 @@ function TimestampCell({
   const timestamp = row.getValue("timestamp") as number;
   const hash = row.original.hash;
   const { isTestnet } = useNetwork();
-  const apiUrl = isTestnet
-    ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
-    : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+  const apiUrl = `${
+    TRANSACTION_STATUS_BASE_URL[isTestnet ? "testnet" : "mainnet"]
+  }/${hash}`;
 
   return (
     <a
@@ -295,26 +349,66 @@ export function TransactionsTable() {
   const refreshAllNonCompleted = async () => {
     setIsRefreshingAll(true);
     const nonCompletedTransactions = transactions.filter(
-      (tx) => tx.status !== "completed"
+      (tx) => tx.status !== "completed" && tx.status !== "failed"
     );
 
     // Refresh each transaction sequentially to avoid overwhelming the API
     for (const tx of nonCompletedTransactions) {
-      const apiUrl = isTestnet
-        ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
-        : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
+      const sourceToken = tx.sourceToken;
+      const targetToken = tx.targetToken;
+
+      // Check if both source and target chains are ZetaChain
+      const isZetaChainTransaction =
+        sourceToken &&
+        targetToken &&
+        sourceToken.chainName.toLowerCase().includes("zeta") &&
+        targetToken.chainName.toLowerCase().includes("zeta");
 
       try {
-        const response = await fetch(apiUrl);
-        if (response.status === 404) {
-          updateStatus(tx.hash, "Initiated");
-        } else if (response.ok) {
-          const data = await response.json();
-          const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
-          if (cctxStatus === "OutboundMined") {
-            updateStatus(tx.hash, "completed");
-          } else if (cctxStatus === "Aborted") {
-            updateStatus(tx.hash, "failed");
+        if (isZetaChainTransaction) {
+          // For ZetaChain transactions, check status via RPC
+          const rpcUrl = ZETA_RPC_URL[isTestnet ? "testnet" : "mainnet"];
+          const response = await fetch(rpcUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              method: "eth_getTransactionReceipt",
+              params: [tx.hash],
+              id: 1,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const receipt = data.result;
+            if (receipt) {
+              // Check if transaction was successful
+              if (receipt.status === "0x1") {
+                updateStatus(tx.hash, "completed");
+              } else {
+                updateStatus(tx.hash, "failed");
+              }
+            }
+          }
+        } else {
+          const apiUrl = `${
+            TRANSACTION_STATUS_BASE_URL[isTestnet ? "testnet" : "mainnet"]
+          }/${tx.hash}`;
+
+          const response = await fetch(apiUrl);
+          if (response.status === 404) {
+            updateStatus(tx.hash, "Initiated");
+          } else if (response.ok) {
+            const data = await response.json();
+            const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+            if (cctxStatus === "OutboundMined") {
+              updateStatus(tx.hash, "completed");
+            } else if (cctxStatus === "Aborted") {
+              updateStatus(tx.hash, "failed");
+            }
           }
         }
       } catch (error) {
