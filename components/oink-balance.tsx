@@ -14,7 +14,15 @@ const ERC20_ABI = [
   "function decimals() view returns (uint8)",
 ];
 
-export function OinkBalance({ className }: { className?: string }) {
+export function OinkBalance({
+  className,
+  onBalanceChange,
+  onReveal,
+}: {
+  className?: string;
+  onBalanceChange?: (balance: string) => void;
+  onReveal?: () => void;
+}) {
   const { primaryWallet } = useDynamicContext();
   const [balance, setBalance] = useState<string>("0");
   const [loading, setLoading] = useState(true);
@@ -41,6 +49,7 @@ export function OinkBalance({ className }: { className?: string }) {
   const handleClick = (event: React.MouseEvent) => {
     if (!isRevealed) {
       setIsRevealed(true);
+      onReveal?.();
     } else {
       setClickCount((prev) => prev + 1);
     }
@@ -84,6 +93,7 @@ export function OinkBalance({ className }: { className?: string }) {
 
         const formattedBalance = ethers.formatUnits(balance, decimals);
         setBalance(formattedBalance);
+        onBalanceChange?.(formattedBalance);
       } catch (error) {
         console.error("Error fetching OINK balance:", error);
       } finally {
