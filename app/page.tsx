@@ -50,7 +50,7 @@ export default function Page() {
             </div>
             <p className="text-muted-foreground text-lg">Connect wallet to manage your portfolio</p>
             <DynamicConnectButton />
-            <div className="w-full">
+            <div className="w-full p-4">
               <Accordion type="single" collapsible className="w-full">
                 <AccordionItem value="item-1" className="border-none">
                   <AccordionTrigger className="text-left">
