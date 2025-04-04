@@ -12,7 +12,7 @@ export interface Strategy {
     description: string
     sortIndex: number
     tags: string[]
-    env: string[]
+    env?: string[]
     definitions: Distribution[]
 }
 
@@ -25,7 +25,7 @@ const allStrategies = parseStrategies()
 
 export function getStrategies(testnet: boolean = false): Strategy[] {
     return allStrategies.filter(
-        (s: Strategy) => s.env.includes(testnet ? 'testnet' : 'mainnet')
+        (s: Strategy) => s.env?.includes(testnet ? 'testnet' : 'mainnet')
     )
 }
 

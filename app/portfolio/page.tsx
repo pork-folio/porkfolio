@@ -34,35 +34,35 @@ export default function PortfolioPage() {
   const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
   const [rebalanceOutput, setRebalanceOutput] = useState<
     | {
-        valid: boolean;
-        actions: {
-          type: string;
-          from: {
-            symbol: string;
-            balance: string;
-            chain_name: string;
-            chain_id: string;
-            coin_type: string;
-            decimals: number;
-            contract?: string;
-            zrc20?: string;
-          };
-          fromUsdValue: number;
-          fromTokenValue: number;
-          to: {
-            symbol: string;
-            name: string;
-            chain_id: string;
-            coin_type: string;
-            decimals: number;
-            contract?: string;
-            zrc20?: string;
-          };
-          toPrice: {
-            usdRate: number;
-          };
-        }[];
-      }
+      valid: boolean;
+      actions: {
+        type: string;
+        from: {
+          symbol: string;
+          balance: string;
+          chain_name: string;
+          chain_id: string;
+          coin_type: string;
+          decimals: number;
+          contract?: string;
+          zrc20?: string;
+        };
+        fromUsdValue: number;
+        fromTokenValue: number;
+        to: {
+          symbol: string;
+          name: string;
+          chain_id: string;
+          coin_type: string;
+          decimals: number;
+          contract?: string;
+          zrc20?: string;
+        };
+        toPrice: {
+          usdRate: number;
+        };
+      }[];
+    }
     | undefined
   >(undefined);
   const { isTestnet } = useNetwork();
@@ -225,6 +225,27 @@ export default function PortfolioPage() {
       if (!output.valid) {
         throw new Error("Rebalance calculation failed");
       }
+
+      // Call the AI strategy API endpoint
+      // DEMO...
+      fetch(
+        '/api/ai-strategy',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', },
+          body: JSON.stringify({ address: primaryWallet.address, ...rebalanceInput }),
+        }
+      ).then((response) => {
+        if (!response.ok) {
+          console.error('AI strategy API call failed:', response.text());
+          return
+        }
+
+        response.json().then((aiStrategyResult) => {
+          console.log('AI strategy result:', aiStrategyResult);
+        });
+      });
+
 
       const dialogOutput = {
         valid: output.valid,

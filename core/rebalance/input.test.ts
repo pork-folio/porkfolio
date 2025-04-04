@@ -1,6 +1,6 @@
 import { Asset, getStrategy, Price, supportedAssets } from "@/core";
 import { BalanceData } from "@/lib/handlers/balances";
-import { buildInputItems, calculateUsdAllocation, buildDesiredAllocations } from "@/core/rebalance/input";
+import { buildInputItems, calculateUsdAllocation, buildDesiredAllocations } from "@/core/rebalance";
 
 describe("buildInputItems", () => {
     // ARRANGE
@@ -227,14 +227,14 @@ describe("calculateUsdAllocation", () => {
 describe("buildDesiredAllocations", () => {
     // ARRANGE
     // Given some mocked data
-    const strategy = getStrategy("layer1-maxi")!;
+    const strategy = getStrategy("btc-maxi")!;
 
     // comes from assets.testnet.json
     const assets = supportedAssets(true);
 
     // Mock prices for each asset
     const BTC_PRICE = 85_000;
-    const ETH_PRICE = 1850;
+    const ETH_PRICE = 2000;
     const SOL_PRICE = 120;
 
     const prices = assets.map(asset => {
@@ -274,18 +274,13 @@ describe("buildDesiredAllocations", () => {
 
         // Check BTC allocation (50%)
         expect(result[0].asset.symbol).toBe("sBTC");
-        expect(result[0].usdValue).toBe(1000); // 50% of 2000
-        expect(result[0].tokenValue()).toBe(1000 / BTC_PRICE);
+        expect(result[0].usdValue).toBe(1800); // 90% of 2000
+        expect(result[0].tokenValue()).toBe(1800 / BTC_PRICE);
 
         // Check ETH allocation (30%)
         expect(result[1].asset.symbol).toBe("sETH.SEPOLIA");
-        expect(result[1].usdValue).toBe(600); // 30% of 2000
-        expect(result[1].tokenValue()).toBe(600 / ETH_PRICE);
-
-        // Check SOL allocation (20%)
-        expect(result[2].asset.symbol).toBe("SOL.SOLANA");
-        expect(result[2].usdValue).toBe(400); // 20% of 2000
-        expect(result[2].tokenValue()).toBe(400 / SOL_PRICE);
+        expect(result[1].usdValue).toBe(200); // 10% of 2000
+        expect(result[1].tokenValue()).toBe(200 / ETH_PRICE);
     });
 
     it("should throw error when asset not found for distribution", () => {

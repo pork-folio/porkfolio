@@ -1,7 +1,6 @@
 import { BalanceData } from "@/lib/handlers/balances";
 import { Allocation, Asset, Distribution, Price } from "@/core";
 
-
 export class InputItem {
     id: string
     balance: BalanceData;
