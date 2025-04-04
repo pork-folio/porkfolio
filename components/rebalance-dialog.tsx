@@ -82,7 +82,7 @@ export function RebalanceDialog({
   const [allocationType, setAllocationType] = useState<
     "percentage" | "usd_value"
   >("percentage");
-  const [allocation, setAllocation] = useState("2");
+  const [allocation, setAllocation] = useState("10");
   const [lastCalculation, setLastCalculation] = useState<{
     strategyId: string;
     allocation: {
