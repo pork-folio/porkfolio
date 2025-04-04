@@ -45,7 +45,7 @@ import { handleDeposit } from "@/lib/handlers/deposit";
 import { roundNumber } from "@/lib/handlers/balances";
 import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sheet";
 import { formatChainName } from "@/lib/utils";
-import { OinkBalance } from "@/components/oink-balance";
+// import { OinkBalance } from "@/components/oink-balance";
 import Image from "next/image";
 import { CryptoIcon } from "@/components/ui/crypto-icon";
 
