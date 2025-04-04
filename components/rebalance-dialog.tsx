@@ -14,17 +14,26 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Strategy } from "@/core";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRebalancingStore } from "@/store/rebalancing";
 import { RebalancingActions } from "@/components/rebalancing-actions";
 import { SwapAction } from "@/lib/handlers/rebalancing";
 import { useRouter } from "next/navigation";
+import { useBalanceStore } from "@/store/balances";
+import { usePriceStore } from "@/store/prices";
 
 interface RebalanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   strategies: Strategy[];
-  onRebalance: (strategy: Strategy, allocation: number) => void;
+  onRebalance: (
+    strategy: Strategy,
+    allocation: {
+      type: "percentage" | "usd_value";
+      percentage?: number;
+      usdValue?: number;
+    }
+  ) => void;
   isRebalancing: boolean;
   rebalanceOutput?: {
     valid: boolean;
@@ -69,19 +78,41 @@ export function RebalanceDialog({
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(
     null
   );
+  const [allocationType, setAllocationType] = useState<
+    "percentage" | "usd_value"
+  >("percentage");
   const [allocation, setAllocation] = useState("2");
   const [lastCalculation, setLastCalculation] = useState<{
     strategyId: string;
-    allocation: number;
+    allocation: {
+      type: "percentage" | "usd_value";
+      percentage?: number;
+      usdValue?: number;
+    };
   } | null>(null);
   const addOperation = useRebalancingStore((state) => state.addOperation);
   const router = useRouter();
+  const { balances } = useBalanceStore();
+  const { prices } = usePriceStore();
+
+  // Calculate total portfolio value
+  const totalPortfolioValue = useMemo(() => {
+    return balances.reduce((total, token) => {
+      const price = prices.find((p) => p.ticker === token.symbol)?.usdRate;
+      const balance = parseFloat(token.balance);
+      if (price && balance > 0) {
+        return total + price * balance;
+      }
+      return total;
+    }, 0);
+  }, [balances, prices]);
 
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
       setSelectedStrategy(null);
       setAllocation("2");
+      setAllocationType("percentage");
       setLastCalculation(null);
     }
   }, [open]);
@@ -91,22 +122,29 @@ export function RebalanceDialog({
     if (selectedStrategy && !isRebalancing) {
       const currentCalculation = {
         strategyId: selectedStrategy.id,
-        allocation: Number(allocation),
+        allocation: {
+          type: allocationType,
+          ...(allocationType === "percentage"
+            ? { percentage: Number(allocation) }
+            : { usdValue: Number(allocation) }),
+        },
       };
 
       // Only recalculate if the strategy or allocation has actually changed
       if (
         !lastCalculation ||
         lastCalculation.strategyId !== currentCalculation.strategyId ||
-        lastCalculation.allocation !== currentCalculation.allocation
+        JSON.stringify(lastCalculation.allocation) !==
+          JSON.stringify(currentCalculation.allocation)
       ) {
         setLastCalculation(currentCalculation);
-        onRebalance(selectedStrategy, Number(allocation));
+        onRebalance(selectedStrategy, currentCalculation.allocation);
       }
     }
   }, [
     selectedStrategy,
     allocation,
+    allocationType,
     isRebalancing,
     onRebalance,
     lastCalculation,
@@ -124,7 +162,12 @@ export function RebalanceDialog({
     if (selectedStrategy && rebalanceOutput) {
       const operation = {
         strategy: selectedStrategy,
-        allocation: Number(allocation),
+        allocation: {
+          type: allocationType,
+          ...(allocationType === "percentage"
+            ? { percentage: Number(allocation) }
+            : { usdValue: Number(allocation) }),
+        },
         actions: rebalanceOutput.actions.map((action) => ({
           ...action,
           to: {
@@ -218,13 +261,21 @@ export function RebalanceDialog({
                 ))}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="allocation">Allocation Percentage</Label>
+                <Label htmlFor="allocation">
+                  {allocationType === "percentage"
+                    ? "Allocation Percentage"
+                    : "Allocation USD Value"}
+                </Label>
                 <div className="flex items-center gap-4">
                   <Slider
                     value={[Number(allocation)]}
                     onValueChange={handleAllocationChange}
-                    max={100}
-                    step={1}
+                    max={
+                      allocationType === "percentage"
+                        ? 100
+                        : totalPortfolioValue
+                    }
+                    step={allocationType === "percentage" ? 1 : 100}
                     className="flex-1"
                   />
                   <div className="flex items-center gap-2">
@@ -232,12 +283,42 @@ export function RebalanceDialog({
                       id="allocation"
                       type="number"
                       min="1"
-                      max="100"
+                      max={
+                        allocationType === "percentage"
+                          ? "100"
+                          : totalPortfolioValue.toString()
+                      }
                       value={allocation}
                       onChange={(e) => handleAllocationChange(e.target.value)}
-                      className="w-20"
+                      className="w-32"
                     />
-                    <span className="text-sm text-muted-foreground">%</span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant={
+                          allocationType === "usd_value" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setAllocationType("usd_value")}
+                        className="h-8 w-8 p-0"
+                      >
+                        $
+                      </Button>
+                      <Button
+                        variant={
+                          allocationType === "percentage"
+                            ? "default"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() => {
+                          setAllocationType("percentage");
+                          setAllocation("2");
+                        }}
+                        className="h-8 w-8 p-0"
+                      >
+                        %
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

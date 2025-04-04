@@ -6,7 +6,11 @@ export interface RebalancingOperation {
   id: string;
   createdAt: Date;
   strategy: Strategy;
-  allocation: number;
+  allocation: {
+    type: "percentage" | "usd_value";
+    percentage?: number;
+    usdValue?: number;
+  };
   actions: {
     type: string;
     from: {

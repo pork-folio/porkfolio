@@ -199,7 +199,14 @@ export default function PortfolioPage() {
 
   const strategies = core.getStrategies(isTestnet);
 
-  const handleRebalance = async (strategy: Strategy, allocation: number) => {
+  const handleRebalance = async (
+    strategy: Strategy,
+    allocation: {
+      type: "percentage" | "usd_value";
+      percentage?: number;
+      usdValue?: number;
+    }
+  ) => {
     if (!primaryWallet?.address || !balances.length || !prices.length) return;
 
     setIsRebalancing(true);
@@ -210,22 +217,15 @@ export default function PortfolioPage() {
         prices,
         supportedAssets,
         strategy,
-        allocation: {
-          type: "percentage" as const,
-          percentage: allocation,
-        },
+        allocation,
       };
 
-      console.log("Rebalance input:", rebalanceInput);
-
       const output = rebalance(rebalanceInput);
-      console.log("Rebalance output:", output);
 
       if (!output.valid) {
         throw new Error("Rebalance calculation failed");
       }
 
-      // Transform the core output to match the dialog's expected shape
       const dialogOutput = {
         valid: output.valid,
         actions: output.actions.map((action) => ({
@@ -260,7 +260,6 @@ export default function PortfolioPage() {
       setRebalanceOutput(dialogOutput);
     } catch (error) {
       console.error("Error during rebalancing:", error);
-      // You might want to show an error toast here
     } finally {
       setIsRebalancing(false);
     }
