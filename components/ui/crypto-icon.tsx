@@ -34,8 +34,11 @@ export function CryptoIcon({ symbol, size = 24, className }: CryptoIconProps) {
   // fallback to a generic icon
   if (!iconMap.has(iconName)) {
     console.log(`No icon found for ${symbol} (${iconName})`);
+
     return (
-      <IconCoin size={size} className={cn("inline-block text-muted-foreground", className)} />
+      <IconCoin
+        size={size}
+        className={cn("inline-block text-muted-foreground rounded-full", className)} />
     );
   }
 
@@ -44,7 +47,7 @@ export function CryptoIcon({ symbol, size = 24, className }: CryptoIconProps) {
   return (
     <Image src={src} alt={`${iconName} icon`}
       width={size} height={size}
-      className={cn("inline-block", className)}
+      className={cn("inline-block rounded-full", className)}
     />
   );
 }

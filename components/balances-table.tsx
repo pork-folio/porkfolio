@@ -197,12 +197,15 @@ const columns: ColumnDef<AggregatedToken>[] = [
       const nonZeroTokens = token.tokens.filter(
         (t) => parseFloat(t.balance) > 0
       ).length;
+
       return (
-        <div className="flex flex-col">
-          <CryptoIcon symbol={token.baseSymbol} size={24} />
-          <div className="font-medium">{token.baseSymbol}</div>
-          <div className="text-sm text-muted-foreground">
-            {`${nonZeroTokens} ${nonZeroTokens > 1 ? "chains" : "chain"}`}
+        <div className="flex items-center">
+          <CryptoIcon symbol={token.baseSymbol} size={26} />
+          <div className="flex flex-col pl-2">
+            <div className="font-medium">{token.baseSymbol}</div>
+            <div className="text-sm text-muted-foreground">
+              {`${nonZeroTokens} ${nonZeroTokens === 1 ? "chain" : "chains"}`}
+            </div>
           </div>
         </div>
       );
