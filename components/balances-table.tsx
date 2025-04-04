@@ -45,6 +45,7 @@ import { handleDeposit } from "@/lib/handlers/deposit";
 import { roundNumber } from "@/lib/handlers/balances";
 import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sheet";
 import { formatChainName } from "@/lib/utils";
+import { OinkBalance } from "@/components/oink-balance";
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -734,23 +735,26 @@ export function BalancesTable({
 
               {/* Smoothly fading blur */}
               <div className="absolute inset-x-0 bottom-0 h-48 backdrop-blur-md mask-fade-up">
-                <div className="absolute bottom-4 left-4">
-                  <Button
-                    variant="default"
-                    size="lg"
-                    onClick={onRebalance}
-                    disabled={isRebalancing}
-                    className="transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
-                  >
-                    {isRebalancing ? (
-                      <div className="flex items-center gap-2">
-                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                        Rebalancing...
-                      </div>
-                    ) : (
-                      "Rebalance Portfolio"
-                    )}
-                  </Button>
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="default"
+                      size="lg"
+                      onClick={onRebalance}
+                      disabled={isRebalancing}
+                      className="transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
+                    >
+                      {isRebalancing ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          Rebalancing...
+                        </div>
+                      ) : (
+                        "Rebalance Portfolio"
+                      )}
+                    </Button>
+                    {/* <OinkBalance /> */}
+                  </div>
                 </div>
               </div>
             </div>
