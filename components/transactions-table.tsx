@@ -286,6 +286,48 @@ export function TransactionsTable() {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isRefreshingAll, setIsRefreshingAll] = React.useState(false);
+  const { isTestnet } = useNetwork();
+  const updateStatus = useTransactionStore(
+    (state) => state.updateTransactionStatus
+  );
+
+  const refreshAllNonCompleted = async () => {
+    setIsRefreshingAll(true);
+    const nonCompletedTransactions = transactions.filter(
+      (tx) => tx.status !== "completed"
+    );
+
+    // Refresh each transaction sequentially to avoid overwhelming the API
+    for (const tx of nonCompletedTransactions) {
+      const apiUrl = isTestnet
+        ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
+        : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
+
+      try {
+        const response = await fetch(apiUrl);
+        if (response.status === 404) {
+          updateStatus(tx.hash, "Initiated");
+        } else if (response.ok) {
+          const data = await response.json();
+          const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+          if (cctxStatus === "OutboundMined") {
+            updateStatus(tx.hash, "completed");
+          } else if (cctxStatus === "Aborted") {
+            updateStatus(tx.hash, "failed");
+          }
+        }
+      } catch (error) {
+        console.error(
+          `Error checking status for transaction ${tx.hash}:`,
+          error
+        );
+      }
+      // Add a small delay between requests
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    setIsRefreshingAll(false);
+  };
 
   React.useEffect(() => {
     console.log("Transactions:", transactions);
@@ -321,37 +363,57 @@ export function TransactionsTable() {
             className="h-8 w-[150px] lg:w-[250px]"
           />
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="ml-auto h-8">
-              <IconTrash className="mr-2 h-4 w-4" />
-              Clear
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Are you sure?</DialogTitle>
-              <DialogDescription>
-                This action will clear all transactions from the table. This
-                action cannot be undone.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="flex justify-end space-x-2 mt-4">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
+        <div className="flex items-center space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshAllNonCompleted}
+            disabled={isRefreshingAll}
+            className="h-8"
+          >
+            <IconRefresh
+              className={cn(
+                "mr-2 h-4 w-4",
+                isRefreshingAll && "animate-[spin_1s_linear_infinite]"
+              )}
+            />
+            Refresh All
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="ml-auto h-8">
+                <IconTrash className="mr-2 h-4 w-4" />
+                Clear
               </Button>
-              <Button
-                variant="destructive"
-                onClick={() => {
-                  clearTransactions();
-                  setIsDialogOpen(false);
-                }}
-              >
-                Clear Transactions
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogDescription>
+                  This action will clear all transactions from the table. This
+                  action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    clearTransactions();
+                    setIsDialogOpen(false);
+                  }}
+                >
+                  Clear Transactions
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
