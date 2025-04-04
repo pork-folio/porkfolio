@@ -286,19 +286,6 @@ export default function PortfolioPage() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setIsRebalanceDialogOpen(true)}
-                      disabled={
-                        !primaryWallet?.address ||
-                        !balances.length ||
-                        !prices.length
-                      }
-                    >
-                      <IconScale className="mr-2 h-4 w-4" />
-                      Rebalance
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
                       onClick={refreshBalances}
                       disabled={isRefreshing || !primaryWallet?.address}
                     >
@@ -345,7 +332,11 @@ export default function PortfolioPage() {
                       isRefreshing && "opacity-50"
                     )}
                   >
-                    <BalancesTable data={balances} />
+                    <BalancesTable
+                      data={balances}
+                      onRebalance={() => setIsRebalanceDialogOpen(true)}
+                      isRebalancing={isRebalancing}
+                    />
                   </div>
                 )}
               </div>

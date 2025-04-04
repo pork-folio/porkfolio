@@ -470,8 +470,12 @@ function DiversificationCard({
 
 export function BalancesTable({
   data: initialData,
+  onRebalance,
+  isRebalancing,
 }: {
   data: z.infer<typeof schema>[];
+  onRebalance: () => void;
+  isRebalancing: boolean;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "value", desc: true },
@@ -729,7 +733,25 @@ export function BalancesTable({
               />
 
               {/* Smoothly fading blur */}
-              <div className="absolute inset-x-0 bottom-0 h-48 backdrop-blur-md mask-fade-up" />
+              <div className="absolute inset-x-0 bottom-0 h-48 backdrop-blur-md mask-fade-up">
+                <div className="absolute bottom-4 left-4">
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={onRebalance}
+                    disabled={isRebalancing}
+                  >
+                    {isRebalancing ? (
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        Rebalancing...
+                      </div>
+                    ) : (
+                      "Rebalance Portfolio"
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
