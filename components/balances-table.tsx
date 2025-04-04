@@ -1,7 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconInfoCircle,
+} from "@tabler/icons-react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import {
   ColumnDef,
@@ -22,6 +26,13 @@ import { useTransactionStore } from "@/store/transactions";
 import { usePriceStore } from "@/store/prices";
 import { useChainsStore } from "@/store/chains";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  Tooltip as ShadcnTooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -362,9 +373,19 @@ function DiversificationCard({
     "oklch(0.769 0.188 70.08)",
   ];
 
+  // Calculate HHI (Herfindahl-Hirschman Index)
+  const hhi = assetDistribution.reduce((sum, asset) => {
+    return sum + Math.pow(asset.percentage, 2);
+  }, 0);
+
+  // Convert HHI to a diversification score (0-100)
+  // HHI ranges from 10000 (single asset) to 10000/n (perfectly diversified)
+  const maxHhi = 10000; // 100^2 for a single asset
+  const minHhi = 10000 / assetDistribution.length; // Perfect diversification
   const diversification = Math.round(
-    100 - assetDistribution[0]?.percentage || 0
+    ((maxHhi - hhi) / (maxHhi - minHhi)) * 100
   );
+
   const diversificationText = (() => {
     if (diversification >= 90) return "highly diversified";
     if (diversification >= 70) return "well diversified";
@@ -415,7 +436,24 @@ function DiversificationCard({
           </PieChart>
         </ResponsiveContainer>
       </div>
-      <div className="text-sm text-muted-foreground">Diversification</div>
+      <div className="flex items-center gap-2">
+        <div className="text-sm text-muted-foreground">Diversification</div>
+        <TooltipProvider>
+          <ShadcnTooltip>
+            <TooltipTrigger>
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-[200px]">
+                Diversification is calculated using the Herfindahl-Hirschman
+                Index (HHI), which considers the distribution of all assets in
+                your portfolio. A higher score indicates a more balanced
+                distribution across different assets.
+              </p>
+            </TooltipContent>
+          </ShadcnTooltip>
+        </TooltipProvider>
+      </div>
       <div className="text-4xl font-bold mt-1">{diversification}%</div>
       <div className="text-sm text-muted-foreground mt-2">
         {diversificationText}
