@@ -740,6 +740,7 @@ export function BalancesTable({
                     size="lg"
                     onClick={onRebalance}
                     disabled={isRebalancing}
+                    className="transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
                   >
                     {isRebalancing ? (
                       <div className="flex items-center gap-2">
