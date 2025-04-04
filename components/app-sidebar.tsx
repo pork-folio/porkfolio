@@ -3,6 +3,7 @@
 import * as React from "react";
 import { IconHistory, IconWallet, IconScale } from "@tabler/icons-react";
 import Link from "next/link";
+import Image from "next/image";
 
 import { NavMain } from "@/components/nav-main";
 import {
@@ -51,13 +52,13 @@ export function AppSidebar({
               className="data-[slot=sidebar-menu-button]:!p-1"
             >
               <Link href="/" className="flex items-center gap-1">
-                <img
+                <Image
                   src="/logo.svg"
                   alt="Porkfolio Logo"
                   width={28}
                   height={28}
                   className="dark:invert"
-                  style={{ filter: 'var(--filter-pork)' }}
+                  style={{ filter: "var(--filter-pork)" }}
                 />
                 <span className="text-base text-xl font-semibold">
                   <span className="text-color-pork">Pork</span>folio

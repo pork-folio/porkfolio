@@ -46,6 +46,7 @@ import { roundNumber } from "@/lib/handlers/balances";
 import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sheet";
 import { formatChainName } from "@/lib/utils";
 import { OinkBalance } from "@/components/oink-balance";
+import Image from "next/image";
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -727,10 +728,12 @@ export function BalancesTable({
           </div>
           <div className="w-full lg:w-1/4 lg:pt-4 mt-8">
             <div className="h-[200px] lg:h-[400px] relative rounded-lg overflow-hidden">
-              <img
+              <Image
                 src="/banner.jpg"
                 alt="Banner"
                 className="w-full h-full object-cover object-top"
+                width={1200}
+                height={400}
               />
 
               {/* Smoothly fading blur */}

@@ -10,7 +10,7 @@ import { fetchBalances } from "@/lib/handlers/balances";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
 import { Button } from "@/components/ui/button";
-import { IconRefresh, IconScale } from "@tabler/icons-react";
+import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
 import { useNetwork } from "@/components/providers";
