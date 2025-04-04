@@ -609,7 +609,7 @@ export function BalancesTable({
           </div>
           <DiversificationCard assetDistribution={assetDistribution} />
         </div>
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row flex-col-reverse gap-4">
           <div className="flex-1 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex flex-1 items-center space-x-2">
