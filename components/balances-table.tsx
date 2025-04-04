@@ -721,16 +721,15 @@ export function BalancesTable({
             </div>
           </div>
           <div className="w-full lg:w-1/4 lg:pt-4 mt-8">
-            <div className="h-[200px] lg:h-[400px] relative">
+            <div className="h-[200px] lg:h-[400px] relative rounded-lg overflow-hidden">
               <img
                 src="/banner.jpg"
                 alt="Banner"
-                className="w-full h-full object-cover object-top rounded-lg"
+                className="w-full h-full object-cover object-top"
               />
-              <div className="absolute bottom-0 left-0 right-0 h-32 rounded-b-lg overflow-hidden">
-                <div className="absolute inset-0 backdrop-blur-[2px]" />
-                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-transparent opacity-80" />
-              </div>
+
+              {/* Smoothly fading blur */}
+              <div className="absolute inset-x-0 bottom-0 h-48 backdrop-blur-md mask-fade-up" />
             </div>
           </div>
         </div>
