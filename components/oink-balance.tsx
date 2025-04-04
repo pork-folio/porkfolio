@@ -102,7 +102,7 @@ export function OinkBalance({
     }
 
     fetchBalance();
-  }, [primaryWallet?.address]);
+  }, [primaryWallet?.address, onBalanceChange]);
 
   if (loading) {
     return (
