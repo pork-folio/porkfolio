@@ -1,5 +1,5 @@
 import { client } from "@/core/ai/client";
-import { buildStrategyPrompt, PromptInput, generateStrategy } from "@/core/ai/strategy";
+import { PromptInput, generateStrategy } from "@/core/ai/strategy";
 
 // todo rate limiter
 
@@ -18,7 +18,7 @@ export async function POST(request: Request) {
     };
 }
 
-function jsonResponse(code: number, data: any) {
+function jsonResponse(code: number, data: object) {
     const headers = {
         'Content-Type': 'application/json',
     }
