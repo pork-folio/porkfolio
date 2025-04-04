@@ -727,6 +727,10 @@ export function BalancesTable({
                 alt="Banner"
                 className="w-full h-full object-cover object-top rounded-lg"
               />
+              <div className="absolute bottom-0 left-0 right-0 h-32 rounded-b-lg overflow-hidden">
+                <div className="absolute inset-0 backdrop-blur-[2px]" />
+                <div className="absolute inset-0 bg-gradient-to-t from-transparent via-transparent to-transparent opacity-80" />
+              </div>
             </div>
           </div>
         </div>
