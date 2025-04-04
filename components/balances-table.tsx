@@ -739,8 +739,6 @@ export function BalancesTable({
                 className="w-full h-full object-cover object-top"
                 width={1200}
                 height={400}
-                style={{ width: "auto", height: "auto" }}
-                priority
               />
 
               {/* Smoothly fading blur */}
