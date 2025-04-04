@@ -21,6 +21,7 @@ import { SwapAction } from "@/lib/handlers/rebalancing";
 import { useRouter } from "next/navigation";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
+import confetti from "canvas-confetti";
 
 interface RebalanceDialogProps {
   open: boolean;
@@ -183,6 +184,14 @@ export function RebalanceDialog({
       // Get the latest operation from the store (it will be the first one since we add to the beginning)
       const operations = useRebalancingStore.getState().operations;
       const newOperation = operations[0];
+
+      // Trigger confetti animation
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+
       router.push(`/rebalancing/${newOperation.id}`);
     }
   };
