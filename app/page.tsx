@@ -12,6 +12,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { useRouter } from "next/navigation";
+import { TwitterLink } from "@/components/ui/twitter-link";
 
 
 export default function Page() {
@@ -48,7 +49,9 @@ export default function Page() {
                 <span className="text-color-pork">Pork</span>folio 🐽
               </h1>
             </div>
-            <p className="text-muted-foreground text-lg">Connect wallet to manage your portfolio</p>
+            <p className="text-muted-foreground text-lg">
+              Your Universal piggy bank — auto-rebalance portfolio across chains with AI
+            </p>
             <DynamicConnectButton />
             <div className="w-full p-4">
               <Accordion type="single" collapsible className="w-full">
@@ -94,6 +97,7 @@ export default function Page() {
                 </AccordionItem>
               </Accordion>
             </div>
+            <TwitterLink handle="PorkfolioApp" />
           </div>
         </div>
       )}

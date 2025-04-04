@@ -13,7 +13,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
+import { TwitterLink } from "@/components/ui/twitter-link";
 import { useRebalancingStore } from "@/store/rebalancing";
 
 export function AppSidebar({
@@ -71,6 +73,11 @@ export function AppSidebar({
       <SidebarContent>
         <NavMain items={navItems} />
       </SidebarContent>
+      <SidebarFooter className="p-4">
+        <div className="flex justify-center">
+          <TwitterLink handle="PorkfolioApp" showIcon={true} />
+        </div>
+      </SidebarFooter>
     </Sidebar>
   );
 }
