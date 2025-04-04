@@ -256,14 +256,10 @@ export function RebalanceDialog({
                     <p className="text-sm text-muted-foreground">
                       {strategy.description}
                     </p>
+                    <div className="mt-2 text-sm">{distributionHumanReadable(strategy)}</div>
                     <div className="mt-2 flex flex-wrap gap-1">
                       {strategy.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-secondary px-2 py-0.5 text-xs"
-                        >
-                          {tag}
-                        </span>
+                        <span key={tag} className="rounded-full bg-secondary px-2 py-0.5 text-xs">{tag}</span>
                       ))}
                     </div>
                   </div>
@@ -376,4 +372,10 @@ export function RebalanceDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function distributionHumanReadable(strategy: Strategy) {
+  return strategy.definitions.
+    map(def => `${def.asset} ${def.percentage/100}%`).
+    join(" ⋅ ");
 }
