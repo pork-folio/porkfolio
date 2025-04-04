@@ -25,7 +25,7 @@ export function TwitterLink({
         >
             <Badge
                 variant="outline"
-                className="cursor-pointer hover:bg-accent transition-colors"
+                className={`cursor-pointer hover:bg-accent transition-colors ${className || ''}`}
             >
                 {showIcon && <span className="text-lg">𝕏</span>}
                 <span>@{cleanHandle}</span>

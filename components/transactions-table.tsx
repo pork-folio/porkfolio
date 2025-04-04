@@ -44,7 +44,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { CryptoIcon } from "@/components/ui/crypto-icon";
 
 // Add keyframes for rotation animation
 const refreshAnimation = `
@@ -335,20 +334,6 @@ function RebalancingCell({ row }: { row: RowData }) {
     <Badge variant="outline">{operation.strategy.name}</Badge>
   ) : (
     "-"
-  );
-}
-
-function TokenDisplay({ token }: { token: TokenInfo }) {
-  return (
-    <div className="flex items-center gap-2">
-      <CryptoIcon symbol={token.symbol} size={16} />
-      <div>
-        <div className="font-medium">{token.symbol}</div>
-        <div className="text-xs text-muted-foreground">
-          {formatChainName(token.chainName)}
-        </div>
-      </div>
-    </div>
   );
 }
 

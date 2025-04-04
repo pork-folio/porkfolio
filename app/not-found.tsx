@@ -22,7 +22,7 @@ export default function NotFound() {
                     />
                 </div>
                 <h1 className="text-4xl font-bold mb-4">Page not found</h1>
-                <p className="text-gray-500 mb-8">The page you are looking for doesn't exist</p>
+                <p className="text-gray-500 mb-8">The page you are looking for doesn&apos;t exist</p>
                 <Link href="/portfolio"
                     className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-white bg-black rounded-md shadow-sm hover:bg-gray-800">
                     Go to Portfolio
