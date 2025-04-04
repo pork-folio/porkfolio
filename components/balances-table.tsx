@@ -485,17 +485,18 @@ function OinkCard() {
 
   return (
     <div className="min-w-[300px] flex-1 flex flex-col p-4 border rounded-lg">
-      <div className="text-sm text-muted-foreground">OINK Token</div>
-      <div className="text-4xl font-bold mt-1">
-        {isRevealed ? formattedBalance : "0.00"}
+      <div>
+        <div className="text-sm text-muted-foreground">OINK Token</div>
+        <div className="text-4xl font-bold mt-1">
+          {isRevealed ? formattedBalance : "0.00"}
+        </div>
       </div>
-      <div className="mt-4">
-        <OinkBalance
-          className="w-full"
-          onBalanceChange={(newBalance: string) => setBalance(newBalance)}
-          onReveal={() => setIsRevealed(true)}
-        />
-      </div>
+      <div className="flex-1" />
+      <OinkBalance
+        className="w-full"
+        onBalanceChange={(newBalance: string) => setBalance(newBalance)}
+        onReveal={() => setIsRevealed(true)}
+      />
     </div>
   );
 }
