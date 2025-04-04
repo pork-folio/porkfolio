@@ -25,16 +25,16 @@ export function OinkBalance({ className }: { className?: string }) {
     const y = rect.top + rect.height / 2;
 
     emojiBlast({
-      emojis: ["🐷", "🐖", "🐽", "🐗", "🐖"],
-      emojiCount: 20,
+      emojis: ["🐷", "🐖", "🐽"],
+      emojiCount: 60,
       position: { x, y },
       physics: {
-        fontSize: { min: 20, max: 30 },
-        gravity: 0.2,
+        fontSize: { min: 15, max: 35 },
+        gravity: 0.3,
         initialVelocities: {
-          x: { min: -8, max: 8 },
-          y: { min: -12, max: -8 },
-          rotation: { min: -10, max: 10 },
+          x: { min: -15, max: 15 },
+          y: { min: -15, max: 15 },
+          rotation: { min: -30, max: 30 },
         },
       },
     });
