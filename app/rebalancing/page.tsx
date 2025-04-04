@@ -80,6 +80,9 @@ export default function RebalancingPage() {
 
   // Load balances and prices on mount
   useEffect(() => {
+    // Update the document title
+    document.title = "Rebalancing | Porkfolio";
+
     const loadBalances = async () => {
       if (primaryWallet?.address) {
         setBalancesLoading(true);
