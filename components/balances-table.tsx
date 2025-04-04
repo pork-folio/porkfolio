@@ -646,7 +646,7 @@ export function BalancesTable({
             <div className="mt-4">
               <RainbowButton
                 onClick={onRebalance}
-                className="rounded-full transition-transform hover:scale-102 active:scale-98"
+                className="transition-transform hover:scale-102 active:scale-98"
                 disabled={isRebalancing}
               >
                 {isRebalancing ? (

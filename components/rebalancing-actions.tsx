@@ -3,6 +3,7 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { SwapAction, executeRebalancingSwap } from "@/lib/handlers/rebalancing";
 import { useTransactionStore } from "@/store/transactions";
 import { Badge } from "@/components/ui/badge";
+import { CryptoIcon } from "@/components/ui/crypto-icon";
 
 interface RebalancingActionsProps {
   actions: SwapAction[];
@@ -78,8 +79,11 @@ export function RebalancingActions({
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">
-                    Swap {action.fromTokenValue.toFixed(6)} {action.from.symbol}{" "}
-                    for {action.to.symbol}
+                    Swap {action.from.symbol}
+                    <CryptoIcon symbol={action.from.symbol} size={16} className="ml-1 pb-0.5" />
+                    {" → "}
+                    {action.to.symbol}
+                    <CryptoIcon symbol={action.to.symbol} size={16} className="ml-1 pb-0.5" />
                   </h3>
                   {status && (
                     <Badge
@@ -97,16 +101,14 @@ export function RebalancingActions({
                 </div>
                 <p className="text-sm text-muted-foreground">
                   From: {action.fromTokenValue.toFixed(6)} {action.from.symbol}{" "}
-                  on {action.from.chain_name} ($
-                  {action.fromUsdValue.toFixed(2)})
+                  on {action.from.chain_name}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  To: {action.to.symbol} on ZetaChain ($
-                  {(action.fromUsdValue / action.toPrice.usdRate).toFixed(6)})
+                  To: {(action.fromUsdValue / action.toPrice.usdRate).toFixed(6)} {action.to.symbol} on ZetaChain
                 </p>
               </div>
               <div className="text-right">
-                <p className="text-sm font-medium">
+                <p className="font-medium">
                   ${action.fromUsdValue.toFixed(2)}
                 </p>
                 <p className="text-xs text-muted-foreground">USD Value</p>

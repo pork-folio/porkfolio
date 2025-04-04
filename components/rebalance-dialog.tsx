@@ -68,6 +68,8 @@ interface RebalanceDialogProps {
   };
 }
 
+const defaultAllocation = "10";
+
 export function RebalanceDialog({
   open,
   onOpenChange,
@@ -82,7 +84,7 @@ export function RebalanceDialog({
   const [allocationType, setAllocationType] = useState<
     "percentage" | "usd_value"
   >("percentage");
-  const [allocation, setAllocation] = useState("10");
+  const [allocation, setAllocation] = useState(defaultAllocation);
   const [lastCalculation, setLastCalculation] = useState<{
     strategyId: string;
     allocation: {
@@ -112,7 +114,7 @@ export function RebalanceDialog({
   useEffect(() => {
     if (open) {
       setSelectedStrategy(null);
-      setAllocation("2");
+      setAllocation(defaultAllocation);
       setAllocationType("percentage");
       setLastCalculation(null);
     }
@@ -317,7 +319,7 @@ export function RebalanceDialog({
                         size="sm"
                         onClick={() => {
                           setAllocationType("percentage");
-                          setAllocation("2");
+                          setAllocation(defaultAllocation);
                         }}
                         className="h-8 w-8 p-0"
                       >
