@@ -36,6 +36,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Add keyframes for rotation animation
 const refreshAnimation = `
@@ -277,6 +285,7 @@ export function TransactionsTable() {
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
 
   React.useEffect(() => {
     console.log("Transactions:", transactions);
@@ -312,15 +321,37 @@ export function TransactionsTable() {
             className="h-8 w-[150px] lg:w-[250px]"
           />
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="ml-auto h-8"
-          onClick={clearTransactions}
-        >
-          <IconTrash className="mr-2 h-4 w-4" />
-          Clear
-        </Button>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="ml-auto h-8">
+              <IconTrash className="mr-2 h-4 w-4" />
+              Clear
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Are you sure?</DialogTitle>
+              <DialogDescription>
+                This action will clear all transactions from the table. This
+                action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex justify-end space-x-2 mt-4">
+              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  clearTransactions();
+                  setIsDialogOpen(false);
+                }}
+              >
+                Clear Transactions
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
       <div className="rounded-md border">
         <Table>
