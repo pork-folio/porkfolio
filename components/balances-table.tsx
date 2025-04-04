@@ -454,7 +454,7 @@ function DiversificationCard({
         <TooltipProvider>
           <ShadcnTooltip>
             <TooltipTrigger>
-              <Info className="h-4 w-4 text-muted-foreground" />
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-[200px]">
