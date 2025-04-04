@@ -18,8 +18,33 @@ export function OinkBalance({ className }: { className?: string }) {
   const { primaryWallet } = useDynamicContext();
   const [balance, setBalance] = useState<string>("0");
   const [loading, setLoading] = useState(true);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const [clickCount, setClickCount] = useState(0);
+
+  const clickMessages = [
+    "Stop clicking!",
+    "Clicking won't give you OINK",
+    "Seriously, stop it!",
+    "You're not getting more OINK this way",
+    "Rebalance to get OINK instead!",
+    "I'm warning you...",
+    "Last warning!",
+    "Fine, keep clicking...",
+    "You're persistent, I'll give you that",
+    "Are you trying to break the button?",
+    "The button is getting tired",
+    "Please, have mercy on the button",
+    "You win, I give up",
+    "Ok, fine, continue clicking",
+  ];
 
   const handleClick = (event: React.MouseEvent) => {
+    if (!isRevealed) {
+      setIsRevealed(true);
+    } else {
+      setClickCount((prev) => prev + 1);
+    }
+
     const rect = event.currentTarget.getBoundingClientRect();
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
@@ -82,6 +107,32 @@ export function OinkBalance({ className }: { className?: string }) {
     );
   }
 
+  const balanceNum = parseFloat(balance);
+  const isZeroBalance = balanceNum === 0;
+
+  const getDisplayText = () => {
+    if (!isRevealed) {
+      return "How many OINK token do I have?";
+    }
+
+    if (clickCount > 0) {
+      const messageIndex = Math.min(clickCount - 1, clickMessages.length - 1);
+      return clickMessages[messageIndex];
+    }
+
+    if (isZeroBalance) {
+      return "Oh no, zero! Rebalance to get OINK";
+    }
+
+    return (
+      <>
+        <span>You own</span>
+        <span className="font-semibold">{balanceNum.toFixed(2)}</span>
+        <span>OINK</span>
+      </>
+    );
+  };
+
   return (
     <div
       onClick={handleClick}
@@ -89,9 +140,7 @@ export function OinkBalance({ className }: { className?: string }) {
     >
       <PiggyBank className="h-6 w-6" />
       <div className="flex items-center gap-1 text-base">
-        <span>You own</span>
-        <span className="font-semibold">{parseFloat(balance).toFixed(2)}</span>
-        <span>OINK</span>
+        {getDisplayText()}
       </div>
     </div>
   );
