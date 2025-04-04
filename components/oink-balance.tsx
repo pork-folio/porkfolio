@@ -112,7 +112,7 @@ export function OinkBalance({ className }: { className?: string }) {
 
   const getDisplayText = () => {
     if (!isRevealed) {
-      return "How many OINK token do I have?";
+      return "How many OINK tokens do I have?";
     }
 
     if (clickCount > 0) {
@@ -136,7 +136,7 @@ export function OinkBalance({ className }: { className?: string }) {
   return (
     <div
       onClick={handleClick}
-      className={`flex items-center justify-center gap-2 px-4 py-4 rounded-lg bg-gradient-to-r from-[rgb(183,105,124)] via-[rgb(153,75,94)] to-[rgb(123,45,64)] hover:from-[rgb(163,85,104)] hover:via-[rgb(133,55,74)] hover:to-[rgb(103,25,44)] text-white transition-all duration-300 cursor-pointer ${className}`}
+      className={`flex transition-transform hover:scale-102 active:scale-98 items-center justify-center gap-2 px-4 py-4 rounded-lg bg-gradient-to-r from-[rgb(183,105,124)] via-[rgb(153,75,94)] to-[rgb(123,45,64)] hover:from-[rgb(163,85,104)] hover:via-[rgb(133,55,74)] hover:to-[rgb(103,25,44)] text-white transition-all duration-300 cursor-pointer ${className}`}
     >
       <PiggyBank className="h-6 w-6" />
       <div className="flex items-center gap-1 text-base">

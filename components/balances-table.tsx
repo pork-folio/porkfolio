@@ -46,8 +46,7 @@ import { handleDeposit } from "@/lib/handlers/deposit";
 import { roundNumber } from "@/lib/handlers/balances";
 import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sheet";
 import { formatChainName } from "@/lib/utils";
-// import { OinkBalance } from "@/components/oink-balance";
-import Image from "next/image";
+import { OinkBalance } from "@/components/oink-balance";
 import { CryptoIcon } from "@/components/ui/crypto-icon";
 
 export const schema = z.object({
@@ -426,7 +425,7 @@ function DiversificationCard({
   };
 
   return (
-    <div className="min-w-[250px] flex flex-1 flex-col p-4 border rounded-lg relative">
+    <div className="min-w-[300px] flex flex-1 flex-col p-4 border rounded-lg relative">
       <div className="absolute top-4 right-4 w-[100px] h-[100px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -471,6 +470,17 @@ function DiversificationCard({
       <div className="text-4xl font-bold mt-1">{diversification}%</div>
       <div className="text-sm text-muted-foreground mt-2">
         {diversificationText}
+      </div>
+    </div>
+  );
+}
+
+function OinkCard() {
+  return (
+    <div className="min-w-[300px] flex-1 flex flex-col p-4 border rounded-lg">
+      <div className="text-sm text-muted-foreground">OINK Token</div>
+      <div className="mt-4">
+        <OinkBalance className="w-full" />
       </div>
     </div>
   );
@@ -600,8 +610,8 @@ export function BalancesTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4">
-        <div className="flex flex-wrap items-stretch gap-4 min-w-[250px]">
-          <div className="min-w-[250px] flex-1 flex flex-col p-4 border rounded-lg">
+        <div className="flex flex-wrap items-stretch gap-4 min-w-[300px]">
+          <div className="min-w-[300px] flex-1 flex flex-col p-4 border rounded-lg">
             <div className="text-sm text-muted-foreground">Total Value</div>
             <div className="text-4xl font-bold mt-1">
               $
@@ -629,6 +639,7 @@ export function BalancesTable({
             </div>
           </div>
           <DiversificationCard assetDistribution={assetDistribution} />
+          <OinkCard />
         </div>
         <div className="flex flex-col lg:flex-row flex-col-reverse gap-4">
           <div className="flex-1 flex flex-col gap-4">
