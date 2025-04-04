@@ -425,7 +425,7 @@ function DiversificationCard({
   };
 
   return (
-    <div className="w-[300px] flex flex-col p-4 border rounded-lg relative">
+    <div className="min-w-[250px] flex flex-1 flex-col p-4 border rounded-lg relative">
       <div className="absolute top-4 right-4 w-[100px] h-[100px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -599,8 +599,8 @@ export function BalancesTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4">
-        <div className="flex items-stretch gap-4">
-          <div className="w-[300px] flex flex-col p-4 border rounded-lg">
+        <div className="flex flex-wrap items-stretch gap-4 min-w-[250px]">
+          <div className="min-w-[250px] flex-1 flex flex-col p-4 border rounded-lg">
             <div className="text-sm text-muted-foreground">Total Value</div>
             <div className="text-4xl font-bold mt-1">
               $
@@ -619,6 +619,65 @@ export function BalancesTable({
             </div>
           </div>
           <DiversificationCard assetDistribution={assetDistribution} />
+          <div className="min-w-[250px] flex-1 h-[150px] relative rounded-lg overflow-hidden">
+            <Image
+              src="/banner.jpg"
+              alt="Banner"
+              className="w-full h-full object-cover object-top"
+              width={1200}
+              height={400}
+            />
+
+            {/* Smoothly fading blur */}
+            <div className="absolute inset-x-0 bottom-0 h-48 backdrop-blur-md mask-fade-up">
+              <div className="absolute bottom-4 left-4 right-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 flex-1">
+                    <Button
+                      variant="default"
+                      size="lg"
+                      onClick={onRebalance}
+                      disabled={isRebalancing}
+                      className="flex-1 transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] text-base"
+                    >
+                      {isRebalancing ? (
+                        <div className="flex items-center gap-2">
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                          Rebalancing...
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 font-normal">
+                          <Scale className="h-6 w-6" />
+                          Rebalance Portfolio
+                        </div>
+                      )}
+                    </Button>
+                    <TooltipProvider>
+                      <ShadcnTooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="default"
+                            size="lg"
+                            className="h-10 w-10"
+                          >
+                            <HelpCircle className="h-6 w-6" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="max-w-[200px]">
+                            Rebalancing helps maintain your desired asset
+                            allocation by automatically adjusting your portfolio
+                            weights. Every time you rebalance, you earn OINK
+                            tokens as a reward.
+                          </p>
+                        </TooltipContent>
+                      </ShadcnTooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div className="flex flex-col lg:flex-row flex-col-reverse gap-4">
           <div className="flex-1 flex flex-col gap-4">
@@ -731,70 +790,11 @@ export function BalancesTable({
               </div>
             </div>
           </div>
-          <div className="w-full lg:w-1/4 lg:pt-4 mt-8">
-            <div className="h-[200px] lg:h-[400px] relative rounded-lg overflow-hidden">
-              <Image
-                src="/banner.jpg"
-                alt="Banner"
-                className="w-full h-full object-cover object-top"
-                width={1200}
-                height={400}
-              />
-
-              {/* Smoothly fading blur */}
-              <div className="absolute inset-x-0 bottom-0 h-48 backdrop-blur-md mask-fade-up">
-                <div className="absolute bottom-4 left-4 right-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-1">
-                      <Button
-                        variant="default"
-                        size="lg"
-                        onClick={onRebalance}
-                        disabled={isRebalancing}
-                        className="flex-1 transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] text-base"
-                      >
-                        {isRebalancing ? (
-                          <div className="flex items-center gap-2">
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-                            Rebalancing...
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 font-normal">
-                            <Scale className="h-6 w-6" />
-                            Rebalance Portfolio
-                          </div>
-                        )}
-                      </Button>
-                      <TooltipProvider>
-                        <ShadcnTooltip>
-                          <TooltipTrigger asChild>
-                            <Button
-                              variant="default"
-                              size="lg"
-                              className="h-10 w-10"
-                            >
-                              <HelpCircle className="h-6 w-6" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="max-w-[200px]">
-                              Rebalancing helps maintain your desired asset
-                              allocation by automatically adjusting your
-                              portfolio weights. Every time you rebalance, you
-                              earn OINK tokens as a reward.
-                            </p>
-                          </TooltipContent>
-                        </ShadcnTooltip>
-                      </TooltipProvider>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* <div className="w-full lg:w-1/4 lg:pt-4 mt-8">
             <div className="w-full mt-4">
               <OinkBalance className="w-full" />
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
