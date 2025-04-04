@@ -21,6 +21,7 @@ import { z } from "zod";
 import { useTransactionStore } from "@/store/transactions";
 import { usePriceStore } from "@/store/prices";
 import { useChainsStore } from "@/store/chains";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -348,6 +349,65 @@ function TokenDetails({
   );
 }
 
+function DiversificationCard({
+  assetDistribution,
+}: {
+  assetDistribution: { symbol: string; percentage: number }[];
+}) {
+  const COLORS = [
+    "oklch(0.646 0.222 41.116)",
+    "oklch(0.6 0.118 184.704)",
+    "oklch(0.398 0.07 227.392)",
+    "oklch(0.828 0.189 84.429)",
+    "oklch(0.769 0.188 70.08)",
+  ];
+
+  const diversification = Math.round(
+    100 - assetDistribution[0]?.percentage || 0
+  );
+  const diversificationText = (() => {
+    if (diversification >= 90) return "highly diversified";
+    if (diversification >= 70) return "well diversified";
+    if (diversification >= 50) return "moderately diversified";
+    if (diversification >= 30) return "slightly concentrated";
+    if (diversification >= 20) return "concentrated";
+    if (diversification >= 10) return "highly concentrated";
+    return "extremely concentrated";
+  })();
+
+  return (
+    <div className="w-[300px] flex flex-col p-4 border rounded-lg">
+      <div className="text-sm text-muted-foreground">Diversification</div>
+      <div className="text-4xl font-bold mt-1">{diversification}%</div>
+      <div className="text-sm text-muted-foreground mt-2">
+        {diversificationText}
+      </div>
+      <div className="h-[100px] w-full mt-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={assetDistribution}
+              cx="50%"
+              cy="50%"
+              innerRadius={30}
+              outerRadius={40}
+              paddingAngle={2}
+              dataKey="percentage"
+            >
+              {assetDistribution.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 export function BalancesTable({
   data: initialData,
 }: {
@@ -487,26 +547,7 @@ export function BalancesTable({
               )}
             </div>
           </div>
-          <div className="w-[300px] flex flex-col p-4 border rounded-lg">
-            <div className="text-sm text-muted-foreground">Diversification</div>
-            <div className="text-4xl font-bold mt-1">
-              {Math.round(100 - assetDistribution[0]?.percentage || 0)}%
-            </div>
-            <div className="text-sm text-muted-foreground mt-2">
-              {(() => {
-                const diversification = Math.round(
-                  100 - assetDistribution[0]?.percentage || 0
-                );
-                if (diversification >= 90) return "highly diversified";
-                if (diversification >= 70) return "well diversified";
-                if (diversification >= 50) return "moderately diversified";
-                if (diversification >= 30) return "slightly concentrated";
-                if (diversification >= 20) return "concentrated";
-                if (diversification >= 10) return "highly concentrated";
-                return "extremely concentrated";
-              })()}
-            </div>
-          </div>
+          <DiversificationCard assetDistribution={assetDistribution} />
         </div>
         <div className="flex items-center justify-between">
           <div className="flex flex-1 items-center space-x-2">
