@@ -59,7 +59,7 @@ export function getIconName(symbol: string): string {
     return "pol";
   }
 
-  if (name.startsWith("usdc")) {
+  if (name.includes("usdc")) {
     return "usdc";
   }
 
