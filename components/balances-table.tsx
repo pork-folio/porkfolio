@@ -587,13 +587,6 @@ export function BalancesTable({
 
   return (
     <div className="space-y-4">
-      <div className="w-full h-[200px] relative mb-4">
-        <img
-          src="/banner.jpg"
-          alt="Banner"
-          className="w-full h-full object-cover rounded-lg"
-        />
-      </div>
       <div className="flex flex-col gap-4">
         <div className="flex items-stretch gap-4">
           <div className="w-[300px] flex flex-col p-4 border rounded-lg">
@@ -616,114 +609,126 @@ export function BalancesTable({
           </div>
           <DiversificationCard assetDistribution={assetDistribution} />
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex flex-1 items-center space-x-2">
-            <Input
-              placeholder="Filter tokens..."
-              value={
-                (table.getColumn("baseSymbol")?.getFilterValue() as string) ??
-                ""
-              }
-              onChange={(event) =>
-                table
-                  .getColumn("baseSymbol")
-                  ?.setFilterValue(event.target.value)
-              }
-              className="h-8 w-[150px] lg:w-[250px]"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowZeroBalances(!showZeroBalances)}
-              className="h-8"
-            >
-              {showZeroBalances ? "Hide Zero Balances" : "Show Zero Balances"}
-            </Button>
-          </div>
-        </div>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-1 items-center space-x-2">
+                <Input
+                  placeholder="Filter tokens..."
+                  value={
+                    (table
+                      .getColumn("baseSymbol")
+                      ?.getFilterValue() as string) ?? ""
+                  }
+                  onChange={(event) =>
+                    table
+                      .getColumn("baseSymbol")
+                      ?.setFilterValue(event.target.value)
+                  }
+                  className="h-8 w-[150px] lg:w-[250px]"
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowZeroBalances(!showZeroBalances)}
+                  className="h-8"
+                >
+                  {showZeroBalances
+                    ? "Hide Zero Balances"
+                    : "Show Zero Balances"}
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <React.Fragment key={row.original.baseSymbol}>
+                        <TableRow
+                          className="cursor-pointer"
+                          onClick={() => toggleRow(row.original.baseSymbol)}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                        {expandedRows.has(row.original.baseSymbol) && (
+                          <TableRow>
+                            <TableCell colSpan={columns.length}>
+                              <TokenDetails
+                                token={row.original}
+                                showZeroBalances={showZeroBalances}
+                              />
+                            </TableCell>
+                          </TableRow>
                         )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <React.Fragment key={row.original.baseSymbol}>
-                  <TableRow
-                    className="cursor-pointer"
-                    onClick={() => toggleRow(row.original.baseSymbol)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  {expandedRows.has(row.original.baseSymbol) && (
+                      </React.Fragment>
+                    ))
+                  ) : (
                     <TableRow>
-                      <TableCell colSpan={columns.length}>
-                        <TokenDetails
-                          token={row.original}
-                          showZeroBalances={showZeroBalances}
-                        />
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
                       </TableCell>
                     </TableRow>
                   )}
-                </React.Fragment>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-end space-x-2">
+              <div className="space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
                 >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2">
-        {/* <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div> */}
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <IconChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <IconChevronRight className="h-4 w-4" />
-          </Button>
+                  <IconChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <IconChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          <div className="w-full lg:w-1/4 lg:pt-4 mt-8">
+            <div className="h-[200px] lg:h-[400px] relative">
+              <img
+                src="/banner.jpg"
+                alt="Banner"
+                className="w-full h-full object-cover object-top rounded-lg"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
