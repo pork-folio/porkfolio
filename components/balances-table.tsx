@@ -28,7 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { Info, HelpCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -762,6 +762,26 @@ export function BalancesTable({
                           "Rebalance Portfolio"
                         )}
                       </Button>
+                      <TooltipProvider>
+                        <ShadcnTooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="default"
+                              size="lg"
+                              className="h-10 w-10"
+                            >
+                              <HelpCircle className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="max-w-[200px]">
+                              Rebalancing helps maintain your desired asset
+                              allocation by automatically adjusting your
+                              portfolio weights.
+                            </p>
+                          </TooltipContent>
+                        </ShadcnTooltip>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </div>
