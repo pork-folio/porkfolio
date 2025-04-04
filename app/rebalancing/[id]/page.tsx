@@ -194,9 +194,7 @@ export default function RebalancingOperationPage({
                 <div className="space-y-4">
                   <div className="max-w-2xl">
                     <div className="flex items-center gap-2 mb-2">
-                      <h2 className="text-xl font-semibold">
-                        Overall Progress
-                      </h2>
+                      <h2 className="text-xl font-semibold">Progress</h2>
                       <Badge variant="outline">{Math.round(progress)}%</Badge>
                     </div>
                     <div className="flex items-center gap-4">

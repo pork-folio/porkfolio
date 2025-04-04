@@ -60,8 +60,13 @@ function formatChainName(chainName: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
-  // Replace "Zeta" with "ZetaChain"
+  // Replace "Zeta" with "ZetaChain" and handle testnet cases
   formatted = formatted.replace(/Zeta\b/g, "ZetaChain");
+
+  // If both chains are ZetaChain, only show it once
+  if (formatted === "ZetaChain Testnet") {
+    return "ZetaChain";
+  }
 
   return formatted;
 }
@@ -83,7 +88,20 @@ const columns: ColumnDef<Transaction>[] = [
     accessorKey: "targetToken.symbol",
     header: "Token",
     cell: ({ row }) => {
+      const sourceToken = row.original.sourceToken;
       const targetToken = row.original.targetToken;
+      const type = row.original.type;
+
+      if (type === "rebalance" && sourceToken && targetToken) {
+        return (
+          <div className="flex items-center gap-1">
+            <span>{sourceToken.symbol}</span>
+            <span>→</span>
+            <span>{targetToken.symbol}</span>
+          </div>
+        );
+      }
+
       return targetToken ? targetToken.symbol : row.original.tokenSymbol;
     },
   },
@@ -91,11 +109,28 @@ const columns: ColumnDef<Transaction>[] = [
     accessorKey: "targetToken.chainName",
     header: "Chain",
     cell: ({ row }) => {
+      const sourceToken = row.original.sourceToken;
       const targetToken = row.original.targetToken;
-      const chainName = targetToken
-        ? targetToken.chainName
-        : row.original.chainName;
-      return formatChainName(chainName);
+
+      if (!sourceToken || !targetToken) {
+        return formatChainName(row.original.chainName);
+      }
+
+      const sourceChain = sourceToken.chainName.toLowerCase();
+      const targetChain = targetToken.chainName.toLowerCase();
+
+      // If both chains are zetachain (testnet or mainnet), just show ZetaChain
+      if (sourceChain.includes("zeta") && targetChain.includes("zeta")) {
+        return "ZetaChain";
+      }
+
+      return (
+        <div className="flex items-center gap-1">
+          <span>{formatChainName(sourceToken.chainName)}</span>
+          <span>→</span>
+          <span>{formatChainName(targetToken.chainName)}</span>
+        </div>
+      );
     },
   },
   {
@@ -242,6 +277,10 @@ export function TransactionsTable() {
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+
+  React.useEffect(() => {
+    console.log("Transactions:", transactions);
+  }, []);
 
   const table = useReactTable({
     data: transactions,
