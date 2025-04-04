@@ -28,7 +28,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info, HelpCircle } from "lucide-react";
+import { Info, HelpCircle, Scale } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -745,13 +745,13 @@ export function BalancesTable({
               <div className="absolute inset-x-0 bottom-0 h-48 backdrop-blur-md mask-fade-up">
                 <div className="absolute bottom-4 left-4 right-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center gap-2 flex-1">
                       <Button
                         variant="default"
                         size="lg"
                         onClick={onRebalance}
                         disabled={isRebalancing}
-                        className="flex-1 transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98]"
+                        className="flex-1 transition-all duration-200 hover:scale-[1.02] hover:shadow-md active:scale-[0.98] text-base"
                       >
                         {isRebalancing ? (
                           <div className="flex items-center gap-2">
@@ -759,7 +759,10 @@ export function BalancesTable({
                             Rebalancing...
                           </div>
                         ) : (
-                          "Rebalance Portfolio"
+                          <div className="flex items-center gap-2 font-normal">
+                            <Scale className="h-6 w-6" />
+                            Rebalance Portfolio
+                          </div>
                         )}
                       </Button>
                       <TooltipProvider>
@@ -770,7 +773,7 @@ export function BalancesTable({
                               size="lg"
                               className="h-10 w-10"
                             >
-                              <HelpCircle className="h-4 w-4" />
+                              <HelpCircle className="h-6 w-6" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
