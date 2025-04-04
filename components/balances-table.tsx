@@ -587,6 +587,13 @@ export function BalancesTable({
 
   return (
     <div className="space-y-4">
+      <div className="w-full h-[200px] relative mb-4">
+        <img
+          src="/banner.jpg"
+          alt="Banner"
+          className="w-full h-full object-cover rounded-lg"
+        />
+      </div>
       <div className="flex flex-col gap-4">
         <div className="flex items-stretch gap-4">
           <div className="w-[300px] flex flex-col p-4 border rounded-lg">
