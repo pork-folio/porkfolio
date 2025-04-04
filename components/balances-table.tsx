@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { RainbowButton } from "@/components/magicui/rainbow-button";
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import {
@@ -616,6 +617,14 @@ export function BalancesTable({
                   {excludedTokens.length > 5 && "..."}
                 </span>
               )}
+            </div>
+            <div className="mt-4">
+              <RainbowButton
+                onClick={onRebalance}
+                className="rounded-full transition-transform hover:scale-102 active:scale-98"
+              >
+                Rebalance Portfolio
+              </RainbowButton>
             </div>
           </div>
           <DiversificationCard assetDistribution={assetDistribution} />
