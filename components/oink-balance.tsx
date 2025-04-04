@@ -14,7 +14,15 @@ const ERC20_ABI = [
   "function decimals() view returns (uint8)",
 ];
 
-export function OinkBalance({ className }: { className?: string }) {
+export function OinkBalance({
+  className,
+  onBalanceChange,
+  onReveal,
+}: {
+  className?: string;
+  onBalanceChange?: (balance: string) => void;
+  onReveal?: () => void;
+}) {
   const { primaryWallet } = useDynamicContext();
   const [balance, setBalance] = useState<string>("0");
   const [loading, setLoading] = useState(true);
@@ -41,6 +49,7 @@ export function OinkBalance({ className }: { className?: string }) {
   const handleClick = (event: React.MouseEvent) => {
     if (!isRevealed) {
       setIsRevealed(true);
+      onReveal?.();
     } else {
       setClickCount((prev) => prev + 1);
     }
@@ -84,6 +93,7 @@ export function OinkBalance({ className }: { className?: string }) {
 
         const formattedBalance = ethers.formatUnits(balance, decimals);
         setBalance(formattedBalance);
+        onBalanceChange?.(formattedBalance);
       } catch (error) {
         console.error("Error fetching OINK balance:", error);
       } finally {
@@ -92,7 +102,7 @@ export function OinkBalance({ className }: { className?: string }) {
     }
 
     fetchBalance();
-  }, [primaryWallet?.address]);
+  }, [primaryWallet?.address, onBalanceChange]);
 
   if (loading) {
     return (
@@ -112,7 +122,7 @@ export function OinkBalance({ className }: { className?: string }) {
 
   const getDisplayText = () => {
     if (!isRevealed) {
-      return "How many OINK token do I have?";
+      return "How many OINK tokens do I have?";
     }
 
     if (clickCount > 0) {
@@ -136,7 +146,7 @@ export function OinkBalance({ className }: { className?: string }) {
   return (
     <div
       onClick={handleClick}
-      className={`flex items-center justify-center gap-2 px-4 py-4 rounded-lg bg-gradient-to-r from-[rgb(183,105,124)] via-[rgb(153,75,94)] to-[rgb(123,45,64)] hover:from-[rgb(163,85,104)] hover:via-[rgb(133,55,74)] hover:to-[rgb(103,25,44)] text-white transition-all duration-300 cursor-pointer ${className}`}
+      className={`flex h-11 transition-transform hover:scale-102 active:scale-98 items-center justify-center gap-2 px-4 rounded-lg bg-gradient-to-r from-[rgb(183,105,124)] via-[rgb(153,75,94)] to-[rgb(123,45,64)] hover:from-[rgb(163,85,104)] hover:via-[rgb(133,55,74)] hover:to-[rgb(103,25,44)] text-white transition-all duration-300 cursor-pointer ${className}`}
     >
       <PiggyBank className="h-6 w-6" />
       <div className="flex items-center gap-1 text-base">
