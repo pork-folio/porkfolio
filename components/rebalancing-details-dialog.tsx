@@ -34,7 +34,10 @@ export function RebalancingDetailsDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
-          <RebalancingActions actions={operation.actions} />
+          <RebalancingActions
+            actions={operation.actions}
+            rebalancingId={operation.id}
+          />
         </div>
         <DialogFooter className="mt-4">
           <Button variant="outline" onClick={() => onOpenChange(false)}>

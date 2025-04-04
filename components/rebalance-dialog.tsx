@@ -18,6 +18,7 @@ import { useState, useEffect } from "react";
 import { useRebalancingStore } from "@/store/rebalancing";
 import { RebalancingActions } from "@/components/rebalancing-actions";
 import { SwapAction } from "@/lib/handlers/rebalancing";
+import { useRouter } from "next/navigation";
 
 interface RebalanceDialogProps {
   open: boolean;
@@ -69,17 +70,47 @@ export function RebalanceDialog({
     null
   );
   const [allocation, setAllocation] = useState("2");
-  const [showActions, setShowActions] = useState(false);
+  const [lastCalculation, setLastCalculation] = useState<{
+    strategyId: string;
+    allocation: number;
+  } | null>(null);
   const addOperation = useRebalancingStore((state) => state.addOperation);
+  const router = useRouter();
 
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
-      setShowActions(false);
       setSelectedStrategy(null);
       setAllocation("2");
+      setLastCalculation(null);
     }
   }, [open]);
+
+  // Auto-calculate rebalancing when strategy or allocation changes
+  useEffect(() => {
+    if (selectedStrategy && !isRebalancing) {
+      const currentCalculation = {
+        strategyId: selectedStrategy.id,
+        allocation: Number(allocation),
+      };
+
+      // Only recalculate if the strategy or allocation has actually changed
+      if (
+        !lastCalculation ||
+        lastCalculation.strategyId !== currentCalculation.strategyId ||
+        lastCalculation.allocation !== currentCalculation.allocation
+      ) {
+        setLastCalculation(currentCalculation);
+        onRebalance(selectedStrategy, Number(allocation));
+      }
+    }
+  }, [
+    selectedStrategy,
+    allocation,
+    isRebalancing,
+    onRebalance,
+    lastCalculation,
+  ]);
 
   const handleAllocationChange = (value: string | number[]) => {
     if (typeof value === "string") {
@@ -89,16 +120,9 @@ export function RebalanceDialog({
     }
   };
 
-  const handleRebalanceClick = () => {
-    if (selectedStrategy) {
-      setShowActions(true);
-      onRebalance(selectedStrategy, Number(allocation));
-    }
-  };
-
   const handleSave = () => {
     if (selectedStrategy && rebalanceOutput) {
-      addOperation({
+      const operation = {
         strategy: selectedStrategy,
         allocation: Number(allocation),
         actions: rebalanceOutput.actions.map((action) => ({
@@ -110,8 +134,13 @@ export function RebalanceDialog({
             balance: "0",
           },
         })),
-      });
+      };
+      addOperation(operation);
       onOpenChange(false);
+      // Get the latest operation from the store (it will be the first one since we add to the beginning)
+      const operations = useRebalancingStore.getState().operations;
+      const newOperation = operations[0];
+      router.push(`/rebalancing/${newOperation.id}`);
     }
   };
 
@@ -147,111 +176,112 @@ export function RebalanceDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-[1200px] h-[800px] flex flex-col">
         <DialogHeader>
           <DialogTitle>Rebalance Portfolio</DialogTitle>
           <DialogDescription>
-            {showActions
-              ? "Review the actions that will be performed to rebalance your portfolio."
-              : "Select a strategy and allocation percentage to rebalance your portfolio."}
+            Select a strategy and allocation percentage to rebalance your
+            portfolio.
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
-          {!showActions ? (
-            <>
-              <div className="grid gap-4 py-4">
-                <div className="flex flex-wrap gap-4">
-                  {strategies.map((strategy) => (
-                    <div
-                      key={strategy.id}
-                      className={cn(
-                        "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors hover:bg-accent flex-1 min-w-[250px]",
-                        selectedStrategy?.id === strategy.id &&
-                          "border-primary bg-accent"
-                      )}
-                      onClick={() => setSelectedStrategy(strategy)}
-                    >
-                      <h3 className="font-semibold">{strategy.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        {strategy.description}
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {strategy.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="rounded-full bg-secondary px-2 py-0.5 text-xs"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
+          <div className="grid grid-cols-2 gap-6">
+            {/* Left side - Strategy Selection */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Strategies</h3>
+              <div className="flex flex-wrap gap-4">
+                {strategies.map((strategy) => (
+                  <div
+                    key={strategy.id}
+                    className={cn(
+                      "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors hover:bg-accent flex-1 min-w-[250px]",
+                      selectedStrategy?.id === strategy.id &&
+                        "border-primary bg-accent"
+                    )}
+                    onClick={() => setSelectedStrategy(strategy)}
+                  >
+                    <h3 className="font-semibold">{strategy.name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {strategy.description}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {strategy.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full bg-secondary px-2 py-0.5 text-xs"
+                        >
+                          {tag}
+                        </span>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="allocation">Allocation Percentage</Label>
-                  <div className="flex items-center gap-4">
-                    <Slider
-                      value={[Number(allocation)]}
-                      onValueChange={handleAllocationChange}
-                      max={100}
-                      step={1}
-                      className="flex-1"
+                  </div>
+                ))}
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="allocation">Allocation Percentage</Label>
+                <div className="flex items-center gap-4">
+                  <Slider
+                    value={[Number(allocation)]}
+                    onValueChange={handleAllocationChange}
+                    max={100}
+                    step={1}
+                    className="flex-1"
+                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="allocation"
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={allocation}
+                      onChange={(e) => handleAllocationChange(e.target.value)}
+                      className="w-20"
                     />
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="allocation"
-                        type="number"
-                        min="1"
-                        max="100"
-                        value={allocation}
-                        onChange={(e) => handleAllocationChange(e.target.value)}
-                        className="w-20"
-                      />
-                      <span className="text-sm text-muted-foreground">%</span>
-                    </div>
+                    <span className="text-sm text-muted-foreground">%</span>
                   </div>
                 </div>
               </div>
-            </>
-          ) : (
-            <RebalancingActions actions={swapActions} />
-          )}
+            </div>
+
+            {/* Right side - Actions List */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg">Actions</h3>
+              {rebalanceOutput ? (
+                rebalanceOutput.actions.length > 0 ? (
+                  <RebalancingActions
+                    actions={swapActions}
+                    readOnly={true}
+                    rebalancingId={crypto.randomUUID()}
+                  />
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    With the current strategy and allocation, your portfolio is
+                    already balanced. Try selecting a different strategy or
+                    adjusting the allocation to see rebalancing actions.
+                  </div>
+                )
+              ) : (
+                <div className="text-center text-muted-foreground py-8">
+                  Select a strategy and allocation to see the actions.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
         <DialogFooter className="mt-4">
-          {!showActions ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isRebalancing}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleRebalanceClick}
-                disabled={!selectedStrategy || isRebalancing}
-              >
-                {isRebalancing ? "Rebalancing..." : "Rebalance"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => setShowActions(false)}
-                disabled={isRebalancing}
-              >
-                Back
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={!rebalanceOutput || isRebalancing}
-              >
-                Save Rebalancing
-              </Button>
-            </>
-          )}
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isRebalancing}
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!rebalanceOutput?.actions.length || isRebalancing}
+          >
+            Proceed with Rebalancing
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

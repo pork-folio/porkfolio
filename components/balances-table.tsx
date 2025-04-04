@@ -21,6 +21,14 @@ import { z } from "zod";
 import { useTransactionStore } from "@/store/transactions";
 import { usePriceStore } from "@/store/prices";
 import { useChainsStore } from "@/store/chains";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import {
+  Tooltip as ShadcnTooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -348,6 +356,118 @@ function TokenDetails({
   );
 }
 
+function DiversificationCard({
+  assetDistribution,
+}: {
+  assetDistribution: { symbol: string; percentage: number }[];
+}) {
+  const COLORS = [
+    "oklch(0.646 0.222 41.116)",
+    "oklch(0.6 0.118 184.704)",
+    "oklch(0.398 0.07 227.392)",
+    "oklch(0.828 0.189 84.429)",
+    "oklch(0.769 0.188 70.08)",
+  ];
+
+  // Calculate HHI (Herfindahl-Hirschman Index)
+  const hhi = assetDistribution.reduce((sum, asset) => {
+    return sum + Math.pow(asset.percentage, 2);
+  }, 0);
+
+  // Convert HHI to a diversification score (0-100)
+  // HHI ranges from 10000 (single asset) to 10000/n (perfectly diversified)
+  const maxHhi = 10000; // 100^2 for a single asset
+  const minHhi = 10000 / assetDistribution.length; // Perfect diversification
+  const diversification = Math.round(
+    ((maxHhi - hhi) / (maxHhi - minHhi)) * 100
+  );
+
+  const diversificationText = (() => {
+    if (diversification >= 90) return "highly diversified";
+    if (diversification >= 70) return "well diversified";
+    if (diversification >= 50) return "moderately diversified";
+    if (diversification >= 30) return "slightly concentrated";
+    if (diversification >= 20) return "concentrated";
+    if (diversification >= 10) return "highly concentrated";
+    return "extremely concentrated";
+  })();
+
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        symbol: string;
+        percentage: number;
+      };
+    }>;
+  }
+
+  const CustomTooltip = ({ active, payload }: TooltipProps) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-background border rounded-lg p-2 shadow-lg">
+          <p className="font-medium">{data.symbol}</p>
+          <p className="text-sm text-muted-foreground">
+            {data.percentage.toFixed(2)}%
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="w-[300px] flex flex-col p-4 border rounded-lg relative">
+      <div className="absolute top-4 right-4 w-[100px] h-[100px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={assetDistribution}
+              cx="50%"
+              cy="50%"
+              innerRadius={25}
+              outerRadius={45}
+              paddingAngle={2}
+              dataKey="percentage"
+            >
+              {assetDistribution.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={COLORS[index % COLORS.length]}
+                />
+              ))}
+            </Pie>
+            <Tooltip content={<CustomTooltip />} />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="text-sm text-muted-foreground">Diversification</div>
+        <TooltipProvider>
+          <ShadcnTooltip>
+            <TooltipTrigger>
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="max-w-[200px]">
+                Diversification is calculated using the Herfindahl-Hirschman
+                Index (HHI), which considers the distribution of all assets in
+                your portfolio. A higher score indicates a more balanced
+                distribution across different assets.
+              </p>
+            </TooltipContent>
+          </ShadcnTooltip>
+        </TooltipProvider>
+      </div>
+      <div className="text-4xl font-bold mt-1">{diversification}%</div>
+      <div className="text-sm text-muted-foreground mt-2">
+        {diversificationText}
+      </div>
+    </div>
+  );
+}
+
 export function BalancesTable({
   data: initialData,
 }: {
@@ -487,26 +607,7 @@ export function BalancesTable({
               )}
             </div>
           </div>
-          <div className="w-[300px] flex flex-col p-4 border rounded-lg">
-            <div className="text-sm text-muted-foreground">Diversification</div>
-            <div className="text-4xl font-bold mt-1">
-              {Math.round(100 - assetDistribution[0]?.percentage || 0)}%
-            </div>
-            <div className="text-sm text-muted-foreground mt-2">
-              {(() => {
-                const diversification = Math.round(
-                  100 - assetDistribution[0]?.percentage || 0
-                );
-                if (diversification >= 90) return "highly diversified";
-                if (diversification >= 70) return "well diversified";
-                if (diversification >= 50) return "moderately diversified";
-                if (diversification >= 30) return "slightly concentrated";
-                if (diversification >= 20) return "concentrated";
-                if (diversification >= 10) return "highly concentrated";
-                return "extremely concentrated";
-              })()}
-            </div>
-          </div>
+          <DiversificationCard assetDistribution={assetDistribution} />
         </div>
         <div className="flex items-center justify-between">
           <div className="flex flex-1 items-center space-x-2">
@@ -595,10 +696,10 @@ export function BalancesTable({
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2">
-        <div className="flex-1 text-sm text-muted-foreground">
+        {/* <div className="flex-1 text-sm text-muted-foreground">
           {table.getFilteredSelectedRowModel().rows.length} of{" "}
           {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
+        </div> */}
         <div className="space-x-2">
           <Button
             variant="outline"

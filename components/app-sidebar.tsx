@@ -1,19 +1,13 @@
 "use client";
 
 import * as React from "react";
-import {
-  IconHistory,
-  IconWallet,
-  IconScale,
-  IconSettings,
-} from "@tabler/icons-react";
+import { IconHistory, IconWallet, IconScale } from "@tabler/icons-react";
 import Link from "next/link";
 
 import { NavMain } from "@/components/nav-main";
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -76,18 +70,6 @@ export function AppSidebar({
       <SidebarContent>
         <NavMain items={navItems} />
       </SidebarContent>
-      <SidebarFooter>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/settings" className="flex items-center gap-2">
-                <IconSettings className="h-4 w-4" />
-                Settings
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }

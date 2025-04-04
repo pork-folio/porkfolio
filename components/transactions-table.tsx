@@ -23,6 +23,7 @@ import { useTransactionStore, Transaction } from "@/store/transactions";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNetwork } from "@/components/providers";
+import { useRebalancingStore } from "@/store/rebalancing";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +36,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 // Add keyframes for rotation animation
 const refreshAnimation = `
@@ -59,8 +68,13 @@ function formatChainName(chainName: string): string {
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
     .join(" ");
 
-  // Replace "Zeta" with "ZetaChain"
+  // Replace "Zeta" with "ZetaChain" and handle testnet cases
   formatted = formatted.replace(/Zeta\b/g, "ZetaChain");
+
+  // If both chains are ZetaChain, only show it once
+  if (formatted === "ZetaChain Testnet") {
+    return "ZetaChain";
+  }
 
   return formatted;
 }
@@ -82,7 +96,20 @@ const columns: ColumnDef<Transaction>[] = [
     accessorKey: "targetToken.symbol",
     header: "Token",
     cell: ({ row }) => {
+      const sourceToken = row.original.sourceToken;
       const targetToken = row.original.targetToken;
+      const type = row.original.type;
+
+      if (type === "rebalance" && sourceToken && targetToken) {
+        return (
+          <div className="flex items-center gap-1">
+            <span>{sourceToken.symbol}</span>
+            <span>→</span>
+            <span>{targetToken.symbol}</span>
+          </div>
+        );
+      }
+
       return targetToken ? targetToken.symbol : row.original.tokenSymbol;
     },
   },
@@ -90,16 +117,38 @@ const columns: ColumnDef<Transaction>[] = [
     accessorKey: "targetToken.chainName",
     header: "Chain",
     cell: ({ row }) => {
+      const sourceToken = row.original.sourceToken;
       const targetToken = row.original.targetToken;
-      const chainName = targetToken
-        ? targetToken.chainName
-        : row.original.chainName;
-      return formatChainName(chainName);
+
+      if (!sourceToken || !targetToken) {
+        return formatChainName(row.original.chainName);
+      }
+
+      const sourceChain = sourceToken.chainName.toLowerCase();
+      const targetChain = targetToken.chainName.toLowerCase();
+
+      // If both chains are zetachain (testnet or mainnet), just show ZetaChain
+      if (sourceChain.includes("zeta") && targetChain.includes("zeta")) {
+        return "ZetaChain";
+      }
+
+      return (
+        <div className="flex items-center gap-1">
+          <span>{formatChainName(sourceToken.chainName)}</span>
+          <span>→</span>
+          <span>{formatChainName(targetToken.chainName)}</span>
+        </div>
+      );
     },
   },
   {
     accessorKey: "amount",
     header: "Amount",
+  },
+  {
+    accessorKey: "rebalancingGroupId",
+    header: "Rebalancing",
+    cell: RebalancingCell,
   },
   {
     accessorKey: "status",
@@ -113,12 +162,24 @@ const columns: ColumnDef<Transaction>[] = [
   },
 ];
 
+const TRANSACTION_STATUS_BASE_URL = {
+  mainnet:
+    "https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData",
+  testnet:
+    "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData",
+};
+
+const ZETA_RPC_URL = {
+  mainnet: "https://zetachain-evm.blockpi.network/v1/rpc/public",
+  testnet: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
+};
+
 function StatusCell({
   row,
 }: {
   row: {
     getValue: (key: keyof Transaction) => Transaction[keyof Transaction];
-    original: { hash: string };
+    original: Transaction;
   };
 }) {
   const status = row.getValue("status") as Transaction["status"];
@@ -131,21 +192,63 @@ function StatusCell({
     setIsRefreshing(true);
     const startTime = Date.now();
     try {
-      const apiUrl = isTestnet
-        ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
-        : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+      const sourceToken = row.original.sourceToken;
+      const targetToken = row.original.targetToken;
 
-      const response = await fetch(apiUrl);
+      // Check if both source and target chains are ZetaChain
+      const isZetaChainTransaction =
+        sourceToken &&
+        targetToken &&
+        sourceToken.chainName.toLowerCase().includes("zeta") &&
+        targetToken.chainName.toLowerCase().includes("zeta");
 
-      if (response.status === 404) {
-        updateStatus(hash, "Initiated");
-      } else if (response.ok) {
-        const data = await response.json();
-        const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
-        if (cctxStatus === "OutboundMined") {
-          updateStatus(hash, "completed");
-        } else if (cctxStatus === "Aborted") {
-          updateStatus(hash, "failed");
+      if (isZetaChainTransaction) {
+        // For ZetaChain transactions, check status via RPC
+        const rpcUrl = ZETA_RPC_URL[isTestnet ? "testnet" : "mainnet"];
+        const response = await fetch(rpcUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "eth_getTransactionReceipt",
+            params: [hash],
+            id: 1,
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          const receipt = data.result;
+          if (receipt) {
+            // Check if transaction was successful
+            if (receipt.status === "0x1") {
+              updateStatus(hash, "completed");
+            } else {
+              updateStatus(hash, "failed");
+            }
+          } else {
+            // Transaction not found or still pending
+            updateStatus(hash, "Initiated");
+          }
+        }
+      } else {
+        const apiUrl = `${
+          TRANSACTION_STATUS_BASE_URL[isTestnet ? "testnet" : "mainnet"]
+        }/${hash}`;
+        const response = await fetch(apiUrl);
+
+        if (response.status === 404) {
+          updateStatus(hash, "Initiated");
+        } else if (response.ok) {
+          const data = await response.json();
+          const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+          if (cctxStatus === "OutboundMined") {
+            updateStatus(hash, "completed");
+          } else if (cctxStatus === "Aborted") {
+            updateStatus(hash, "failed");
+          }
         }
       }
     } catch (error) {
@@ -203,9 +306,9 @@ function TimestampCell({
   const timestamp = row.getValue("timestamp") as number;
   const hash = row.original.hash;
   const { isTestnet } = useNetwork();
-  const apiUrl = isTestnet
-    ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`
-    : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${hash}`;
+  const apiUrl = `${
+    TRANSACTION_STATUS_BASE_URL[isTestnet ? "testnet" : "mainnet"]
+  }/${hash}`;
 
   return (
     <a
@@ -219,6 +322,21 @@ function TimestampCell({
   );
 }
 
+interface RowData {
+  getValue: (key: string) => string | number | boolean | null | undefined;
+}
+
+function RebalancingCell({ row }: { row: RowData }) {
+  const rebalancingGroupId = row.getValue("rebalancingGroupId") as string;
+  const operations = useRebalancingStore((state) => state.operations);
+  const operation = operations.find((op) => op.id === rebalancingGroupId);
+  return operation ? (
+    <Badge variant="outline">{operation.strategy.name}</Badge>
+  ) : (
+    "-"
+  );
+}
+
 export function TransactionsTable() {
   const { transactions, clearTransactions } = useTransactionStore();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -227,22 +345,109 @@ export function TransactionsTable() {
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  const [isRefreshingAll, setIsRefreshingAll] = React.useState(false);
+  const { isTestnet } = useNetwork();
+  const updateStatus = useTransactionStore(
+    (state) => state.updateTransactionStatus
+  );
+
+  const refreshAllNonCompleted = async () => {
+    setIsRefreshingAll(true);
+    const nonCompletedTransactions = transactions.filter(
+      (tx) => tx.status !== "completed" && tx.status !== "failed"
+    );
+
+    // Refresh each transaction sequentially to avoid overwhelming the API
+    for (const tx of nonCompletedTransactions) {
+      const sourceToken = tx.sourceToken;
+      const targetToken = tx.targetToken;
+
+      // Check if both source and target chains are ZetaChain
+      const isZetaChainTransaction =
+        sourceToken &&
+        targetToken &&
+        sourceToken.chainName.toLowerCase().includes("zeta") &&
+        targetToken.chainName.toLowerCase().includes("zeta");
+
+      try {
+        if (isZetaChainTransaction) {
+          // For ZetaChain transactions, check status via RPC
+          const rpcUrl = ZETA_RPC_URL[isTestnet ? "testnet" : "mainnet"];
+          const response = await fetch(rpcUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              method: "eth_getTransactionReceipt",
+              params: [tx.hash],
+              id: 1,
+            }),
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            const receipt = data.result;
+            if (receipt) {
+              // Check if transaction was successful
+              if (receipt.status === "0x1") {
+                updateStatus(tx.hash, "completed");
+              } else {
+                updateStatus(tx.hash, "failed");
+              }
+            }
+          }
+        } else {
+          const apiUrl = `${
+            TRANSACTION_STATUS_BASE_URL[isTestnet ? "testnet" : "mainnet"]
+          }/${tx.hash}`;
+
+          const response = await fetch(apiUrl);
+          if (response.status === 404) {
+            updateStatus(tx.hash, "Initiated");
+          } else if (response.ok) {
+            const data = await response.json();
+            const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
+            if (cctxStatus === "OutboundMined") {
+              updateStatus(tx.hash, "completed");
+            } else if (cctxStatus === "Aborted") {
+              updateStatus(tx.hash, "failed");
+            }
+          }
+        }
+      } catch (error) {
+        console.error(
+          `Error checking status for transaction ${tx.hash}:`,
+          error
+        );
+      }
+      // Add a small delay between requests
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+    setIsRefreshingAll(false);
+  };
+
+  React.useEffect(() => {
+    console.log("Transactions:", transactions);
+  }, [transactions]);
 
   const table = useReactTable({
     data: transactions,
     columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
     state: {
       sorting,
       columnFilters,
       columnVisibility,
     },
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    onColumnVisibilityChange: setColumnVisibility,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
   });
 
   return (
@@ -259,17 +464,55 @@ export function TransactionsTable() {
           />
         </div>
         <div className="flex items-center space-x-2">
-          {transactions.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8"
-              onClick={clearTransactions}
-            >
-              <IconTrash className="mr-2 h-4 w-4" />
-              Clear Transactions
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={refreshAllNonCompleted}
+            disabled={isRefreshingAll}
+            className="h-8"
+          >
+            <IconRefresh
+              className={cn(
+                "mr-2 h-4 w-4",
+                isRefreshingAll && "animate-[spin_1s_linear_infinite]"
+              )}
+            />
+            Refresh All
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="ml-auto h-8">
+                <IconTrash className="mr-2 h-4 w-4" />
+                Clear
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Are you sure?</DialogTitle>
+                <DialogDescription>
+                  This action will clear all transactions from the table. This
+                  action cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="flex justify-end space-x-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    clearTransactions();
+                    setIsDialogOpen(false);
+                  }}
+                >
+                  Clear Transactions
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
       <div className="rounded-md border">
@@ -293,7 +536,10 @@ export function TransactionsTable() {
           <TableBody>
             {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -310,7 +556,7 @@ export function TransactionsTable() {
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No transactions found.
+                  No transactions.
                 </TableCell>
               </TableRow>
             )}
@@ -318,27 +564,22 @@ export function TransactionsTable() {
         </Table>
       </div>
       <div className="flex items-center justify-end space-x-2">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredRowModel().rows.length} transaction(s)
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <IconChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <IconChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          <IconChevronLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          <IconChevronRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

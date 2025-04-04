@@ -148,6 +148,7 @@ export async function handleWithdraw(
       amount: ethers.formatUnits(withdrawalAmount, tokenInfo.decimals),
       status: "pending",
       hash: tx.hash,
+      id: `withdraw_${tokenInfo.symbol}_${Date.now()}`,
       sourceToken: {
         symbol: tokenInfo.symbol,
         chainName: tokenInfo.chainName,

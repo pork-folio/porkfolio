@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IconScale, IconTrash } from "@tabler/icons-react";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
-import { RebalancingDetailsDialog } from "@/components/rebalancing-details-dialog";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
@@ -19,6 +18,9 @@ import { useState, useEffect } from "react";
 import { rebalance } from "@/core/rebalance/rebalance";
 import { Strategy } from "@/core";
 import { fetchBalances } from "@/lib/handlers/balances";
+import { useRouter } from "next/navigation";
+import { Progress } from "@/components/ui/progress";
+import { useTransactionStore } from "@/store/transactions";
 
 type RebalanceDialogOutput = {
   valid: boolean;
@@ -55,6 +57,7 @@ type RebalanceDialogOutput = {
 };
 
 export default function RebalancingPage() {
+  const router = useRouter();
   const operations = useRebalancingStore((state) => state.operations);
   const deleteOperation = useRebalancingStore((state) => state.deleteOperation);
   const addOperation = useRebalancingStore((state) => state.addOperation);
@@ -71,8 +74,7 @@ export default function RebalancingPage() {
   const [rebalanceOutput, setRebalanceOutput] = useState<
     RebalanceDialogOutput | undefined
   >(undefined);
-  const [selectedOperation, setSelectedOperation] =
-    useState<RebalancingOperation | null>(null);
+  const transactions = useTransactionStore((state) => state.transactions);
 
   const strategies = core.getStrategies(isTestnet);
 
@@ -202,6 +204,19 @@ export default function RebalancingPage() {
     }
   };
 
+  const calculateProgress = (operation: RebalancingOperation) => {
+    const completedActions = operation.actions.filter((action) => {
+      const matchingTransaction = transactions.find(
+        (tx) =>
+          tx.rebalancingGroupId === operation.id &&
+          tx.targetToken?.symbol === action.to.symbol &&
+          tx.amount === action.fromTokenValue.toString()
+      );
+      return matchingTransaction?.status === "completed";
+    }).length;
+    return (completedActions / operation.actions.length) * 100;
+  };
+
   return (
     <SidebarProvider>
       <AppSidebar variant="inset" />
@@ -242,52 +257,55 @@ export default function RebalancingPage() {
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-4">
-                    {operations.map((operation) => (
-                      <div
-                        key={operation.id}
-                        className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors"
-                        onClick={() => setSelectedOperation(operation)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h3 className="font-semibold">
-                              {operation.strategy.name}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {operation.allocation}% allocation •{" "}
-                              {formatDistanceToNow(operation.createdAt, {
-                                addSuffix: true,
-                              })}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={
-                                operation.status === "completed"
-                                  ? "default"
-                                  : operation.status === "failed"
-                                  ? "destructive"
-                                  : "secondary"
-                              }
-                            >
-                              {operation.status}
-                            </Badge>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteOperation(operation.id);
-                              }}
-                              className="h-8 w-8"
-                            >
-                              <IconTrash className="h-4 w-4" />
-                            </Button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {operations.map((operation) => {
+                      const progress = calculateProgress(operation);
+                      return (
+                        <div
+                          key={operation.id}
+                          className="rounded-lg border p-4 cursor-pointer hover:bg-accent/50 transition-colors group"
+                          onClick={() =>
+                            router.push(`/rebalancing/${operation.id}`)
+                          }
+                        >
+                          <div className="flex flex-col gap-2">
+                            <div>
+                              <h3 className="font-semibold">
+                                {operation.strategy.name}
+                              </h3>
+                              <p className="text-sm text-muted-foreground">
+                                {operation.allocation}% allocation •{" "}
+                                {formatDistanceToNow(operation.createdAt, {
+                                  addSuffix: true,
+                                })}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Progress
+                                value={progress}
+                                className="h-2 flex-1"
+                              />
+                              <Badge variant="outline">
+                                {Math.round(progress)}%
+                              </Badge>
+                            </div>
+                            <div className="flex justify-end">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteOperation(operation.id);
+                                }}
+                                className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <IconTrash className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -303,15 +321,6 @@ export default function RebalancingPage() {
         isRebalancing={isRebalancing}
         rebalanceOutput={rebalanceOutput}
       />
-      {selectedOperation && (
-        <RebalancingDetailsDialog
-          open={!!selectedOperation}
-          onOpenChange={(open) => {
-            if (!open) setSelectedOperation(null);
-          }}
-          operation={selectedOperation}
-        />
-      )}
     </SidebarProvider>
   );
 }

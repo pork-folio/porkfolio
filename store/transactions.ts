@@ -27,11 +27,12 @@ export interface Transaction {
   timestamp: number;
   sourceToken?: TokenInfo;
   targetToken?: TokenInfo;
+  rebalancingGroupId?: string;
 }
 
 interface TransactionStore {
   transactions: Transaction[];
-  addTransaction: (transaction: Omit<Transaction, "id" | "timestamp">) => void;
+  addTransaction: (transaction: Omit<Transaction, "timestamp">) => void;
   updateTransactionStatus: (hash: string, status: TransactionStatus) => void;
   clearTransactions: () => void;
 }
@@ -46,7 +47,7 @@ export const useTransactionStore = create<TransactionStore>()(
             {
               ...transaction,
               status: "Initiated",
-              id: Math.random().toString(36).substring(7),
+              id: transaction.id || Math.random().toString(36).substring(7),
               timestamp: Date.now(),
             },
             ...state.transactions,
