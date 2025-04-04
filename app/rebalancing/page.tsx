@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { IconScale, IconTrash } from "@tabler/icons-react";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
-import { RebalancingDetailsDialog } from "@/components/rebalancing-details-dialog";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";

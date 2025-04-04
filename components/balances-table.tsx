@@ -1,11 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  IconChevronLeft,
-  IconChevronRight,
-  IconInfoCircle,
-} from "@tabler/icons-react";
+import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import {
   ColumnDef,
@@ -396,7 +392,17 @@ function DiversificationCard({
     return "extremely concentrated";
   })();
 
-  const CustomTooltip = ({ active, payload }: any) => {
+  interface TooltipProps {
+    active?: boolean;
+    payload?: Array<{
+      payload: {
+        symbol: string;
+        percentage: number;
+      };
+    }>;
+  }
+
+  const CustomTooltip = ({ active, payload }: TooltipProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (

@@ -3,7 +3,6 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { SwapAction, executeRebalancingSwap } from "@/lib/handlers/rebalancing";
 import { useTransactionStore } from "@/store/transactions";
 import { Badge } from "@/components/ui/badge";
-import { useNetwork } from "@/components/providers";
 
 interface RebalancingActionsProps {
   actions: SwapAction[];
@@ -21,10 +20,6 @@ export function RebalancingActions({
   );
   const { primaryWallet } = useDynamicContext();
   const transactions = useTransactionStore((state) => state.transactions);
-  const updateTransactionStatus = useTransactionStore(
-    (state) => state.updateTransactionStatus
-  );
-  const { isTestnet } = useNetwork();
 
   const handleSwap = async (action: SwapAction, index: number) => {
     if (readOnly) return;

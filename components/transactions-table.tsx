@@ -148,16 +148,7 @@ const columns: ColumnDef<Transaction>[] = [
   {
     accessorKey: "rebalancingGroupId",
     header: "Rebalancing",
-    cell: ({ row }) => {
-      const rebalancingGroupId = row.getValue("rebalancingGroupId") as string;
-      const operations = useRebalancingStore((state) => state.operations);
-      const operation = operations.find((op) => op.id === rebalancingGroupId);
-      return operation ? (
-        <Badge variant="outline">{operation.strategy.name}</Badge>
-      ) : (
-        "-"
-      );
-    },
+    cell: RebalancingCell,
   },
   {
     accessorKey: "status",
@@ -331,6 +322,21 @@ function TimestampCell({
   );
 }
 
+interface RowData {
+  getValue: (key: string) => string | number | boolean | null | undefined;
+}
+
+function RebalancingCell({ row }: { row: RowData }) {
+  const rebalancingGroupId = row.getValue("rebalancingGroupId") as string;
+  const operations = useRebalancingStore((state) => state.operations);
+  const operation = operations.find((op) => op.id === rebalancingGroupId);
+  return operation ? (
+    <Badge variant="outline">{operation.strategy.name}</Badge>
+  ) : (
+    "-"
+  );
+}
+
 export function TransactionsTable() {
   const { transactions, clearTransactions } = useTransactionStore();
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -425,7 +431,7 @@ export function TransactionsTable() {
 
   React.useEffect(() => {
     console.log("Transactions:", transactions);
-  }, []);
+  }, [transactions]);
 
   const table = useReactTable({
     data: transactions,

@@ -28,6 +28,35 @@ const refreshAnimation = `
   }
 `;
 
+interface TransactionAction {
+  type: string;
+  from: {
+    symbol: string;
+    balance: string;
+    chain_name: string;
+    chain_id: string;
+    coin_type: string;
+    decimals: number;
+    contract?: string;
+    zrc20?: string;
+  };
+  fromUsdValue: number;
+  fromTokenValue: number;
+  to: {
+    symbol: string;
+    balance: string;
+    chain_name: string;
+    chain_id: string;
+    coin_type: string;
+    decimals: number;
+    contract?: string;
+    zrc20?: string;
+  };
+  toPrice: {
+    usdRate: number;
+  };
+}
+
 export default function RebalancingOperationPage({
   params,
 }: {
@@ -66,7 +95,8 @@ export default function RebalancingOperationPage({
                     <h1 className="text-3xl font-bold">Operation Not Found</h1>
                   </div>
                   <p className="text-muted-foreground mt-2">
-                    The rebalancing operation you're looking for doesn't exist.
+                    The rebalancing operation you&apos;re looking for
+                    doesn&apos;t exist.
                   </p>
                 </div>
               </div>
@@ -77,7 +107,7 @@ export default function RebalancingOperationPage({
     );
   }
 
-  const findTransactionStatus = (action: any) => {
+  const findTransactionStatus = (action: TransactionAction) => {
     const matchingTransaction = transactions.find(
       (tx) =>
         tx.rebalancingGroupId === operation.id &&
