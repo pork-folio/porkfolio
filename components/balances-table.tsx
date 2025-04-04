@@ -21,7 +21,7 @@ import { z } from "zod";
 import { useTransactionStore } from "@/store/transactions";
 import { usePriceStore } from "@/store/prices";
 import { useChainsStore } from "@/store/chains";
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -375,22 +375,32 @@ function DiversificationCard({
     return "extremely concentrated";
   })();
 
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0].payload;
+      return (
+        <div className="bg-background border rounded-lg p-2 shadow-lg">
+          <p className="font-medium">{data.symbol}</p>
+          <p className="text-sm text-muted-foreground">
+            {data.percentage.toFixed(2)}%
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
-    <div className="w-[300px] flex flex-col p-4 border rounded-lg">
-      <div className="text-sm text-muted-foreground">Diversification</div>
-      <div className="text-4xl font-bold mt-1">{diversification}%</div>
-      <div className="text-sm text-muted-foreground mt-2">
-        {diversificationText}
-      </div>
-      <div className="h-[100px] w-full mt-4">
+    <div className="w-[300px] flex flex-col p-4 border rounded-lg relative">
+      <div className="absolute top-4 right-4 w-[100px] h-[100px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
               data={assetDistribution}
               cx="50%"
               cy="50%"
-              innerRadius={30}
-              outerRadius={40}
+              innerRadius={25}
+              outerRadius={45}
               paddingAngle={2}
               dataKey="percentage"
             >
@@ -401,8 +411,14 @@ function DiversificationCard({
                 />
               ))}
             </Pie>
+            <Tooltip content={<CustomTooltip />} />
           </PieChart>
         </ResponsiveContainer>
+      </div>
+      <div className="text-sm text-muted-foreground">Diversification</div>
+      <div className="text-4xl font-bold mt-1">{diversification}%</div>
+      <div className="text-sm text-muted-foreground mt-2">
+        {diversificationText}
       </div>
     </div>
   );
