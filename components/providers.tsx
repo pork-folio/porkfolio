@@ -195,6 +195,23 @@ const NetworkContext = createContext<{
 
 export const useNetwork = () => useContext(NetworkContext);
 
+const avalancheFujiDynamic = {
+  blockExplorerUrls: ["https://testnet.snowtrace.io/"],
+  chainId: 43113,
+  chainName: "Avalanche Fuji Testnet",
+  iconUrls: ["https://app.dynamic.xyz/assets/networks/avalanche.svg"],
+  name: "Avalanche Fuji",
+  nativeCurrency: {
+    decimals: 18,
+    name: "AVAX",
+    symbol: "AVAX",
+    iconUrl: "https://app.dynamic.xyz/assets/networks/avalanche.svg",
+  },
+  networkId: 43113,
+  rpcUrls: ["https://api.avax-test.network/ext/bc/C/rpc"],
+  vanityName: "Avalanche Fuji",
+};
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [isTestnet, setIsTestnet] = useState(true);
   const config = isTestnet ? testnetConfig : mainnetConfig;
@@ -256,7 +273,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
         if (isTestnet) {
           return mergeNetworks(
-            [zetaTestnet, amoyTestnetDynamic, bnbTestnetDynamic],
+            [
+              zetaTestnet,
+              amoyTestnetDynamic,
+              bnbTestnetDynamic,
+              avalancheFujiDynamic,
+            ],
             filteredNetworks
           );
         }
