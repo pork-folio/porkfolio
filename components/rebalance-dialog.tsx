@@ -280,9 +280,13 @@ export function RebalanceDialog({
                       <div className="absolute bottom-4 left-4 right-4">
                         <div className="relative z-10">
                           <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-white opacity-90">
-                              {strategy.name}
-                            </h3>
+                            {strategy.id.startsWith("toolu_") && isLoading ? (
+                              <Skeleton className="h-6 w-32 bg-white/20" />
+                            ) : (
+                              <h3 className="font-semibold text-white opacity-90">
+                                {strategy.name}
+                              </h3>
+                            )}
                             {strategy.id.startsWith("toolu_") && (
                               <Button
                                 variant="ghost"
