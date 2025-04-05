@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
 import confetti from "canvas-confetti";
+import { Badge } from "@/components/ui/badge";
 
 interface RebalanceDialogProps {
   open: boolean;
@@ -248,21 +249,47 @@ export function RebalanceDialog({
                   <div
                     key={strategy.id}
                     className={cn(
-                      "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors hover:bg-accent flex-1 min-w-[250px]",
+                      "relative flex cursor-pointer flex-col rounded-lg border p-0 transition-colors hover:bg-accent/50 flex-1 min-w-[250px] overflow-hidden",
                       selectedStrategy?.id === strategy.id &&
-                        "border-primary bg-accent"
+                        "border-primary bg-accent/50"
                     )}
                     onClick={() => setSelectedStrategy(strategy)}
                   >
-                    <h3 className="font-semibold">{strategy.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {strategy.description}
-                    </p>
-                    <div className="mt-2 text-sm">{distributionHumanReadable(strategy)}</div>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {strategy.tags.map((tag) => (
-                        <span key={tag} className="rounded-full bg-secondary px-2 py-0.5 text-xs">{tag}</span>
-                      ))}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{
+                        backgroundImage: strategy.id
+                          ? `url(/${strategy.id}.jpg)`
+                          : "none",
+                        backgroundColor: "#000000",
+                      }}
+                    />
+                    <div className="inset-x-0 bottom-0 h-58">
+                      <div className="absolute inset-0 backdrop-blur-md mask-fade-up bg-black/60" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <div className="relative z-10">
+                          <h3 className="font-semibold text-white opacity-90">
+                            {strategy.name}
+                          </h3>
+                          <p className="text-sm text-white opacity-85">
+                            {strategy.description}
+                          </p>
+                          <div className="mt-2 text-sm text-white opacity-90">
+                            {distributionHumanReadable(strategy)}
+                          </div>
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {strategy.tags.map((tag) => (
+                              <Badge
+                                key={tag}
+                                variant="outline"
+                                className="text-white border-white/20 opacity-90"
+                              >
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -377,7 +404,7 @@ export function RebalanceDialog({
 }
 
 function distributionHumanReadable(strategy: Strategy) {
-  return strategy.definitions.
-    map(def => `${def.asset} ${def.percentage/100}%`).
-    join(" ⋅ ");
+  return strategy.definitions
+    .map((def) => `${def.asset} ${def.percentage / 100}%`)
+    .join(" ⋅ ");
 }
