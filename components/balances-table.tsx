@@ -486,7 +486,22 @@ function OinkCard() {
   return (
     <div className="min-w-[300px] flex-1 flex flex-col p-4 border rounded-lg">
       <div>
-        <div className="text-sm text-muted-foreground">OINK Token</div>
+        <div className="text-sm text-muted-foreground flex items-center gap-1">
+          OINK Token
+          <TooltipProvider>
+            <ShadcnTooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-[200px]">
+                  OINK tokens are rewarded to users of Porkfolio. Every time you
+                  rebalance your portfolio you get OINK tokens.
+                </p>
+              </TooltipContent>
+            </ShadcnTooltip>
+          </TooltipProvider>
+        </div>
         <div className="text-4xl font-bold mt-1 mb-4">
           {isRevealed ? formattedBalance : "0.00"}
         </div>
