@@ -66,12 +66,15 @@ export function RebalancingActions({
             className={`rounded-lg border p-4 ${
               readOnly ? "" : "cursor-pointer hover:bg-gray-50"
             } transition-colors ${isLoading ? "opacity-50" : ""} ${
-              status === "completed" ? "opacity-50 pointer-events-none" : ""
+              status === "completed" || status === "Initiated"
+                ? "opacity-50 pointer-events-none"
+                : ""
             }`}
             onClick={() =>
               !isLoading &&
               !readOnly &&
               status !== "completed" &&
+              status !== "Initiated" &&
               handleSwap(action, index)
             }
           >
@@ -80,10 +83,18 @@ export function RebalancingActions({
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold">
                     Swap {action.from.symbol}
-                    <CryptoIcon symbol={action.from.symbol} size={16} className="ml-1 pb-0.5" />
+                    <CryptoIcon
+                      symbol={action.from.symbol}
+                      size={16}
+                      className="ml-1 pb-0.5"
+                    />
                     {" → "}
                     {action.to.symbol}
-                    <CryptoIcon symbol={action.to.symbol} size={16} className="ml-1 pb-0.5" />
+                    <CryptoIcon
+                      symbol={action.to.symbol}
+                      size={16}
+                      className="ml-1 pb-0.5"
+                    />
                   </h3>
                   {status && (
                     <Badge
@@ -104,13 +115,13 @@ export function RebalancingActions({
                   on {action.from.chain_name}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  To: {(action.fromUsdValue / action.toPrice.usdRate).toFixed(6)} {action.to.symbol} on ZetaChain
+                  To:{" "}
+                  {(action.fromUsdValue / action.toPrice.usdRate).toFixed(6)}{" "}
+                  {action.to.symbol} on ZetaChain
                 </p>
               </div>
               <div className="text-right">
-                <p className="font-medium">
-                  ${action.fromUsdValue.toFixed(2)}
-                </p>
+                <p className="font-medium">${action.fromUsdValue.toFixed(2)}</p>
                 <p className="text-xs text-muted-foreground">USD Value</p>
                 {isLoading && (
                   <p className="text-xs text-blue-500 mt-1">Processing...</p>
