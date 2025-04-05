@@ -269,7 +269,7 @@ export function RebalanceDialog({
                         variant="ghost"
                         size="icon"
                         className={cn(
-                          "absolute top-2 right-2 z-20 h-8 w-8 text-white hover:bg-white/10",
+                          "absolute top-2 right-2 z-20 h-8 w-8 text-white hover:bg-white/20 hover:text-white",
                           isLoading && "animate-spin"
                         )}
                         onClick={handleRefreshAiStrategy}
