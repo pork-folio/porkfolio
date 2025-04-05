@@ -23,6 +23,9 @@ import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
 import confetti from "canvas-confetti";
 import { Badge } from "@/components/ui/badge";
+import { useAiStrategyStore } from "@/store/ai-strategy";
+import { IconRefresh } from "@tabler/icons-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface RebalanceDialogProps {
   open: boolean;
@@ -98,6 +101,7 @@ export function RebalanceDialog({
   const router = useRouter();
   const { balances } = useBalanceStore();
   const { prices } = usePriceStore();
+  const { refreshStrategy, isLoading } = useAiStrategyStore();
 
   // Calculate total portfolio value
   const totalPortfolioValue = useMemo(() => {
@@ -229,6 +233,11 @@ export function RebalanceDialog({
       toPrice: action.toPrice,
     })) || [];
 
+  const handleRefreshAiStrategy = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent strategy selection
+    refreshStrategy();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1200px] h-[800px] flex flex-col">
@@ -270,26 +279,55 @@ export function RebalanceDialog({
                       <div className="absolute inset-0 backdrop-blur-md mask-fade-up bg-black/60" />
                       <div className="absolute bottom-4 left-4 right-4">
                         <div className="relative z-10">
-                          <h3 className="font-semibold text-white opacity-90">
-                            {strategy.name}
-                          </h3>
-                          <p className="text-sm text-white opacity-85">
-                            {strategy.description}
-                          </p>
-                          <div className="mt-2 text-sm text-white opacity-90">
-                            {distributionHumanReadable(strategy)}
-                          </div>
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {strategy.tags.map((tag) => (
-                              <Badge
-                                key={tag}
-                                variant="outline"
-                                className="text-white border-white/20 opacity-90"
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-white opacity-90">
+                              {strategy.name}
+                            </h3>
+                            {strategy.id.startsWith("toolu_") && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn(
+                                  "h-8 w-8 text-white hover:bg-white/10",
+                                  isLoading && "animate-spin"
+                                )}
+                                onClick={handleRefreshAiStrategy}
+                                disabled={isLoading}
                               >
-                                {tag}
-                              </Badge>
-                            ))}
+                                <IconRefresh className="h-4 w-4" />
+                              </Button>
+                            )}
                           </div>
+                          {strategy.id.startsWith("toolu_") && isLoading ? (
+                            <div className="space-y-2 mt-2">
+                              <Skeleton className="h-4 w-full bg-white/20" />
+                              <Skeleton className="h-4 w-3/4 bg-white/20" />
+                              <div className="flex gap-1 mt-2">
+                                <Skeleton className="h-6 w-16 bg-white/20" />
+                                <Skeleton className="h-6 w-16 bg-white/20" />
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-sm text-white opacity-85">
+                                {strategy.description}
+                              </p>
+                              <div className="mt-2 text-sm text-white opacity-90">
+                                {distributionHumanReadable(strategy)}
+                              </div>
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {strategy.tags.map((tag) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="outline"
+                                    className="text-white border-white/20 opacity-90"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

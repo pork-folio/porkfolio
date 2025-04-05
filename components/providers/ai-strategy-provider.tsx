@@ -17,7 +17,8 @@ export function AiStrategyProvider({
   const { balances } = useBalanceStore();
   const { prices } = usePriceStore();
   const { isTestnet } = useNetwork();
-  const { strategy, setStrategy, setLoading, setError } = useAiStrategyStore();
+  const { strategy, setStrategy, setLoading, setError, refreshTrigger } =
+    useAiStrategyStore();
 
   useEffect(() => {
     const loadAiStrategy = async () => {
@@ -25,7 +26,7 @@ export function AiStrategyProvider({
         primaryWallet?.address &&
         balances.length &&
         prices.length &&
-        !strategy
+        (!strategy || useAiStrategyStore.getState().isLoading)
       ) {
         setLoading(true);
         setError(null);
@@ -58,7 +59,6 @@ export function AiStrategyProvider({
         } catch (error) {
           console.error("Error loading AI strategy:", error);
           setError(error instanceof Error ? error.message : "Unknown error");
-        } finally {
           setLoading(false);
         }
       }
@@ -74,6 +74,7 @@ export function AiStrategyProvider({
     setStrategy,
     setLoading,
     setError,
+    refreshTrigger,
   ]);
 
   return <>{children}</>;
