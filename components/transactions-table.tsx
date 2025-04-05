@@ -24,6 +24,7 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNetwork } from "@/components/providers";
 import { useRebalancingStore } from "@/store/rebalancing";
+import { API_BASE_URLS, API_ENDPOINTS, EVM_RPC_URLS } from "@/lib/constants";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -163,15 +164,13 @@ const columns: ColumnDef<Transaction>[] = [
 ];
 
 const TRANSACTION_STATUS_BASE_URL = {
-  mainnet:
-    "https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData",
-  testnet:
-    "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData",
+  mainnet: `${API_BASE_URLS.mainnet}${API_ENDPOINTS.TRANSACTION_STATUS}`,
+  testnet: `${API_BASE_URLS.testnet}${API_ENDPOINTS.TRANSACTION_STATUS}`,
 };
 
 const ZETA_RPC_URL = {
-  mainnet: "https://zetachain-evm.blockpi.network/v1/rpc/public",
-  testnet: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
+  mainnet: `${EVM_RPC_URLS.mainnet}/v1/rpc/public`,
+  testnet: `${EVM_RPC_URLS.testnet}/v1/rpc/public`,
 };
 
 function StatusCell({

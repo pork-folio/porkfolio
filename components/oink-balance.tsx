@@ -5,9 +5,19 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { ethers } from "ethers";
 import { PiggyBank } from "lucide-react";
 import { emojiBlast } from "emoji-blast";
+import { EVM_RPC_URLS, UNIVERSAL_TOKEN_OINK_ADDRESSES } from "@/lib/constants";
 
-const OINK_CONTRACT = "0xF14773cc4bF0c5aeA0e50d14E00a5d266267f4A6";
-const RPC_URL = "https://zetachain-athens-evm.blockpi.network/v1/rpc/public";
+const OINK_CONTRACTS = UNIVERSAL_TOKEN_OINK_ADDRESSES;
+
+const RPC_URLS = {
+  mainnet: `${EVM_RPC_URLS.mainnet}/v1/rpc/public`,
+  testnet: `${EVM_RPC_URLS.testnet}/v1/rpc/public`,
+};
+
+// For now, we'll use testnet. This can be made configurable via env variables or props
+const NETWORK = "testnet";
+const OINK_CONTRACT = OINK_CONTRACTS[NETWORK];
+const RPC_URL = RPC_URLS[NETWORK];
 
 const ERC20_ABI = [
   "function balanceOf(address owner) view returns (uint256)",

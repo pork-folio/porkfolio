@@ -18,6 +18,7 @@ import { rebalance } from "@/core/rebalance/rebalance";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
 import { Strategy } from "@/core";
 import { useAiStrategyStore } from "@/store/ai-strategy";
+import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/constants";
 
 export default function PortfolioPage() {
   const { primaryWallet } = useDynamicContext();
@@ -79,8 +80,8 @@ export default function PortfolioPage() {
 
       for (const tx of nonCompletedTransactions) {
         const apiUrl = isTestnet
-          ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
-          : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
+          ? `${API_BASE_URLS.testnet}${API_ENDPOINTS.TRANSACTION_STATUS}/${tx.hash}`
+          : `${API_BASE_URLS.mainnet}${API_ENDPOINTS.TRANSACTION_STATUS}/${tx.hash}`;
 
         try {
           const response = await fetch(apiUrl);
