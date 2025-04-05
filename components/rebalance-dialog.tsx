@@ -256,7 +256,7 @@ export function RebalanceDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left side - Strategy Selection */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Strategies</h3>
