@@ -5,6 +5,7 @@ import { useTransactionStore } from "@/store/transactions";
 import { useBalanceStore } from "@/store/balances";
 import { fetchBalances } from "./balances";
 import { Wallet } from "@dynamic-labs/sdk-react-core";
+import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
 
 interface TokenInfo {
   chain_id: string;
@@ -70,12 +71,33 @@ export async function executeRebalancingSwap(
       signer,
     });
 
-    // Gateway address for BSC testnet
-    const gatewayAddress =
+    // Get gateway address based on chain
+    let gatewayAddress: string;
+    if (
+      ["arbitrum_mainnet", "avalanche_mainnet"].includes(action.from.chain_name)
+    ) {
+      gatewayAddress = "0x1C53e188Bc2E471f9D4A4762CFf843d32C2C8549";
+    } else if (
+      ["avalanche_testnet", "arbitrum_sepolia"].includes(action.from.chain_name)
+    ) {
+      gatewayAddress = "0x0dA86Dc3F9B71F84a0E97B0e2291e50B7a5df10f";
+    } else {
+      const addr = getAddress(
+        "gateway",
+        action.from.chain_name as ParamChainName
+      );
+      if (!addr) {
+        throw new Error(
+          `Gateway address not found for chain ${action.from.chain_name}`
+        );
+      }
+      gatewayAddress = addr;
+    }
+
+    const receiverAddress =
       action.from.chain_id === "7001"
-        ? "0x6c533f7fe93fae114d0954697069df33c9b74fd7" // ZetaChain gateway
-        : "0x0c487a766110c85d301d96e33579c5b317fa4995"; // Other chains gateway
-    const receiverAddress = "0x0cf3e61a95137172bb064C209a12e31003a23B8B";
+        ? "0x0cf3e61a95137172bb064C209a12e31003a23B8B" // testnet
+        : "0x4932D2CfFF24B27d57C8d1FC56f4f5307677758e"; // mainnet
 
     // Prepare parameters for the swap
     if (!action.to.zrc20 && action.to.symbol !== "ZETA") {
@@ -84,10 +106,7 @@ export async function executeRebalancingSwap(
       );
     }
 
-    const zetaAddress =
-      action.from.chain_id === "7000"
-        ? "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf" // mainnet
-        : "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf"; // testnet
+    const zetaAddress = "0x5F0b1a82749cb4E2278EC87F8BF6B618dC71a8bf";
 
     let tx;
     if (action.from.chain_id === "7000" || action.from.chain_id === "7001") {
