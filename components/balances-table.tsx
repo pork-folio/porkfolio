@@ -57,6 +57,26 @@ import { OinkBalance } from "@/components/oink-balance";
 import { CryptoIcon } from "@/components/ui/crypto-icon";
 import { cn } from "@/lib/utils";
 
+// Add utility function for formatting numbers with aligned decimals
+function formatNumberWithAlignedDecimals(
+  value: string | number,
+  decimals: number = 2
+): React.ReactElement {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return <div className="text-right">-</div>;
+
+  const parts = num.toFixed(decimals).split(".");
+  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const decimalPart = parts[1];
+
+  return (
+    <div className="flex justify-end">
+      <span className="tabular-nums">{integerPart}</span>
+      <span className="tabular-nums">.{decimalPart}</span>
+    </div>
+  );
+}
+
 export const schema = z.object({
   chain_id: z.string(),
   coin_type: z.string(),
@@ -153,7 +173,7 @@ function PriceCell({ ticker }: { ticker: string }) {
   const price = prices.find((p) => p.ticker === ticker)?.usdRate;
   return (
     <div className="text-right font-medium">
-      {price ? `$${price.toFixed(2)}` : "-"}
+      {price ? formatNumberWithAlignedDecimals(price, 2) : "-"}
     </div>
   );
 }
@@ -165,7 +185,7 @@ function ValueCell({ ticker, balance }: { ticker: string; balance: string }) {
   const value = price ? price * balanceValue : null;
   return (
     <div className="text-right font-medium">
-      {value ? `$${value.toFixed(2)}` : "-"}
+      {value ? formatNumberWithAlignedDecimals(value, 2) : "-"}
     </div>
   );
 }
@@ -224,7 +244,9 @@ const columns: ColumnDef<AggregatedToken>[] = [
     accessorKey: "totalBalance",
     header: () => <div className="w-full text-right">Balance</div>,
     cell: ({ row }) => (
-      <div className="text-right font-medium">{row.original.totalBalance}</div>
+      <div className="text-right font-medium">
+        {formatNumberWithAlignedDecimals(row.original.totalBalance)}
+      </div>
     ),
   },
   {
