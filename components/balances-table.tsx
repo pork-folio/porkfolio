@@ -2,7 +2,11 @@
 
 import * as React from "react";
 import { RainbowButton } from "@/components/magicui/rainbow-button";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconRefresh,
+} from "@tabler/icons-react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import {
   ColumnDef,
@@ -30,6 +34,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { HelpCircle, Scale } from "lucide-react";
+import { useNetwork } from "@/components/providers";
+import { useBalanceStore } from "@/store/balances";
+import { fetchBalances } from "@/lib/handlers/balances";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -48,6 +55,7 @@ import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sh
 import { formatChainName } from "@/lib/utils";
 import { OinkBalance } from "@/components/oink-balance";
 import { CryptoIcon } from "@/components/ui/crypto-icon";
+import { cn } from "@/lib/utils";
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -538,7 +546,26 @@ export function BalancesTable({
     new Set()
   );
   const [showZeroBalances, setShowZeroBalances] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const { prices } = usePriceStore();
+  const { primaryWallet } = useDynamicContext();
+  const { isTestnet } = useNetwork();
+  const { setBalances } = useBalanceStore();
+
+  const refreshBalances = async () => {
+    if (primaryWallet?.address) {
+      setIsRefreshing(true);
+      try {
+        const balancesData = await fetchBalances(
+          primaryWallet.address,
+          isTestnet
+        );
+        setBalances(balancesData);
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  };
 
   const aggregatedData = React.useMemo(
     () => aggregateTokens(initialData),
@@ -697,17 +724,32 @@ export function BalancesTable({
                       .getColumn("baseSymbol")
                       ?.setFilterValue(event.target.value)
                   }
-                  className="h-8 w-[150px] lg:w-[250px]"
+                  className="max-w-sm mr-2"
                 />
+              </div>
+              <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowZeroBalances(!showZeroBalances)}
-                  className="h-8"
                 >
                   {showZeroBalances
                     ? "Hide Zero Balances"
                     : "Show Zero Balances"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshBalances}
+                  disabled={isRefreshing || !primaryWallet?.address}
+                >
+                  <IconRefresh
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      isRefreshing && "animate-spin"
+                    )}
+                  />
+                  Refresh
                 </Button>
               </div>
             </div>

@@ -331,22 +331,6 @@ export default function PortfolioPage() {
                       Manage your portfolio positions here.
                     </p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={refreshBalances}
-                      disabled={isRefreshing || !primaryWallet?.address}
-                    >
-                      <IconRefresh
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isRefreshing && "animate-spin"
-                        )}
-                      />
-                      Refresh
-                    </Button>
-                  </div>
                 </div>
               </div>
               <div className="px-4 lg:px-6">
