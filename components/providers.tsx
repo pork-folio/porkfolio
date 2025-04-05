@@ -24,6 +24,7 @@ import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useChainsStore } from "@/store/chains";
 import { ProviderRpcError } from "viem";
+import { AiStrategyProvider } from "@/components/providers/ai-strategy-provider";
 
 const zetaTestnet = {
   blockExplorerUrls: ["https://athens.explorer.zetachain.com/"],
@@ -289,13 +290,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <NetworkContext.Provider value={{ isTestnet, toggleNetwork }}>
-      <DynamicContextProvider settings={dynamicSettings}>
-        <WagmiProvider config={config}>
-          <QueryClientProvider client={queryClient}>
-            <DynamicWagmiConnector>{children}</DynamicWagmiConnector>
-          </QueryClientProvider>
-        </WagmiProvider>
-      </DynamicContextProvider>
+      <QueryClientProvider client={queryClient}>
+        <DynamicContextProvider settings={dynamicSettings}>
+          <WagmiProvider config={config}>
+            <DynamicWagmiConnector>
+              <AiStrategyProvider>{children}</AiStrategyProvider>
+            </DynamicWagmiConnector>
+          </WagmiProvider>
+        </DynamicContextProvider>
+      </QueryClientProvider>
     </NetworkContext.Provider>
   );
 }

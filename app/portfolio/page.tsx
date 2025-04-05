@@ -19,6 +19,7 @@ import { useTransactionStore } from "@/store/transactions";
 import { rebalance } from "@/core/rebalance/rebalance";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
 import { Strategy } from "@/core";
+import { useAiStrategyStore } from "@/store/ai-strategy";
 
 export default function PortfolioPage() {
   const { primaryWallet } = useDynamicContext();
@@ -32,7 +33,7 @@ export default function PortfolioPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
-  const [aiStrategy, setAiStrategy] = useState<Strategy | null>(null);
+  const { strategy: aiStrategy } = useAiStrategyStore();
   const [rebalanceOutput, setRebalanceOutput] = useState<
     | {
         valid: boolean;
@@ -231,7 +232,6 @@ export default function PortfolioPage() {
           if (response.ok) {
             const aiStrategyResult = await response.json();
             console.log("AI strategy result:", aiStrategyResult);
-            setAiStrategy(aiStrategyResult.strategy);
           }
         } catch (error) {
           console.error("Error fetching AI strategy:", error);
