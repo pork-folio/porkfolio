@@ -17,7 +17,7 @@ export function AiStrategyProvider({
   const { balances } = useBalanceStore();
   const { prices } = usePriceStore();
   const { isTestnet } = useNetwork();
-  const { setStrategy, setLoading, setError } = useAiStrategyStore();
+  const { strategy, setStrategy, setLoading, setError } = useAiStrategyStore();
 
   useEffect(() => {
     const loadAiStrategy = async () => {
@@ -25,7 +25,7 @@ export function AiStrategyProvider({
         primaryWallet?.address &&
         balances.length &&
         prices.length &&
-        !useAiStrategyStore.getState().strategy
+        !strategy
       ) {
         setLoading(true);
         setError(null);
@@ -70,6 +70,7 @@ export function AiStrategyProvider({
     balances,
     prices,
     isTestnet,
+    strategy,
     setStrategy,
     setLoading,
     setError,
