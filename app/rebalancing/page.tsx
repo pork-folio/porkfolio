@@ -80,6 +80,9 @@ export default function RebalancingPage() {
 
   // Load balances and prices on mount
   useEffect(() => {
+    // Update the document title
+    document.title = "Rebalancing | Porkfolio";
+
     const loadBalances = async () => {
       if (primaryWallet?.address) {
         setBalancesLoading(true);
@@ -111,18 +114,15 @@ export default function RebalancingPage() {
     isTestnet,
   ]);
 
-  const handleRebalance = async (strategy: Strategy, allocation: number) => {
-    console.log("handleRebalance called with:", { strategy, allocation });
-    console.log("Current state:", {
-      hasWallet: !!primaryWallet?.address,
-      balancesLength: balances.length,
-      pricesLength: prices.length,
-    });
-
-    if (!primaryWallet?.address || !balances.length || !prices.length) {
-      console.log("Early return due to missing data");
-      return;
+  const handleRebalance = async (
+    strategy: Strategy,
+    allocation: {
+      type: "percentage" | "usd_value";
+      percentage?: number;
+      usdValue?: number;
     }
+  ) => {
+    if (!primaryWallet?.address || !balances.length || !prices.length) return;
 
     setIsRebalancing(true);
     try {
@@ -132,22 +132,10 @@ export default function RebalancingPage() {
         prices,
         supportedAssets,
         strategy,
-        allocation: {
-          type: "percentage" as const,
-          percentage: allocation,
-        },
+        allocation,
       };
 
-      console.log("Rebalance input:", {
-        portfolio: balances,
-        prices,
-        supportedAssets,
-        strategy,
-        allocation,
-      });
-
       const output = rebalance(rebalanceInput);
-      console.log("Rebalance output:", output);
 
       if (!output.valid) {
         throw new Error("Rebalance calculation failed");
@@ -274,7 +262,10 @@ export default function RebalancingPage() {
                                 {operation.strategy.name}
                               </h3>
                               <p className="text-sm text-muted-foreground">
-                                {operation.allocation}% allocation •{" "}
+                                {operation.allocation.type === "percentage"
+                                  ? `${operation.allocation.percentage}%`
+                                  : `$${operation.allocation.usdValue?.toLocaleString()}`}{" "}
+                                allocation •{" "}
                                 {formatDistanceToNow(operation.createdAt, {
                                   addSuffix: true,
                                 })}

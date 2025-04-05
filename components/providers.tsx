@@ -24,6 +24,7 @@ import { mergeNetworks } from "@dynamic-labs/sdk-react-core";
 import { createContext, useContext, useState, useEffect } from "react";
 import { useChainsStore } from "@/store/chains";
 import { ProviderRpcError } from "viem";
+import { AiStrategyProvider } from "@/components/providers/ai-strategy-provider";
 
 const zetaTestnet = {
   blockExplorerUrls: ["https://athens.explorer.zetachain.com/"],
@@ -195,6 +196,23 @@ const NetworkContext = createContext<{
 
 export const useNetwork = () => useContext(NetworkContext);
 
+const avalancheFujiDynamic = {
+  blockExplorerUrls: ["https://testnet.snowtrace.io/"],
+  chainId: 43113,
+  chainName: "Avalanche Fuji Testnet",
+  iconUrls: ["https://app.dynamic.xyz/assets/networks/avalanche.svg"],
+  name: "Avalanche Fuji",
+  nativeCurrency: {
+    decimals: 18,
+    name: "AVAX",
+    symbol: "AVAX",
+    iconUrl: "https://app.dynamic.xyz/assets/networks/avalanche.svg",
+  },
+  networkId: 43113,
+  rpcUrls: ["https://api.avax-test.network/ext/bc/C/rpc"],
+  vanityName: "Avalanche Fuji",
+};
+
 export function Providers({ children }: { children: React.ReactNode }) {
   const [isTestnet, setIsTestnet] = useState(true);
   const config = isTestnet ? testnetConfig : mainnetConfig;
@@ -256,7 +274,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
         if (isTestnet) {
           return mergeNetworks(
-            [zetaTestnet, amoyTestnetDynamic, bnbTestnetDynamic],
+            [
+              zetaTestnet,
+              amoyTestnetDynamic,
+              bnbTestnetDynamic,
+              avalancheFujiDynamic,
+            ],
             filteredNetworks
           );
         }
@@ -267,13 +290,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <NetworkContext.Provider value={{ isTestnet, toggleNetwork }}>
-      <DynamicContextProvider settings={dynamicSettings}>
-        <WagmiProvider config={config}>
-          <QueryClientProvider client={queryClient}>
-            <DynamicWagmiConnector>{children}</DynamicWagmiConnector>
-          </QueryClientProvider>
-        </WagmiProvider>
-      </DynamicContextProvider>
+      <QueryClientProvider client={queryClient}>
+        <DynamicContextProvider settings={dynamicSettings}>
+          <WagmiProvider config={config}>
+            <DynamicWagmiConnector>
+              <AiStrategyProvider>{children}</AiStrategyProvider>
+            </DynamicWagmiConnector>
+          </WagmiProvider>
+        </DynamicContextProvider>
+      </QueryClientProvider>
     </NetworkContext.Provider>
   );
 }

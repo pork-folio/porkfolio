@@ -200,7 +200,7 @@ export default function RebalancingOperationPage({
                     </h1>
                     <div className="flex items-center gap-2 mt-2">
                       <p className="text-muted-foreground">
-                        {operation.allocation}% allocation •{" "}
+                        {operation.allocation.percentage}% allocation •{" "}
                         {formatDistanceToNow(operation.createdAt, {
                           addSuffix: true,
                         })}
@@ -245,6 +245,43 @@ export default function RebalancingOperationPage({
                         />
                         Refresh Statuses
                       </Button>
+                    </div>
+                  </div>
+                  <div className="max-w-2xl">
+                    <h2 className="text-xl font-semibold mb-4">
+                      Strategy Details
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <p className="text-muted-foreground">
+                          {operation.strategy.description}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {operation.strategy.tags.map((tag) => (
+                            <Badge key={tag} variant="secondary">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <h3 className="font-medium">Target Distribution</h3>
+                        <div className="grid gap-2">
+                          {operation.strategy.definitions.map((def) => (
+                            <div
+                              key={def.asset}
+                              className="flex items-center justify-between"
+                            >
+                              <span className="text-muted-foreground">
+                                {def.asset}
+                              </span>
+                              <span className="font-medium">
+                                {def.percentage / 100}%
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <h2 className="text-xl font-semibold">Actions</h2>

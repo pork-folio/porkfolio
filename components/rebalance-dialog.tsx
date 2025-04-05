@@ -14,17 +14,38 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Strategy } from "@/core";
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRebalancingStore } from "@/store/rebalancing";
 import { RebalancingActions } from "@/components/rebalancing-actions";
 import { SwapAction } from "@/lib/handlers/rebalancing";
 import { useRouter } from "next/navigation";
+import { useBalanceStore } from "@/store/balances";
+import { usePriceStore } from "@/store/prices";
+import confetti from "canvas-confetti";
+import { Badge } from "@/components/ui/badge";
+import { useAiStrategyStore } from "@/store/ai-strategy";
+import { IconRefresh } from "@tabler/icons-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface RebalanceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   strategies: Strategy[];
-  onRebalance: (strategy: Strategy, allocation: number) => void;
+  onRebalance: (
+    strategy: Strategy,
+    allocation: {
+      type: "percentage" | "usd_value";
+      percentage?: number;
+      usdValue?: number;
+    }
+  ) => void;
   isRebalancing: boolean;
   rebalanceOutput?: {
     valid: boolean;
@@ -58,6 +79,8 @@ interface RebalanceDialogProps {
   };
 }
 
+const defaultAllocation = "10";
+
 export function RebalanceDialog({
   open,
   onOpenChange,
@@ -69,19 +92,42 @@ export function RebalanceDialog({
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(
     null
   );
-  const [allocation, setAllocation] = useState("2");
+  const [allocationType, setAllocationType] = useState<
+    "percentage" | "usd_value"
+  >("percentage");
+  const [allocation, setAllocation] = useState(defaultAllocation);
   const [lastCalculation, setLastCalculation] = useState<{
     strategyId: string;
-    allocation: number;
+    allocation: {
+      type: "percentage" | "usd_value";
+      percentage?: number;
+      usdValue?: number;
+    };
   } | null>(null);
   const addOperation = useRebalancingStore((state) => state.addOperation);
   const router = useRouter();
+  const { balances } = useBalanceStore();
+  const { prices } = usePriceStore();
+  const { refreshStrategy, isLoading } = useAiStrategyStore();
+
+  // Calculate total portfolio value
+  const totalPortfolioValue = useMemo(() => {
+    return balances.reduce((total, token) => {
+      const price = prices.find((p) => p.ticker === token.symbol)?.usdRate;
+      const balance = parseFloat(token.balance);
+      if (price && balance > 0) {
+        return total + price * balance;
+      }
+      return total;
+    }, 0);
+  }, [balances, prices]);
 
   // Reset state when dialog opens
   useEffect(() => {
     if (open) {
       setSelectedStrategy(null);
-      setAllocation("2");
+      setAllocation(defaultAllocation);
+      setAllocationType("percentage");
       setLastCalculation(null);
     }
   }, [open]);
@@ -91,22 +137,29 @@ export function RebalanceDialog({
     if (selectedStrategy && !isRebalancing) {
       const currentCalculation = {
         strategyId: selectedStrategy.id,
-        allocation: Number(allocation),
+        allocation: {
+          type: allocationType,
+          ...(allocationType === "percentage"
+            ? { percentage: Number(allocation) }
+            : { usdValue: Number(allocation) }),
+        },
       };
 
       // Only recalculate if the strategy or allocation has actually changed
       if (
         !lastCalculation ||
         lastCalculation.strategyId !== currentCalculation.strategyId ||
-        lastCalculation.allocation !== currentCalculation.allocation
+        JSON.stringify(lastCalculation.allocation) !==
+          JSON.stringify(currentCalculation.allocation)
       ) {
         setLastCalculation(currentCalculation);
-        onRebalance(selectedStrategy, Number(allocation));
+        onRebalance(selectedStrategy, currentCalculation.allocation);
       }
     }
   }, [
     selectedStrategy,
     allocation,
+    allocationType,
     isRebalancing,
     onRebalance,
     lastCalculation,
@@ -124,7 +177,12 @@ export function RebalanceDialog({
     if (selectedStrategy && rebalanceOutput) {
       const operation = {
         strategy: selectedStrategy,
-        allocation: Number(allocation),
+        allocation: {
+          type: allocationType,
+          ...(allocationType === "percentage"
+            ? { percentage: Number(allocation) }
+            : { usdValue: Number(allocation) }),
+        },
         actions: rebalanceOutput.actions.map((action) => ({
           ...action,
           to: {
@@ -140,6 +198,14 @@ export function RebalanceDialog({
       // Get the latest operation from the store (it will be the first one since we add to the beginning)
       const operations = useRebalancingStore.getState().operations;
       const newOperation = operations[0];
+
+      // Trigger confetti animation
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+
       router.push(`/rebalancing/${newOperation.id}`);
     }
   };
@@ -174,6 +240,11 @@ export function RebalanceDialog({
       toPrice: action.toPrice,
     })) || [];
 
+  const handleRefreshAiStrategy = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent strategy selection
+    refreshStrategy();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[1200px] h-[800px] flex flex-col">
@@ -185,46 +256,132 @@ export function RebalanceDialog({
           </DialogDescription>
         </DialogHeader>
         <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Left side - Strategy Selection */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Strategies</h3>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 p-1">
                 {strategies.map((strategy) => (
                   <div
                     key={strategy.id}
                     className={cn(
-                      "relative flex cursor-pointer flex-col rounded-lg border p-4 transition-colors hover:bg-accent flex-1 min-w-[250px]",
+                      "relative flex cursor-pointer flex-col rounded-lg border p-0 transition-colors hover:bg-accent/50 flex-1 min-w-[250px] overflow-hidden",
                       selectedStrategy?.id === strategy.id &&
-                        "border-primary bg-accent"
+                        "bg-accent/50 ring-2 ring-primary ring-offset-2 ring-offset-background"
                     )}
                     onClick={() => setSelectedStrategy(strategy)}
                   >
-                    <h3 className="font-semibold">{strategy.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {strategy.description}
-                    </p>
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {strategy.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-secondary px-2 py-0.5 text-xs"
+                    {strategy.id.startsWith("toolu_") && (
+                      <div className="absolute top-2 right-2 z-20 flex gap-1">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-white hover:bg-white/20 hover:text-white cursor-help"
+                              >
+                                <HelpCircle className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>This strategy has been generated with AI ✨</p>
+                              <p>
+                                To load a new strategy, press the reload icon
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 text-white hover:bg-white/20 hover:text-white hover:cursor-pointer",
+                            isLoading && "animate-spin"
+                          )}
+                          onClick={handleRefreshAiStrategy}
+                          disabled={isLoading}
                         >
-                          {tag}
-                        </span>
-                      ))}
+                          <IconRefresh className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    <div
+                      className="absolute inset-0 bg-cover bg-center"
+                      style={{
+                        backgroundImage: strategy.id.startsWith("toolu_")
+                          ? "none"
+                          : `url(/strategies/${strategy.id}.jpg)`,
+                        backgroundColor: strategy.id.startsWith("toolu_")
+                          ? "#1a1a1a"
+                          : "#000000",
+                      }}
+                    />
+                    <div className="inset-x-0 bottom-0 h-58">
+                      <div className="absolute inset-0 backdrop-blur-md mask-fade-up bg-black/60" />
+                      <div className="absolute bottom-4 left-4 right-4">
+                        <div className="relative z-10">
+                          <div className="flex items-center justify-between">
+                            {strategy.id.startsWith("toolu_") && isLoading ? (
+                              <Skeleton className="h-6 w-32 bg-white/20" />
+                            ) : (
+                              <h3 className="font-semibold text-white opacity-90">
+                                {strategy.name}
+                              </h3>
+                            )}
+                          </div>
+                          {strategy.id.startsWith("toolu_") && isLoading ? (
+                            <div className="space-y-2 mt-2">
+                              <Skeleton className="h-4 w-full bg-white/20" />
+                              <Skeleton className="h-4 w-3/4 bg-white/20" />
+                              <div className="flex gap-1 mt-2">
+                                <Skeleton className="h-6 w-16 bg-white/20" />
+                                <Skeleton className="h-6 w-16 bg-white/20" />
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <p className="text-sm text-white opacity-85">
+                                {strategy.description}
+                              </p>
+                              <div className="mt-2 text-sm text-white opacity-90">
+                                {distributionHumanReadable(strategy)}
+                              </div>
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {strategy.tags.map((tag) => (
+                                  <Badge
+                                    key={tag}
+                                    variant="outline"
+                                    className="text-white border-white/20 opacity-90"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="allocation">Allocation Percentage</Label>
+                <Label htmlFor="allocation">
+                  {allocationType === "percentage"
+                    ? "Allocation Percentage"
+                    : "Allocation USD Value"}
+                </Label>
                 <div className="flex items-center gap-4">
                   <Slider
                     value={[Number(allocation)]}
                     onValueChange={handleAllocationChange}
-                    max={100}
-                    step={1}
+                    max={
+                      allocationType === "percentage"
+                        ? 100
+                        : totalPortfolioValue
+                    }
+                    step={allocationType === "percentage" ? 1 : 100}
                     className="flex-1"
                   />
                   <div className="flex items-center gap-2">
@@ -232,12 +389,42 @@ export function RebalanceDialog({
                       id="allocation"
                       type="number"
                       min="1"
-                      max="100"
+                      max={
+                        allocationType === "percentage"
+                          ? "100"
+                          : totalPortfolioValue.toString()
+                      }
                       value={allocation}
                       onChange={(e) => handleAllocationChange(e.target.value)}
-                      className="w-20"
+                      className="w-32"
                     />
-                    <span className="text-sm text-muted-foreground">%</span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant={
+                          allocationType === "usd_value" ? "default" : "outline"
+                        }
+                        size="sm"
+                        onClick={() => setAllocationType("usd_value")}
+                        className="h-8 w-8 p-0"
+                      >
+                        $
+                      </Button>
+                      <Button
+                        variant={
+                          allocationType === "percentage"
+                            ? "default"
+                            : "outline"
+                        }
+                        size="sm"
+                        onClick={() => {
+                          setAllocationType("percentage");
+                          setAllocation(defaultAllocation);
+                        }}
+                        className="h-8 w-8 p-0"
+                      >
+                        %
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -286,4 +473,10 @@ export function RebalanceDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+function distributionHumanReadable(strategy: Strategy) {
+  return strategy.definitions
+    .map((def) => `${def.asset} ${def.percentage / 100}%`)
+    .join(" ⋅ ");
 }

@@ -16,6 +16,13 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Porkfolio",
   description: "Manage & rebalance your portfolio across chains",
+  other: {
+    "twitter:card": "summary_large_image",
+    "twitter:site": "@PorkfolioApp",
+    "twitter:creator": "@PorkfolioApp",
+    "twitter:title": "Porkfolio",
+    "twitter:description": "Manage & rebalance your portfolio across chains",
+  }
 };
 
 export default function RootLayout({

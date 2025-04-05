@@ -1,7 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react";
+import { RainbowButton } from "@/components/magicui/rainbow-button";
+import {
+  IconChevronLeft,
+  IconChevronRight,
+  IconRefresh,
+} from "@tabler/icons-react";
 import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import {
   ColumnDef,
@@ -28,7 +33,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info } from "lucide-react";
+import { HelpCircle, Scale } from "lucide-react";
+import { useNetwork } from "@/components/providers";
+import { useBalanceStore } from "@/store/balances";
+import { fetchBalances } from "@/lib/handlers/balances";
 
 import { Button } from "@/components/ui/button";
 // import { Checkbox } from "@/components/ui/checkbox";
@@ -45,6 +53,29 @@ import { handleDeposit } from "@/lib/handlers/deposit";
 import { roundNumber } from "@/lib/handlers/balances";
 import { WithdrawConfirmationSheet } from "@/components/withdraw-confirmation-sheet";
 import { formatChainName } from "@/lib/utils";
+import { OinkBalance } from "@/components/oink-balance";
+import { CryptoIcon } from "@/components/ui/crypto-icon";
+import { cn } from "@/lib/utils";
+
+// Add utility function for formatting numbers with aligned decimals
+function formatNumberWithAlignedDecimals(
+  value: string | number,
+  decimals: number = 2
+): React.ReactElement {
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return <div className="text-right">-</div>;
+
+  const parts = num.toFixed(decimals).split(".");
+  const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const decimalPart = parts[1];
+
+  return (
+    <div className="flex justify-end">
+      <span className="tabular-nums">{integerPart}</span>
+      <span className="tabular-nums">.{decimalPart}</span>
+    </div>
+  );
+}
 
 export const schema = z.object({
   chain_id: z.string(),
@@ -142,7 +173,7 @@ function PriceCell({ ticker }: { ticker: string }) {
   const price = prices.find((p) => p.ticker === ticker)?.usdRate;
   return (
     <div className="text-right font-medium">
-      {price ? `$${price.toFixed(2)}` : "-"}
+      {price ? formatNumberWithAlignedDecimals(price, 2) : "-"}
     </div>
   );
 }
@@ -154,7 +185,7 @@ function ValueCell({ ticker, balance }: { ticker: string; balance: string }) {
   const value = price ? price * balanceValue : null;
   return (
     <div className="text-right font-medium">
-      {value ? `$${value.toFixed(2)}` : "-"}
+      {value ? formatNumberWithAlignedDecimals(value, 2) : "-"}
     </div>
   );
 }
@@ -194,11 +225,15 @@ const columns: ColumnDef<AggregatedToken>[] = [
       const nonZeroTokens = token.tokens.filter(
         (t) => parseFloat(t.balance) > 0
       ).length;
+
       return (
-        <div className="flex flex-col">
-          <div className="font-medium">{token.baseSymbol}</div>
-          <div className="text-sm text-muted-foreground">
-            {nonZeroTokens} tokens
+        <div className="flex items-center">
+          <CryptoIcon symbol={token.baseSymbol} size={26} />
+          <div className="flex flex-col pl-2">
+            <div className="font-medium">{token.baseSymbol}</div>
+            <div className="text-sm text-muted-foreground">
+              {`${nonZeroTokens} ${nonZeroTokens === 1 ? "chain" : "chains"}`}
+            </div>
           </div>
         </div>
       );
@@ -209,7 +244,9 @@ const columns: ColumnDef<AggregatedToken>[] = [
     accessorKey: "totalBalance",
     header: () => <div className="w-full text-right">Balance</div>,
     cell: ({ row }) => (
-      <div className="text-right font-medium">{row.original.totalBalance}</div>
+      <div className="text-right font-medium">
+        {formatNumberWithAlignedDecimals(row.original.totalBalance)}
+      </div>
     ),
   },
   {
@@ -418,7 +455,7 @@ function DiversificationCard({
   };
 
   return (
-    <div className="w-[300px] flex flex-col p-4 border rounded-lg relative">
+    <div className="min-w-[300px] flex flex-1 flex-col p-4 border rounded-lg relative">
       <div className="absolute top-4 right-4 w-[100px] h-[100px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -447,7 +484,7 @@ function DiversificationCard({
         <TooltipProvider>
           <ShadcnTooltip>
             <TooltipTrigger>
-              <Info className="h-4 w-4 text-muted-foreground" />
+              <HelpCircle className="h-4 w-4 text-muted-foreground" />
             </TooltipTrigger>
             <TooltipContent>
               <p className="max-w-[200px]">
@@ -468,10 +505,55 @@ function DiversificationCard({
   );
 }
 
+function OinkCard() {
+  const [balance, setBalance] = React.useState<string>("0");
+  const [isRevealed, setIsRevealed] = React.useState(false);
+  const formattedBalance = parseFloat(balance).toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return (
+    <div className="min-w-[300px] flex-1 flex flex-col p-4 border rounded-lg">
+      <div>
+        <div className="text-sm text-muted-foreground flex items-center gap-1">
+          OINK Token
+          <TooltipProvider>
+            <ShadcnTooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="h-4 w-4 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="max-w-[200px]">
+                  OINK tokens are rewarded to users of Porkfolio. Every time you
+                  rebalance your portfolio you get OINK tokens.
+                </p>
+              </TooltipContent>
+            </ShadcnTooltip>
+          </TooltipProvider>
+        </div>
+        <div className="text-4xl font-bold mt-1 mb-4">
+          {isRevealed ? formattedBalance : "0.00"}
+        </div>
+      </div>
+      <div className="flex-1" />
+      <OinkBalance
+        className="w-full"
+        onBalanceChange={(newBalance: string) => setBalance(newBalance)}
+        onReveal={() => setIsRevealed(true)}
+      />
+    </div>
+  );
+}
+
 export function BalancesTable({
   data: initialData,
+  onRebalance,
+  isRebalancing,
 }: {
   data: z.infer<typeof schema>[];
+  onRebalance: () => void;
+  isRebalancing: boolean;
 }) {
   const [sorting, setSorting] = React.useState<SortingState>([
     { id: "value", desc: true },
@@ -486,7 +568,26 @@ export function BalancesTable({
     new Set()
   );
   const [showZeroBalances, setShowZeroBalances] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
   const { prices } = usePriceStore();
+  const { primaryWallet } = useDynamicContext();
+  const { isTestnet } = useNetwork();
+  const { setBalances } = useBalanceStore();
+
+  const refreshBalances = async () => {
+    if (primaryWallet?.address) {
+      setIsRefreshing(true);
+      try {
+        const balancesData = await fetchBalances(
+          primaryWallet.address,
+          isTestnet
+        );
+        setBalances(balancesData);
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  };
 
   const aggregatedData = React.useMemo(
     () => aggregateTokens(initialData),
@@ -588,8 +689,8 @@ export function BalancesTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4">
-        <div className="flex items-stretch gap-4">
-          <div className="w-[300px] flex flex-col p-4 border rounded-lg">
+        <div className="flex flex-wrap items-stretch gap-4 min-w-[300px]">
+          <div className="min-w-[300px] flex-1 flex flex-col p-4 border rounded-lg">
             <div className="text-sm text-muted-foreground">Total Value</div>
             <div className="text-4xl font-bold mt-1">
               $
@@ -606,117 +707,160 @@ export function BalancesTable({
                 </span>
               )}
             </div>
+            <div className="mt-4">
+              <RainbowButton
+                onClick={onRebalance}
+                className="transition-transform hover:scale-102 active:scale-98"
+                disabled={isRebalancing}
+              >
+                {isRebalancing ? (
+                  <>
+                    <Scale className="mr-2 h-4 w-4 animate-spin" />
+                    Rebalancing...
+                  </>
+                ) : (
+                  <>
+                    <Scale className="mr-2 h-4 w-4" />
+                    Rebalance Portfolio
+                  </>
+                )}
+              </RainbowButton>
+            </div>
           </div>
           <DiversificationCard assetDistribution={assetDistribution} />
+          <OinkCard />
         </div>
-        <div className="flex items-center justify-between">
-          <div className="flex flex-1 items-center space-x-2">
-            <Input
-              placeholder="Filter tokens..."
-              value={
-                (table.getColumn("baseSymbol")?.getFilterValue() as string) ??
-                ""
-              }
-              onChange={(event) =>
-                table
-                  .getColumn("baseSymbol")
-                  ?.setFilterValue(event.target.value)
-              }
-              className="h-8 w-[150px] lg:w-[250px]"
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowZeroBalances(!showZeroBalances)}
-              className="h-8"
-            >
-              {showZeroBalances ? "Hide Zero Balances" : "Show Zero Balances"}
-            </Button>
-          </div>
-        </div>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
+        <div className="flex flex-col lg:flex-row flex-col-reverse gap-4">
+          <div className="flex-1 flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div className="flex flex-1 items-center space-x-2">
+                <Input
+                  placeholder="Filter tokens..."
+                  value={
+                    (table
+                      .getColumn("baseSymbol")
+                      ?.getFilterValue() as string) ?? ""
+                  }
+                  onChange={(event) =>
+                    table
+                      .getColumn("baseSymbol")
+                      ?.setFilterValue(event.target.value)
+                  }
+                  className="max-w-sm mr-2"
+                />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowZeroBalances(!showZeroBalances)}
+                >
+                  {showZeroBalances
+                    ? "Hide Zero Balances"
+                    : "Show Zero Balances"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={refreshBalances}
+                  disabled={isRefreshing || !primaryWallet?.address}
+                >
+                  <IconRefresh
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      isRefreshing && "animate-spin"
+                    )}
+                  />
+                  Refresh
+                </Button>
+              </div>
+            </div>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
+                        <TableHead key={header.id}>
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row) => (
+                      <React.Fragment key={row.original.baseSymbol}>
+                        <TableRow
+                          className="cursor-pointer"
+                          onClick={() => toggleRow(row.original.baseSymbol)}
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <TableCell key={cell.id}>
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                        {expandedRows.has(row.original.baseSymbol) && (
+                          <TableRow>
+                            <TableCell colSpan={columns.length}>
+                              <TokenDetails
+                                token={row.original}
+                                showZeroBalances={showZeroBalances}
+                              />
+                            </TableCell>
+                          </TableRow>
                         )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <React.Fragment key={row.original.baseSymbol}>
-                  <TableRow
-                    className="cursor-pointer"
-                    onClick={() => toggleRow(row.original.baseSymbol)}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                  {expandedRows.has(row.original.baseSymbol) && (
+                      </React.Fragment>
+                    ))
+                  ) : (
                     <TableRow>
-                      <TableCell colSpan={columns.length}>
-                        <TokenDetails
-                          token={row.original}
-                          showZeroBalances={showZeroBalances}
-                        />
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        No results.
                       </TableCell>
                     </TableRow>
                   )}
-                </React.Fragment>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
+                </TableBody>
+              </Table>
+            </div>
+            <div className="flex items-center justify-end space-x-2">
+              <div className="space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.previousPage()}
+                  disabled={!table.getCanPreviousPage()}
                 >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2">
-        {/* <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div> */}
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            <IconChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            <IconChevronRight className="h-4 w-4" />
-          </Button>
+                  <IconChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => table.nextPage()}
+                  disabled={!table.getCanNextPage()}
+                >
+                  <IconChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          {/* <div className="w-full lg:w-1/4 lg:pt-4 mt-8">
+            <div className="w-full mt-4">
+              <OinkBalance className="w-full" />
+            </div>
+          </div> */}
         </div>
       </div>
     </div>

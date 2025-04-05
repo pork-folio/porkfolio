@@ -9,8 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchBalances } from "@/lib/handlers/balances";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
-import { Button } from "@/components/ui/button";
-import { IconRefresh, IconScale } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
 import { useNetwork } from "@/components/providers";
@@ -19,6 +17,7 @@ import { useTransactionStore } from "@/store/transactions";
 import { rebalance } from "@/core/rebalance/rebalance";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
 import { Strategy } from "@/core";
+import { useAiStrategyStore } from "@/store/ai-strategy";
 
 export default function PortfolioPage() {
   const { primaryWallet } = useDynamicContext();
@@ -32,6 +31,7 @@ export default function PortfolioPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
+  const { strategy: aiStrategy } = useAiStrategyStore();
   const [rebalanceOutput, setRebalanceOutput] = useState<
     | {
         valid: boolean;
@@ -66,6 +66,8 @@ export default function PortfolioPage() {
     | undefined
   >(undefined);
   const { isTestnet } = useNetwork();
+  const strategies = core.getStrategies(isTestnet);
+  const allStrategies = aiStrategy ? [...strategies, aiStrategy] : strategies;
 
   // Add effect to check pending transactions on load
   useEffect(() => {
@@ -108,56 +110,6 @@ export default function PortfolioPage() {
     checkPendingTransactions();
   }, [isTestnet]);
 
-  const refreshBalances = async () => {
-    if (primaryWallet?.address) {
-      setIsRefreshing(true);
-      try {
-        const balancesData = await fetchBalances(
-          primaryWallet.address,
-          isTestnet
-        );
-        setBalances(balancesData);
-
-        // Check status of non-completed transactions
-        const { transactions } = useTransactionStore.getState();
-        const nonCompletedTransactions = transactions.filter(
-          (tx) => tx.status !== "completed" && tx.status !== "failed"
-        );
-
-        for (const tx of nonCompletedTransactions) {
-          const apiUrl = isTestnet
-            ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
-            : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
-
-          try {
-            const response = await fetch(apiUrl);
-            if (response.status === 404) {
-              useTransactionStore
-                .getState()
-                .updateTransactionStatus(tx.hash, "Initiated");
-            } else if (response.ok) {
-              const data = await response.json();
-              const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
-              if (cctxStatus === "OutboundMined") {
-                useTransactionStore
-                  .getState()
-                  .updateTransactionStatus(tx.hash, "completed");
-              } else if (cctxStatus === "Aborted") {
-                useTransactionStore
-                  .getState()
-                  .updateTransactionStatus(tx.hash, "failed");
-              }
-            }
-          } catch (error) {
-            console.error("Error checking transaction status:", error);
-          }
-        }
-      } finally {
-        setIsRefreshing(false);
-      }
-    }
-  };
-
   useEffect(() => {
     const loadBalances = async () => {
       if (primaryWallet?.address) {
@@ -197,9 +149,62 @@ export default function PortfolioPage() {
     isTestnet,
   ]);
 
-  const strategies = core.getStrategies(isTestnet);
+  // Separate effect for loading AI strategy
+  useEffect(() => {
+    const loadAiStrategy = async () => {
+      if (
+        primaryWallet?.address &&
+        balances.length &&
+        prices.length &&
+        !aiStrategy
+      ) {
+        const supportedAssets = core.supportedAssets(isTestnet);
+        const rebalanceInput = {
+          portfolio: balances,
+          prices,
+          supportedAssets,
+          strategy: strategies[0], // Use first strategy as placeholder
+          allocation: { type: "percentage", percentage: 100 },
+        };
 
-  const handleRebalance = async (strategy: Strategy, allocation: number) => {
+        try {
+          const response = await fetch("/api/ai-strategy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              address: primaryWallet.address,
+              ...rebalanceInput,
+            }),
+          });
+
+          if (response.ok) {
+            const aiStrategyResult = await response.json();
+            console.log("AI strategy result:", aiStrategyResult);
+          }
+        } catch (error) {
+          console.error("Error fetching AI strategy:", error);
+        }
+      }
+    };
+
+    loadAiStrategy();
+  }, [
+    primaryWallet?.address,
+    balances,
+    prices,
+    isTestnet,
+    strategies,
+    aiStrategy,
+  ]);
+
+  const handleRebalance = async (
+    strategy: Strategy,
+    allocation: {
+      type: "percentage" | "usd_value";
+      percentage?: number;
+      usdValue?: number;
+    }
+  ) => {
     if (!primaryWallet?.address || !balances.length || !prices.length) return;
 
     setIsRebalancing(true);
@@ -210,22 +215,15 @@ export default function PortfolioPage() {
         prices,
         supportedAssets,
         strategy,
-        allocation: {
-          type: "percentage" as const,
-          percentage: allocation,
-        },
+        allocation,
       };
 
-      console.log("Rebalance input:", rebalanceInput);
-
       const output = rebalance(rebalanceInput);
-      console.log("Rebalance output:", output);
 
       if (!output.valid) {
         throw new Error("Rebalance calculation failed");
       }
 
-      // Transform the core output to match the dialog's expected shape
       const dialogOutput = {
         valid: output.valid,
         actions: output.actions.map((action) => ({
@@ -260,7 +258,6 @@ export default function PortfolioPage() {
       setRebalanceOutput(dialogOutput);
     } catch (error) {
       console.error("Error during rebalancing:", error);
-      // You might want to show an error toast here
     } finally {
       setIsRebalancing(false);
     }
@@ -281,35 +278,6 @@ export default function PortfolioPage() {
                     <p className="text-muted-foreground mt-2">
                       Manage your portfolio positions here.
                     </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsRebalanceDialogOpen(true)}
-                      disabled={
-                        !primaryWallet?.address ||
-                        !balances.length ||
-                        !prices.length
-                      }
-                    >
-                      <IconScale className="mr-2 h-4 w-4" />
-                      Rebalance
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={refreshBalances}
-                      disabled={isRefreshing || !primaryWallet?.address}
-                    >
-                      <IconRefresh
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          isRefreshing && "animate-spin"
-                        )}
-                      />
-                      Refresh
-                    </Button>
                   </div>
                 </div>
               </div>
@@ -345,7 +313,11 @@ export default function PortfolioPage() {
                       isRefreshing && "opacity-50"
                     )}
                   >
-                    <BalancesTable data={balances} />
+                    <BalancesTable
+                      data={balances}
+                      onRebalance={() => setIsRebalanceDialogOpen(true)}
+                      isRebalancing={isRebalancing}
+                    />
                   </div>
                 )}
               </div>
@@ -356,7 +328,7 @@ export default function PortfolioPage() {
       <RebalanceDialog
         open={isRebalanceDialogOpen}
         onOpenChange={setIsRebalanceDialogOpen}
-        strategies={strategies}
+        strategies={allStrategies}
         onRebalance={handleRebalance}
         isRebalancing={isRebalancing}
         rebalanceOutput={rebalanceOutput}
