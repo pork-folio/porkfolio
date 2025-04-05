@@ -244,14 +244,14 @@ export function RebalanceDialog({
             {/* Left side - Strategy Selection */}
             <div className="space-y-4">
               <h3 className="font-semibold text-lg">Strategies</h3>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 p-1">
                 {strategies.map((strategy) => (
                   <div
                     key={strategy.id}
                     className={cn(
                       "relative flex cursor-pointer flex-col rounded-lg border p-0 transition-colors hover:bg-accent/50 flex-1 min-w-[250px] overflow-hidden",
                       selectedStrategy?.id === strategy.id &&
-                        "border-primary bg-accent/50"
+                        "bg-accent/50 ring-2 ring-primary ring-offset-2 ring-offset-background"
                     )}
                     onClick={() => setSelectedStrategy(strategy)}
                   >
