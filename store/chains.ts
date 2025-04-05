@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/constants";
+import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/handlers/constants";
 
 export interface Chain {
   chain_id: string;

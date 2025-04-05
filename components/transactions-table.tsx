@@ -24,7 +24,11 @@ import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useNetwork } from "@/components/providers";
 import { useRebalancingStore } from "@/store/rebalancing";
-import { API_BASE_URLS, API_ENDPOINTS, EVM_RPC_URLS } from "@/lib/constants";
+import {
+  API_BASE_URLS,
+  API_ENDPOINTS,
+  EVM_RPC_URLS,
+} from "@/lib/handlers/constants";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

@@ -6,6 +6,7 @@ import { useBalanceStore } from "@/store/balances";
 import { fetchBalances } from "./balances";
 import { Wallet } from "@dynamic-labs/sdk-react-core";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
+import { UNIVERSAL_SWAP_ADDRESSES } from "./constants";
 
 interface TokenInfo {
   chain_id: string;
@@ -96,8 +97,8 @@ export async function executeRebalancingSwap(
 
     const receiverAddress =
       action.from.chain_id === "7001"
-        ? "0x0cf3e61a95137172bb064C209a12e31003a23B8B" // testnet
-        : "0x4932D2CfFF24B27d57C8d1FC56f4f5307677758e"; // mainnet
+        ? UNIVERSAL_SWAP_ADDRESSES.testnet
+        : UNIVERSAL_SWAP_ADDRESSES.mainnet;
 
     // Prepare parameters for the swap
     if (!action.to.zrc20 && action.to.symbol !== "ZETA") {
