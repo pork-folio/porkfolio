@@ -259,7 +259,7 @@ export function RebalanceDialog({
                       className="absolute inset-0 bg-cover bg-center"
                       style={{
                         backgroundImage: strategy.id
-                          ? `url(/${strategy.id}.jpg)`
+                          ? `url(/strategies/${strategy.id}.jpg)`
                           : "none",
                         backgroundColor: "#000000",
                       }}
