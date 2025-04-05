@@ -5,10 +5,7 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { ethers } from "ethers";
 import { PiggyBank } from "lucide-react";
 import { emojiBlast } from "emoji-blast";
-import {
-  EVM_RPC_URLS,
-  UNIVERSAL_TOKEN_OINK_ADDRESSES,
-} from "@/lib/handlers/constants";
+import { EVM_RPC_URLS, UNIVERSAL_TOKEN_OINK_ADDRESSES } from "@/lib/constants";
 
 const OINK_CONTRACTS = UNIVERSAL_TOKEN_OINK_ADDRESSES;
 

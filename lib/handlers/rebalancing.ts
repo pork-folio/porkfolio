@@ -6,7 +6,7 @@ import { useBalanceStore } from "@/store/balances";
 import { fetchBalances } from "./balances";
 import { Wallet } from "@dynamic-labs/sdk-react-core";
 import { getAddress, ParamChainName } from "@zetachain/protocol-contracts";
-import { UNIVERSAL_SWAP_ADDRESSES } from "./constants";
+import { UNIVERSAL_SWAP_ADDRESSES } from "../constants";
 
 interface TokenInfo {
   chain_id: string;

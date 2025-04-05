@@ -18,7 +18,7 @@ import { rebalance } from "@/core/rebalance/rebalance";
 import { RebalanceDialog } from "@/components/rebalance-dialog";
 import { Strategy } from "@/core";
 import { useAiStrategyStore } from "@/store/ai-strategy";
-import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/handlers/constants";
+import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/constants";
 
 export default function PortfolioPage() {
   const { primaryWallet } = useDynamicContext();

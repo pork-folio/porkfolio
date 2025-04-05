@@ -15,7 +15,7 @@ import { useTransactionStore } from "@/store/transactions";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import { useNetwork } from "@/components/providers";
-import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/handlers/constants";
+import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/constants";
 
 // Add keyframes for rotation animation
 const refreshAnimation = `
