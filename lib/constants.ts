@@ -9,7 +9,7 @@ export const EVM_RPC_URLS = {
 } as const;
 
 export const UNIVERSAL_SWAP_ADDRESSES = {
-  mainnet: "0x4932D2CfFF24B27d57C8d1FC56f4f5307677758e",
+  mainnet: "0x436791ce3490213f64426449863fA9f43B4B4b54",
   testnet: "0x0cf3e61a95137172bb064C209a12e31003a23B8B",
 } as const;
 
