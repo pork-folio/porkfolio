@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/constants";
 
 export interface Chain {
   chain_id: string;
@@ -27,8 +28,8 @@ export const useChainsStore = create<ChainsState>((set) => ({
     set({ isLoading: true, error: null });
     try {
       const baseUrl = isTestnet
-        ? "https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/observer/supportedChains"
-        : "https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/observer/supportedChains";
+        ? `${API_BASE_URLS.testnet}${API_ENDPOINTS.SUPPORTED_CHAINS}`
+        : `${API_BASE_URLS.mainnet}${API_ENDPOINTS.SUPPORTED_CHAINS}`;
 
       const response = await fetch(baseUrl);
       if (!response.ok) {

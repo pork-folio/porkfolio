@@ -15,6 +15,7 @@ import { useTransactionStore } from "@/store/transactions";
 import { Progress } from "@/components/ui/progress";
 import { useState } from "react";
 import { useNetwork } from "@/components/providers";
+import { API_BASE_URLS, API_ENDPOINTS } from "@/lib/constants";
 
 // Add keyframes for rotation animation
 const refreshAnimation = `
@@ -137,8 +138,8 @@ export default function RebalancingOperationPage({
         rebalancingTransactions.map(async (tx) => {
           try {
             const apiUrl = isTestnet
-              ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
-              : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
+              ? `${API_BASE_URLS.testnet}${API_ENDPOINTS.TRANSACTION_STATUS}/${tx.hash}`
+              : `${API_BASE_URLS.mainnet}${API_ENDPOINTS.TRANSACTION_STATUS}/${tx.hash}`;
 
             const response = await fetch(apiUrl);
 

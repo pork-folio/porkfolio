@@ -5,6 +5,7 @@ import { useDynamicContext } from "@dynamic-labs/sdk-react-core";
 import { ethers } from "ethers";
 import { PiggyBank } from "lucide-react";
 import { emojiBlast } from "emoji-blast";
+import { EVM_RPC_URLS } from "@/lib/constants";
 
 const OINK_CONTRACTS = {
   mainnet: "0x965C393f72b0902b0119C34fdabff6cD02f32469",
@@ -12,8 +13,8 @@ const OINK_CONTRACTS = {
 };
 
 const RPC_URLS = {
-  mainnet: "https://zetachain-evm.blockpi.network/v1/rpc/public",
-  testnet: "https://zetachain-athens-evm.blockpi.network/v1/rpc/public",
+  mainnet: `${EVM_RPC_URLS.mainnet}/v1/rpc/public`,
+  testnet: `${EVM_RPC_URLS.testnet}/v1/rpc/public`,
 };
 
 // For now, we'll use testnet. This can be made configurable via env variables or props
