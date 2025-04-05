@@ -32,40 +32,43 @@ export default function PortfolioPage() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isRebalancing, setIsRebalancing] = useState(false);
   const [isRebalanceDialogOpen, setIsRebalanceDialogOpen] = useState(false);
+  const [aiStrategy, setAiStrategy] = useState<Strategy | null>(null);
   const [rebalanceOutput, setRebalanceOutput] = useState<
     | {
-      valid: boolean;
-      actions: {
-        type: string;
-        from: {
-          symbol: string;
-          balance: string;
-          chain_name: string;
-          chain_id: string;
-          coin_type: string;
-          decimals: number;
-          contract?: string;
-          zrc20?: string;
-        };
-        fromUsdValue: number;
-        fromTokenValue: number;
-        to: {
-          symbol: string;
-          name: string;
-          chain_id: string;
-          coin_type: string;
-          decimals: number;
-          contract?: string;
-          zrc20?: string;
-        };
-        toPrice: {
-          usdRate: number;
-        };
-      }[];
-    }
+        valid: boolean;
+        actions: {
+          type: string;
+          from: {
+            symbol: string;
+            balance: string;
+            chain_name: string;
+            chain_id: string;
+            coin_type: string;
+            decimals: number;
+            contract?: string;
+            zrc20?: string;
+          };
+          fromUsdValue: number;
+          fromTokenValue: number;
+          to: {
+            symbol: string;
+            name: string;
+            chain_id: string;
+            coin_type: string;
+            decimals: number;
+            contract?: string;
+            zrc20?: string;
+          };
+          toPrice: {
+            usdRate: number;
+          };
+        }[];
+      }
     | undefined
   >(undefined);
   const { isTestnet } = useNetwork();
+  const strategies = core.getStrategies(isTestnet);
+  const allStrategies = aiStrategy ? [...strategies, aiStrategy] : strategies;
 
   // Add effect to check pending transactions on load
   useEffect(() => {
@@ -197,7 +200,54 @@ export default function PortfolioPage() {
     isTestnet,
   ]);
 
-  const strategies = core.getStrategies(isTestnet);
+  // Separate effect for loading AI strategy
+  useEffect(() => {
+    const loadAiStrategy = async () => {
+      if (
+        primaryWallet?.address &&
+        balances.length &&
+        prices.length &&
+        !aiStrategy
+      ) {
+        const supportedAssets = core.supportedAssets(isTestnet);
+        const rebalanceInput = {
+          portfolio: balances,
+          prices,
+          supportedAssets,
+          strategy: strategies[0], // Use first strategy as placeholder
+          allocation: { type: "percentage", percentage: 100 },
+        };
+
+        try {
+          const response = await fetch("/api/ai-strategy", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              address: primaryWallet.address,
+              ...rebalanceInput,
+            }),
+          });
+
+          if (response.ok) {
+            const aiStrategyResult = await response.json();
+            console.log("AI strategy result:", aiStrategyResult);
+            setAiStrategy(aiStrategyResult.strategy);
+          }
+        } catch (error) {
+          console.error("Error fetching AI strategy:", error);
+        }
+      }
+    };
+
+    loadAiStrategy();
+  }, [
+    primaryWallet?.address,
+    balances,
+    prices,
+    isTestnet,
+    strategies,
+    aiStrategy,
+  ]);
 
   const handleRebalance = async (
     strategy: Strategy,
@@ -225,27 +275,6 @@ export default function PortfolioPage() {
       if (!output.valid) {
         throw new Error("Rebalance calculation failed");
       }
-
-      // Call the AI strategy API endpoint
-      // DEMO...
-      fetch(
-        '/api/ai-strategy',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', },
-          body: JSON.stringify({ address: primaryWallet.address, ...rebalanceInput }),
-        }
-      ).then((response) => {
-        if (!response.ok) {
-          console.error('AI strategy API call failed:', response.text());
-          return
-        }
-
-        response.json().then((aiStrategyResult) => {
-          console.log('AI strategy result:', aiStrategyResult);
-        });
-      });
-
 
       const dialogOutput = {
         valid: output.valid,
@@ -367,7 +396,7 @@ export default function PortfolioPage() {
       <RebalanceDialog
         open={isRebalanceDialogOpen}
         onOpenChange={setIsRebalanceDialogOpen}
-        strategies={strategies}
+        strategies={allStrategies}
         onRebalance={handleRebalance}
         isRebalancing={isRebalancing}
         rebalanceOutput={rebalanceOutput}

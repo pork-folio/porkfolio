@@ -258,10 +258,12 @@ export function RebalanceDialog({
                     <div
                       className="absolute inset-0 bg-cover bg-center"
                       style={{
-                        backgroundImage: strategy.id
-                          ? `url(/strategies/${strategy.id}.jpg)`
-                          : "none",
-                        backgroundColor: "#000000",
+                        backgroundImage: strategy.id.startsWith("toolu_")
+                          ? "none"
+                          : `url(/strategies/${strategy.id}.jpg)`,
+                        backgroundColor: strategy.id.startsWith("toolu_")
+                          ? "#1a1a1a"
+                          : "#000000",
                       }}
                     />
                     <div className="inset-x-0 bottom-0 h-58">
