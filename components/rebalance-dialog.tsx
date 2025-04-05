@@ -26,6 +26,13 @@ import { Badge } from "@/components/ui/badge";
 import { useAiStrategyStore } from "@/store/ai-strategy";
 import { IconRefresh } from "@tabler/icons-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface RebalanceDialogProps {
   open: boolean;
@@ -265,18 +272,39 @@ export function RebalanceDialog({
                     onClick={() => setSelectedStrategy(strategy)}
                   >
                     {strategy.id.startsWith("toolu_") && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn(
-                          "absolute top-2 right-2 z-20 h-8 w-8 text-white hover:bg-white/20 hover:text-white",
-                          isLoading && "animate-spin"
-                        )}
-                        onClick={handleRefreshAiStrategy}
-                        disabled={isLoading}
-                      >
-                        <IconRefresh className="h-4 w-4" />
-                      </Button>
+                      <div className="absolute top-2 right-2 z-20 flex gap-1">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-white hover:bg-white/20 hover:text-white cursor-help"
+                              >
+                                <HelpCircle className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>This strategy has been generated with AI ✨</p>
+                              <p>
+                                To load a new strategy, press the reload icon
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn(
+                            "h-8 w-8 text-white hover:bg-white/20 hover:text-white hover:cursor-pointer",
+                            isLoading && "animate-spin"
+                          )}
+                          onClick={handleRefreshAiStrategy}
+                          disabled={isLoading}
+                        >
+                          <IconRefresh className="h-4 w-4" />
+                        </Button>
+                      </div>
                     )}
                     <div
                       className="absolute inset-0 bg-cover bg-center"
