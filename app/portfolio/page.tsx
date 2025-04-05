@@ -9,8 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { fetchBalances } from "@/lib/handlers/balances";
 import { useBalanceStore } from "@/store/balances";
 import { usePriceStore } from "@/store/prices";
-import { Button } from "@/components/ui/button";
-import { IconRefresh } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import * as core from "@/core";
 import { useNetwork } from "@/components/providers";
@@ -111,56 +109,6 @@ export default function PortfolioPage() {
 
     checkPendingTransactions();
   }, [isTestnet]);
-
-  const refreshBalances = async () => {
-    if (primaryWallet?.address) {
-      setIsRefreshing(true);
-      try {
-        const balancesData = await fetchBalances(
-          primaryWallet.address,
-          isTestnet
-        );
-        setBalances(balancesData);
-
-        // Check status of non-completed transactions
-        const { transactions } = useTransactionStore.getState();
-        const nonCompletedTransactions = transactions.filter(
-          (tx) => tx.status !== "completed" && tx.status !== "failed"
-        );
-
-        for (const tx of nonCompletedTransactions) {
-          const apiUrl = isTestnet
-            ? `https://zetachain-athens.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`
-            : `https://zetachain.blockpi.network/lcd/v1/public/zeta-chain/crosschain/inboundHashToCctxData/${tx.hash}`;
-
-          try {
-            const response = await fetch(apiUrl);
-            if (response.status === 404) {
-              useTransactionStore
-                .getState()
-                .updateTransactionStatus(tx.hash, "Initiated");
-            } else if (response.ok) {
-              const data = await response.json();
-              const cctxStatus = data.CrossChainTxs[0]?.cctx_status?.status;
-              if (cctxStatus === "OutboundMined") {
-                useTransactionStore
-                  .getState()
-                  .updateTransactionStatus(tx.hash, "completed");
-              } else if (cctxStatus === "Aborted") {
-                useTransactionStore
-                  .getState()
-                  .updateTransactionStatus(tx.hash, "failed");
-              }
-            }
-          } catch (error) {
-            console.error("Error checking transaction status:", error);
-          }
-        }
-      } finally {
-        setIsRefreshing(false);
-      }
-    }
-  };
 
   useEffect(() => {
     const loadBalances = async () => {
