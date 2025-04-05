@@ -264,6 +264,20 @@ export function RebalanceDialog({
                     )}
                     onClick={() => setSelectedStrategy(strategy)}
                   >
+                    {strategy.id.startsWith("toolu_") && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "absolute top-2 right-2 z-20 h-8 w-8 text-white hover:bg-white/10",
+                          isLoading && "animate-spin"
+                        )}
+                        onClick={handleRefreshAiStrategy}
+                        disabled={isLoading}
+                      >
+                        <IconRefresh className="h-4 w-4" />
+                      </Button>
+                    )}
                     <div
                       className="absolute inset-0 bg-cover bg-center"
                       style={{
@@ -286,20 +300,6 @@ export function RebalanceDialog({
                               <h3 className="font-semibold text-white opacity-90">
                                 {strategy.name}
                               </h3>
-                            )}
-                            {strategy.id.startsWith("toolu_") && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className={cn(
-                                  "h-8 w-8 text-white hover:bg-white/10",
-                                  isLoading && "animate-spin"
-                                )}
-                                onClick={handleRefreshAiStrategy}
-                                disabled={isLoading}
-                              >
-                                <IconRefresh className="h-4 w-4" />
-                              </Button>
                             )}
                           </div>
                           {strategy.id.startsWith("toolu_") && isLoading ? (
