@@ -63,8 +63,7 @@ yarn install
 
 ```env
 # Add your environment variables here
-NEXT_PUBLIC_ZETACHAIN_RPC_URL=your_rpc_url
-NEXT_PUBLIC_ANTHROPIC_API_KEY=your_api_key
+CLAUDE_API_KEY=your_api_key
 ```
 
 4. Start the development server:
