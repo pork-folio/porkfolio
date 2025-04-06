@@ -56,7 +56,12 @@ export async function executeRebalancingSwap(
       chainId: action.from.chain_id,
     });
 
-    await primaryWallet.switchNetwork(parseInt(action.from.chain_id));
+    try {
+      await primaryWallet.switchNetwork(parseInt(action.from.chain_id));
+    } catch (error) {
+      console.error("Failed to switch network", error);
+      throw error;
+    }
 
     const signer = await getSigner(primaryWallet);
     if (!signer) {

@@ -26,6 +26,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { useChainsStore } from "@/store/chains";
 import { ProviderRpcError } from "viem";
 import { AiStrategyProvider } from "@/components/providers/ai-strategy-provider";
+import { PostHogProvider } from "@/components/providers/posthog";
 
 const zetaTestnet = {
   blockExplorerUrls: ["https://athens.explorer.zetachain.com/"],
@@ -192,7 +193,7 @@ const NetworkContext = createContext<{
   toggleNetwork: () => void;
 }>({
   isTestnet: true,
-  toggleNetwork: () => {},
+  toggleNetwork: () => { },
 });
 
 export const useNetwork = () => useContext(NetworkContext);
@@ -314,16 +315,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <NetworkContext.Provider value={{ isTestnet, toggleNetwork }}>
-      <QueryClientProvider client={queryClient}>
-        <DynamicContextProvider settings={dynamicSettings}>
-          <WagmiProvider config={config}>
-            <DynamicWagmiConnector>
-              <AiStrategyProvider>{children}</AiStrategyProvider>
-            </DynamicWagmiConnector>
-          </WagmiProvider>
-        </DynamicContextProvider>
-      </QueryClientProvider>
-    </NetworkContext.Provider>
+    <PostHogProvider>
+      <NetworkContext.Provider value={{ isTestnet, toggleNetwork }}>
+        <QueryClientProvider client={queryClient}>
+          <DynamicContextProvider settings={dynamicSettings}>
+            <WagmiProvider config={config}>
+              <DynamicWagmiConnector>
+                <AiStrategyProvider>{children}</AiStrategyProvider>
+              </DynamicWagmiConnector>
+            </WagmiProvider>
+          </DynamicContextProvider>
+        </QueryClientProvider>
+      </NetworkContext.Provider>
+    </PostHogProvider>
   );
 }
