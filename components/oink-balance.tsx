@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 import { PiggyBank } from "lucide-react";
 import { emojiBlast } from "emoji-blast";
 import { EVM_RPC_URLS, UNIVERSAL_TOKEN_OINK_ADDRESSES } from "@/lib/constants";
+import { useNetwork } from "@/components/providers";
 
 const OINK_CONTRACTS = UNIVERSAL_TOKEN_OINK_ADDRESSES;
 
@@ -13,11 +14,6 @@ const RPC_URLS = {
   mainnet: `${EVM_RPC_URLS.mainnet}/v1/rpc/public`,
   testnet: `${EVM_RPC_URLS.testnet}/v1/rpc/public`,
 };
-
-// For now, we'll use testnet. This can be made configurable via env variables or props
-const NETWORK = "testnet";
-const OINK_CONTRACT = OINK_CONTRACTS[NETWORK];
-const RPC_URL = RPC_URLS[NETWORK];
 
 const ERC20_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
@@ -34,10 +30,15 @@ export function OinkBalance({
   onReveal?: () => void;
 }) {
   const { primaryWallet } = useDynamicContext();
+  const { isTestnet } = useNetwork();
   const [balance, setBalance] = useState<string>("0");
   const [loading, setLoading] = useState(true);
   const [isRevealed, setIsRevealed] = useState(false);
   const [clickCount, setClickCount] = useState(0);
+
+  const NETWORK = isTestnet ? "testnet" : "mainnet";
+  const OINK_CONTRACT = OINK_CONTRACTS[NETWORK];
+  const RPC_URL = RPC_URLS[NETWORK];
 
   const clickMessages = [
     "Stop clicking!",
