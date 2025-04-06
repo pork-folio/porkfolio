@@ -250,6 +250,24 @@ export function Providers({ children }: { children: React.ReactNode }) {
       onLogout: () => {
         router.push("/");
       },
+      onAuthFlowClose: () => {
+        // Reset loading state in DynamicConnectButton
+        const connectButton = document.querySelector(
+          "[data-dynamic-connect-button]"
+        );
+        if (connectButton) {
+          connectButton.dispatchEvent(new CustomEvent("authFlowClose"));
+        }
+      },
+      onAuthFlowCancel: () => {
+        // Reset loading state in DynamicConnectButton
+        const connectButton = document.querySelector(
+          "[data-dynamic-connect-button]"
+        );
+        if (connectButton) {
+          connectButton.dispatchEvent(new CustomEvent("authFlowCancel"));
+        }
+      },
     },
     overrides: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
