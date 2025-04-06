@@ -4,6 +4,8 @@ A modern cross-chain portfolio management application powered by ZetaChain,
 featuring sophisticated strategies for token rebalancing, AI-powered portfolio
 analytics, and seamless cross-chain token management.
 
+[Visit Porkfolio](https://porkfolio.xyz/) 🐷
+
 ## Features
 
 - 💼 Cross-chain portfolio management powered by ZetaChain
@@ -35,7 +37,13 @@ analytics, and seamless cross-chain token management.
 - Yarn package manager
 - Web3 wallet (MetaMask or similar)
 
-### Installation
+### Quick Start
+
+1. Visit [porkfolio.xyz](https://porkfolio.xyz/) to get started
+2. Connect your wallet
+3. Start managing your cross-chain portfolio
+
+### Local Development
 
 1. Clone the repository:
 
