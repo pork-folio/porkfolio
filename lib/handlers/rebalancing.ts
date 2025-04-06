@@ -37,7 +37,8 @@ export async function executeRebalancingSwap(
   action: SwapAction,
   primaryWallet: Wallet | null,
   rebalancingId: string,
-  actionIndex: number
+  actionIndex: number,
+  isTestnet: boolean
 ) {
   console.log("swap", action);
   try {
@@ -68,7 +69,7 @@ export async function executeRebalancingSwap(
     });
 
     const client = new ZetaChainClient({
-      network: action.from.chain_id === "7000" ? "mainnet" : "testnet",
+      network: isTestnet ? "testnet" : "mainnet",
       signer,
     });
 
@@ -95,10 +96,9 @@ export async function executeRebalancingSwap(
       gatewayAddress = addr;
     }
 
-    const receiverAddress =
-      action.from.chain_id === "7001"
-        ? UNIVERSAL_SWAP_ADDRESSES.testnet
-        : UNIVERSAL_SWAP_ADDRESSES.mainnet;
+    const receiverAddress = isTestnet
+      ? UNIVERSAL_SWAP_ADDRESSES.testnet
+      : UNIVERSAL_SWAP_ADDRESSES.mainnet;
 
     // Prepare parameters for the swap
     if (!action.to.zrc20 && action.to.symbol !== "ZETA") {
@@ -165,6 +165,27 @@ export async function executeRebalancingSwap(
         primaryWallet.address, // recipient
         false, // boolean flag
       ];
+
+      console.log("!!!", {
+        amount: Number(
+          action.fromTokenValue.toFixed(action.from.decimals)
+        ).toString(),
+        erc20: action.from.contract,
+        gatewayEvm: gatewayAddress,
+        receiver: receiverAddress,
+        types,
+        values,
+        revertOptions: {
+          revertAddress: ethers.ZeroAddress,
+          callOnRevert: false,
+          onRevertGasLimit: 0,
+          revertMessage: "",
+        },
+        txOptions: {
+          gasLimit: BigInt(500000), // High gas limit for complex operations
+          gasPrice: ethers.parseUnits("50", "gwei"), // High gas price
+        },
+      });
 
       tx = await client.evmDepositAndCall({
         amount: Number(

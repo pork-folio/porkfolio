@@ -4,6 +4,7 @@ import { SwapAction, executeRebalancingSwap } from "@/lib/handlers/rebalancing";
 import { useTransactionStore } from "@/store/transactions";
 import { Badge } from "@/components/ui/badge";
 import { CryptoIcon } from "@/components/ui/crypto-icon";
+import { useNetwork } from "@/components/providers";
 
 interface RebalancingActionsProps {
   actions: SwapAction[];
@@ -21,6 +22,7 @@ export function RebalancingActions({
   );
   const { primaryWallet } = useDynamicContext();
   const transactions = useTransactionStore((state) => state.transactions);
+  const { isTestnet } = useNetwork();
 
   const handleSwap = async (action: SwapAction, index: number) => {
     if (readOnly) return;
@@ -29,7 +31,13 @@ export function RebalancingActions({
       const actionKey = `${action.from.symbol}-${action.to.symbol}`;
       setLoadingStates((prev) => ({ ...prev, [actionKey]: true }));
 
-      await executeRebalancingSwap(action, primaryWallet, rebalancingId, index);
+      await executeRebalancingSwap(
+        action,
+        primaryWallet,
+        rebalancingId,
+        index,
+        isTestnet
+      );
     } catch (error) {
       console.error("Swap failed:", error);
       alert(
