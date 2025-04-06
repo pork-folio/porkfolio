@@ -166,27 +166,6 @@ export async function executeRebalancingSwap(
         false, // boolean flag
       ];
 
-      console.log("!!!", {
-        amount: Number(
-          action.fromTokenValue.toFixed(action.from.decimals)
-        ).toString(),
-        erc20: action.from.contract,
-        gatewayEvm: gatewayAddress,
-        receiver: receiverAddress,
-        types,
-        values,
-        revertOptions: {
-          revertAddress: ethers.ZeroAddress,
-          callOnRevert: false,
-          onRevertGasLimit: 0,
-          revertMessage: "",
-        },
-        txOptions: {
-          gasLimit: BigInt(500000), // High gas limit for complex operations
-          gasPrice: ethers.parseUnits("50", "gwei"), // High gas price
-        },
-      });
-
       tx = await client.evmDepositAndCall({
         amount: Number(
           action.fromTokenValue.toFixed(action.from.decimals)
