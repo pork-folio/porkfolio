@@ -167,7 +167,9 @@ export async function executeRebalancingSwap(
       ];
 
       tx = await client.evmDepositAndCall({
-        amount: action.fromTokenValue.toString(),
+        amount: Number(
+          action.fromTokenValue.toFixed(action.from.decimals)
+        ).toString(),
         erc20: action.from.contract,
         gatewayEvm: gatewayAddress,
         receiver: receiverAddress,

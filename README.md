@@ -1,36 +1,106 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Porkfolio
+
+A modern cross-chain portfolio management application powered by ZetaChain,
+featuring sophisticated strategies for token rebalancing, AI-powered portfolio
+analytics, and seamless cross-chain token management.
+
+[Visit Porkfolio](https://porkfolio.xyz/) 🐷
+
+## Features
+
+- 💼 Cross-chain portfolio management powered by ZetaChain
+- 🔄 Cross-chain token rebalancing across multiple EVM chains
+- 🤖 AI-generated rebalancing strategies for optimal portfolio allocation
+- 💰 Seamless deposits and withdrawals to/from ZetaChain
+- 🎁 OINK universal token rewards for portfolio rebalancing
+- 🚀 Price tracking using Pyth Network
+- 📊 Interactive charts and analytics
+- 🔒 Wallet integration with Dynamic Labs
+- 🎨 Modern UI with Tailwind CSS and Radix UI components
+
+## Tech Stack
+
+- **Framework**: Next.js 15 with App Router
+- **UI**: Tailwind CSS, Radix UI, Shadcn UI
+- **State Management**: React Query
+- **Blockchain**: ZetaChain, Dynamic Labs SDK, Wagmi, Viem
+- **AI**: Anthropic Claude
+- **Charts**: Recharts
+- **Testing**: Jest
+- **Type Safety**: TypeScript
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js (v18 or later)
+- Yarn package manager
+- Web3 wallet (MetaMask or similar)
+
+### Quick Start
+
+1. Visit [porkfolio.xyz](https://porkfolio.xyz/) to get started
+2. Connect your wallet
+3. Start managing your cross-chain portfolio
+
+### Local Development
+
+1. Clone the repository:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/yourusername/porkfolio.git
+cd porkfolio
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Install dependencies:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+yarn install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. Create a `.env.local` file in the root directory and add your environment
+   variables:
 
-## Learn More
+```env
+# Add your environment variables here
+CLAUDE_API_KEY=your_api_key
+```
 
-To learn more about Next.js, take a look at the following resources:
+4. Start the development server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+yarn dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Deploy on Vercel
+## Available Scripts
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- `yarn dev` - Start the development server
+- `yarn build` - Build the application for production
+- `yarn start` - Start the production server
+- `yarn lint` - Run ESLint
+- `yarn test` - Run Jest tests
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Project Structure
+
+```
+porkfolio/
+├── app/             # Next.js app router pages
+├── components/      # Reusable UI components
+├── core/            # Core business logic
+├── hooks/           # Custom React hooks
+├── lib/             # Utility functions and configurations
+├── public/          # Static assets
+├── store/           # State management
+└── styles/          # Global styles and Tailwind config
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for
+details.
