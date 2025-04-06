@@ -60,19 +60,25 @@ import { cn } from "@/lib/utils";
 // Add utility function for formatting numbers with aligned decimals
 function formatNumberWithAlignedDecimals(
   value: string | number,
-  decimals: number = 2
+  decimals: number = 2,
+  currency: string = ""
 ): React.ReactElement {
   const num = typeof value === "string" ? parseFloat(value) : value;
   if (isNaN(num)) return <div className="text-right">-</div>;
 
+  // for ui purposes
+  if (decimals > 10) {
+    decimals = 10;
+  }
+
   const parts = num.toFixed(decimals).split(".");
   const integerPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  const decimalPart = parts[1];
+  const decimalPart = parts[1].replace(/0+$/, "");
 
   return (
     <div className="flex justify-end">
-      <span className="tabular-nums">{integerPart}</span>
-      <span className="tabular-nums">.{decimalPart}</span>
+      <span className="tabular-nums">{currency}{integerPart}</span>
+      {decimalPart && <span className="tabular-nums">.{decimalPart}</span>}
     </div>
   );
 }
@@ -106,6 +112,7 @@ type TokenInfo = {
 type AggregatedToken = {
   baseSymbol: string;
   totalBalance: string;
+  decimals: number;
   tokens: TokenInfo[];
 };
 
@@ -141,6 +148,7 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
         baseSymbol,
         totalBalance: "0",
         tokens: [],
+        decimals: token.decimals,
       });
     }
 
@@ -161,7 +169,9 @@ function aggregateTokens(data: z.infer<typeof schema>[]): AggregatedToken[] {
     const currentTotal = parseFloat(aggregated.totalBalance);
     const newBalance = parseFloat(token.balance);
     const total = currentTotal + newBalance;
+
     // Use the first token's ticker for rounding since it represents the same base token
+    // (but some tokens might have different decimals on different chains)
     aggregated.totalBalance = roundNumber(total, token.ticker);
   });
 
@@ -173,7 +183,7 @@ function PriceCell({ ticker }: { ticker: string }) {
   const price = prices.find((p) => p.ticker === ticker)?.usdRate;
   return (
     <div className="text-right font-medium">
-      {price ? formatNumberWithAlignedDecimals(price, 2) : "-"}
+      {price ? formatNumberWithAlignedDecimals(price, 2, "$") : "-"}
     </div>
   );
 }
@@ -185,7 +195,7 @@ function ValueCell({ ticker, balance }: { ticker: string; balance: string }) {
   const value = price ? price * balanceValue : null;
   return (
     <div className="text-right font-medium">
-      {value ? formatNumberWithAlignedDecimals(value, 2) : "-"}
+      {value ? formatNumberWithAlignedDecimals(value, 2, "$") : "-"}
     </div>
   );
 }
@@ -232,7 +242,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
           <div className="flex flex-col pl-2">
             <div className="font-medium">{token.baseSymbol}</div>
             <div className="text-sm text-muted-foreground">
-              {`${nonZeroTokens} ${nonZeroTokens === 1 ? "chain" : "chains"}`}
+              {`${nonZeroTokens} ${nonZeroTokens === 1 ? "asset" : "assets"}`}
             </div>
           </div>
         </div>
@@ -245,7 +255,7 @@ const columns: ColumnDef<AggregatedToken>[] = [
     header: () => <div className="w-full text-right">Balance</div>,
     cell: ({ row }) => (
       <div className="text-right font-medium">
-        {formatNumberWithAlignedDecimals(row.original.totalBalance)}
+        {formatNumberWithAlignedDecimals(row.original.totalBalance, row.original.decimals)}
       </div>
     ),
   },
@@ -594,6 +604,8 @@ export function BalancesTable({
     [initialData]
   );
 
+  console.log('Aggregated Data', aggregatedData);
+
   // Calculate total portfolio value in USD and track included/excluded tokens
   const { totalValue, excludedTokens, assetDistribution } =
     React.useMemo(() => {
@@ -785,9 +797,9 @@ export function BalancesTable({
                           {header.isPlaceholder
                             ? null
                             : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
                         </TableHead>
                       ))}
                     </TableRow>
