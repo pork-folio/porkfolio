@@ -5,6 +5,7 @@ import { DynamicWagmiConnector } from "@dynamic-labs/wagmi-connector";
 import { createConfig, WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { http } from "viem";
+import { useRouter } from "next/navigation";
 import {
   baseSepolia,
   arbitrumSepolia,
@@ -217,6 +218,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [isTestnet, setIsTestnet] = useState(true);
   const config = isTestnet ? testnetConfig : mainnetConfig;
   const fetchChains = useChainsStore((state) => state.fetchChains);
+  const router = useRouter();
 
   useEffect(() => {
     fetchChains(isTestnet);
@@ -244,6 +246,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const dynamicSettings = {
     environmentId: "eaec6949-d524-40e7-81d2-80113243499a",
     walletConnectors: [EthereumWalletConnectors, SolanaWalletConnectors],
+    events: {
+      onLogout: () => {
+        router.push("/");
+      },
+    },
     overrides: {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       evmNetworks: (networks: any[]) => {
