@@ -26,6 +26,7 @@ const iconMap = new Map<string, boolean>([
   ["usdt", true],
   ["wbtc", true],
   ["zeta", true],
+  ["wzeta", true],
 ]);
 
 export function CryptoIcon({ symbol, size = 24, className }: CryptoIconProps) {
@@ -61,6 +62,10 @@ export function getIconName(symbol: string): string {
 
   if (name.includes("usdc")) {
     return "usdc";
+  }
+
+  if (name.includes("btc")) {
+    return "btc";
   }
 
   return name;
